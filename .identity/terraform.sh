@@ -38,7 +38,6 @@ fi
 # Helm
 export HELM_DEBUG=1
 export TF_VAR_github_token="${GITHUB_TOKEN}"
-# TODO set your PAT TOKEN as env var
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "Error: Set an environment variable named GITHUB_TOKEN with your GitHub PAT Token"
   exit 1
