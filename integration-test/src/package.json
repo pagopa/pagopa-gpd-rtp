@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name", // TODO: set your name
+  "name": "pagopa-gpd-rtp",
   "license": "MIT",
   "version": "1.0.0",
   "scripts": {
