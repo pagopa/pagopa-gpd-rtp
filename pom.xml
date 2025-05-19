@@ -11,10 +11,10 @@
   </parent>
 
   <groupId>it.gov.pagopa</groupId>
-  <artifactId>microservice</artifactId> <!--TODO: set your artifactId-->
+  <artifactId>pagopa-gpd-rtp</artifactId>
   <version>0.0.0</version>
-  <name>Your Name</name> <!--TODO: set your name-->
-  <description>Your description</description> <!--TODO: set your description-->
+  <name>gpd-rtp</name>
+  <description>GPD service to forward deb positions to RTP</description>
 
   <properties>
     <java.version>17</java.version>
