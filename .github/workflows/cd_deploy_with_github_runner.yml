@@ -36,7 +36,7 @@ on:
         default: false
 
 env:
-  APP_NAME: <app-name> #TODO: set app name
+  APP_NAME: pagopa-gpd-rtp
 
 
 permissions:
