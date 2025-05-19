@@ -24,7 +24,7 @@
             <encoder class="co.elastic.logging.logback.EcsEncoder">
                 <serviceName>${OTEL_SERVICE_NAME}</serviceName>
                 <serviceVersion>${ECS_SERVICE_VERSION}</serviceVersion>
-                <serviceEnvironment>${ENV}</serviceEnvironment>
+                <serviceEnvironment>${APP_ENVIRONMENT}</serviceEnvironment>
             </encoder>
         </appender>
 

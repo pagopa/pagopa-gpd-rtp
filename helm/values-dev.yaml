@@ -7,6 +7,7 @@ microservice-chart:
     tag: "0.0.0"
     pullPolicy: Always
   livenessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/liveness
       port: 8080
@@ -14,6 +15,7 @@ microservice-chart:
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/readiness
       port: 8080
@@ -22,6 +24,7 @@ microservice-chart:
     periodSeconds: 10
   deployment:
     create: true
+    replicas: 1
   service:
     create: true
     type: ClusterIP
@@ -33,9 +36,9 @@ microservice-chart:
     path: /your-path-here/(.*) # TODO: set your path
     servicePort: 8080
   serviceAccount:
-    create: false
-    annotations: { }
-    name: ""
+    name: "<namespace>-workload-identity" # TODO: set namespace for workload identity
+  azure:
+    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
   podAnnotations: { }
   podSecurityContext:
     seccompProfile:
@@ -70,7 +73,6 @@ microservice-chart:
     APP_ENVIRONMENT: "dev"
     # TODO: set your name
     WEBSITE_SITE_NAME: 'yourProjectName' # required to show cloud role name in application insights
-    ENV: 'azure-dev'
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
