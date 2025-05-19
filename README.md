@@ -1,19 +1,15 @@
-# Template for Java Spring Microservice project
+# GPD x RTP
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TODO-set-your-id&metric=alert_status)](https://sonarcloud.io/dashboard?id=TODO-set-your-id)
-[![Integration Tests](https://github.com/pagopa/<TODO-repo>/actions/workflows/ci_integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/<TODO-repo>/actions/workflows/ci_integration_test.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_pagopa-gpd-rtp&metric=alert_status)](https://sonarcloud.io/dashboard?id=pagopa_pagopa-gpd-rtp)
+[![Integration Tests](https://github.com/pagopa/pagopa-gpd-rtp/actions/workflows/ci_integration_test.yml/badge.svg?branch=main)](https://github.com/pagopa/pagopa-gpd-rtp/actions/workflows/ci_integration_test.yml)
 
-TODO: add a description
-
-TODO: generate a index with this tool: https://ecotrust-canada.github.io/markdown-toc/
-
-TODO: resolve all the TODOs in this template
+Manage the flow of debt positions from GPD to RTP
 
 ---
 
 ## Api Documentation 📖
 
-See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/<TODO-repo>/main/openapi/openapi.json)
+See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/pagopa-gpd-rtp/main/openapi/openapi.json)
 
 ---
 
@@ -24,8 +20,7 @@ See the [OpenApi 3 here.](https://editor.swagger.io/?url=https://raw.githubuserc
 - Spring Web
 - Hibernate
 - JPA
-- ...
-- TODO
+- Python 3.x
 
 ---
 
@@ -52,6 +47,7 @@ from `./docker` directory
 - git
 - maven
 - jdk-17
+- python 3.x
 
 ### Run the project
 
