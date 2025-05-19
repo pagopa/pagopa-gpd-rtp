@@ -55,7 +55,7 @@ main() {
     env_short=$(echo "$environment" | cut -c1)
 
     # TODO set your kv
-    azure_kv_url=$(az keyvault key show --name pagopa-"$env_short"-TODO-sops-key --vault-name pagopa-"$env_short"-TODO-kv --query key.kid | sed 's/"//g')
+    azure_kv_url=$(az keyvault key show --name pagopa-"$env_short"-gps-sops-key --vault-name pagopa-"$env_short"-gps-kv --query key.kid | sed 's/"//g')
 
     if [ "$action" == "enc" ]; then
       sops --encrypt --azure-kv "$azure_kv_url" --input-type dotenv --output-type  dotenv ./"$filepath" > ./"$filepath".encrypted

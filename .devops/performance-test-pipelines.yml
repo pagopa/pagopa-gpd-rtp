@@ -19,7 +19,6 @@ parameters:
       - "spike"
       - "stress"
       - "constant"
-      - # TODO: add your values
     default: "constant"
   - name: "SCRIPT"
     displayName: "Script name"
