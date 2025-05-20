@@ -1,6 +1,6 @@
-package it.gov.pagopa.microservice.config;
+package it.gov.pagopa.gpd.rtp.config;
 
-import it.gov.pagopa.microservice.exception.AppException;
+import it.gov.pagopa.gpd.rtp.exception.AppException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.util.Set;

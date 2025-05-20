@@ -1,4 +1,4 @@
-package it.gov.pagopa.microservice;
+package it.gov.pagopa.gpd.rtp;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

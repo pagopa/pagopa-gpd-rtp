@@ -1,9 +1,10 @@
-package it.gov.pagopa.microservice.exception;
+package it.gov.pagopa.gpd.rtp.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
-import it.gov.pagopa.microservice.model.ProblemJson;
+import it.gov.pagopa.gpd.rtp.model.ProblemJson;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;

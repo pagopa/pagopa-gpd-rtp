@@ -1,7 +1,6 @@
-package it.gov.pagopa.microservice.config;
+package it.gov.pagopa.gpd.rtp.config;
 
-import static it.gov.pagopa.microservice.util.Constants.HEADER_REQUEST_ID;
-
+import it.gov.pagopa.gpd.rtp.util.Constants;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -39,7 +38,7 @@ public class RequestFilter implements Filter {
       HttpServletRequest httRequest = (HttpServletRequest) request;
 
       // get requestId from header or generate one
-      String requestId = httRequest.getHeader(HEADER_REQUEST_ID);
+      String requestId = httRequest.getHeader(Constants.HEADER_REQUEST_ID);
       if (requestId == null || requestId.isEmpty()) {
         requestId = UUID.randomUUID().toString();
       }
@@ -48,7 +47,7 @@ public class RequestFilter implements Filter {
       MDC.put("requestId", requestId);
 
       // set requestId in the response header
-      ((HttpServletResponse) response).setHeader(HEADER_REQUEST_ID, requestId);
+      ((HttpServletResponse) response).setHeader(Constants.HEADER_REQUEST_ID, requestId);
       chain.doFilter(request, response);
     } finally {
       MDC.clear();

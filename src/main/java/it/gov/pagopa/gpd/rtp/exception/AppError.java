@@ -1,4 +1,4 @@
-package it.gov.pagopa.microservice.exception;
+package it.gov.pagopa.gpd.rtp.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

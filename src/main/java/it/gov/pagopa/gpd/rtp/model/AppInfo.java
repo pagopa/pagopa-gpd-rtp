@@ -1,4 +1,4 @@
-package it.gov.pagopa.microservice.model;
+package it.gov.pagopa.gpd.rtp.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;

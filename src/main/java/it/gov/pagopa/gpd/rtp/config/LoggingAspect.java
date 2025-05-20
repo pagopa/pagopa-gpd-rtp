@@ -1,9 +1,10 @@
-package it.gov.pagopa.microservice.config;
+package it.gov.pagopa.gpd.rtp.config;
 
-import static it.gov.pagopa.microservice.util.CommonUtility.deNull;
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.deNull;
 
-import it.gov.pagopa.microservice.exception.AppError;
-import it.gov.pagopa.microservice.model.ProblemJson;
+import it.gov.pagopa.gpd.rtp.model.ProblemJson;
+import it.gov.pagopa.gpd.rtp.util.CommonUtility;
+import it.gov.pagopa.gpd.rtp.exception.AppError;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -80,7 +81,7 @@ public class LoggingAspect {
     Map<String, String> params = new HashMap<>();
     int i = 0;
     for (var paramName : codeSignature.getParameterNames()) {
-      params.put(paramName, deNull(joinPoint.getArgs()[i++]));
+      params.put(paramName, CommonUtility.deNull(joinPoint.getArgs()[i++]));
     }
     return params;
   }

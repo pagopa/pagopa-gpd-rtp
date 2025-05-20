@@ -1,4 +1,4 @@
-package it.gov.pagopa.microservice; // TODO: refactor the package
+package it.gov.pagopa.gpd.rtp; // TODO: refactor the package
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

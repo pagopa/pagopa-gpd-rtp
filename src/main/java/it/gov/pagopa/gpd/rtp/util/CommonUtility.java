@@ -1,4 +1,4 @@
-package it.gov.pagopa.microservice.util;
+package it.gov.pagopa.gpd.rtp.util;
 
 import java.util.Calendar;
 import java.util.List;
