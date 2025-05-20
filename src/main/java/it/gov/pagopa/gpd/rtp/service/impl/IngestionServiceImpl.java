@@ -34,16 +34,19 @@ public class IngestionServiceImpl implements IngestionService {
 
     @Value("${gpd.rtp.ingestion.service.maxRetries}")
     private int maxRetries;
-    @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}")
     // TODO category with 9/.../ or remove from transfer's string?
-    private List<String> VALID_TRANSFER_CATEGORIES = List.of("9/0201102IM/", "9/0201133IM/", "9/0101109IM/", "9/0101101IM/", "9/0301105TS/"); // TODO put in application.properties
+
+    private List<String> validTransferCategories;
 
     @Autowired
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
-            RTPMessageProducer rtpMessageProducer) {
+            RTPMessageProducer rtpMessageProducer,
+            @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories
+            ) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
+        this.validTransferCategories = validTransferCategories;
     }
 
 
@@ -135,7 +138,7 @@ public class IngestionServiceImpl implements IngestionService {
 
     private boolean verifyTransferCategories(List<Transfer> transferList) {
         // TODO all transfers must match?
-        if (!transferList.stream().allMatch(transfer -> this.VALID_TRANSFER_CATEGORIES.contains(transfer.getCategory()))) {
+        if (!transferList.stream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
             return true;
         }
         return false;
