@@ -1,16 +1,17 @@
 package it.gov.pagopa.gpd.rtp.events.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.rtp.events.model.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import lombok.Builder;
-
-import java.util.Date;
+import lombok.Getter;
 
 @Builder
+@Getter
 public class RTPMessage {
 
     private int id;
-    private String operation;
+    private DebeziumOperationCode operation;
     private Long timestamp;
     private String iuv;
     private String subject;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.rtp.events.model.entity.enumeration;
+package it.gov.pagopa.gpd.rtp.entity.enumeration;
 
 public enum PaymentPositionStatus {
     DRAFT,

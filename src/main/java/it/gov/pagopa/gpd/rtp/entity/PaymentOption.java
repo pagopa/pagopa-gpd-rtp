@@ -1,9 +1,9 @@
-package it.gov.pagopa.gpd.rtp.events.model.entity;
+package it.gov.pagopa.gpd.rtp.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.rtp.events.model.entity.enumeration.PaymentOptionStatus;
-import it.gov.pagopa.gpd.rtp.events.model.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentOptionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import lombok.*;
 
 @Getter

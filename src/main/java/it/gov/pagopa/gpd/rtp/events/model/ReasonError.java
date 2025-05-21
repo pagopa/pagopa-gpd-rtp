@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.rtp.events.model.entity;
+package it.gov.pagopa.gpd.rtp.events.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
