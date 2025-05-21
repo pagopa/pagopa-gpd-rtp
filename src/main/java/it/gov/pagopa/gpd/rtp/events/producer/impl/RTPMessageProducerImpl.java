@@ -2,7 +2,7 @@ package it.gov.pagopa.gpd.rtp.events.producer.impl;
 
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
-import it.gov.pagopa.gpd.rtp.events.model.entity.PaymentOption;
+import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import java.util.function.Supplier;
 
@@ -30,7 +30,7 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
 
   private static Message<RTPMessage> buildMessage(
           RTPMessage rtpMessage) {
-    return MessageBuilder.withPayload(rtpMessage).build();
+    return MessageBuilder.withPayload(rtpMessage).setHeader("id", rtpMessage.getId()).build();
   }
 
   @Override
@@ -38,9 +38,9 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
       RTPMessage rtpMessage) {
     var res = streamBridge.send("ingestPaymentOption-out-0", buildMessage(rtpMessage));
 
-    MDC.put("topic", "payment option");
+    MDC.put("topic", "rtp-events");
     MDC.put("action", "sent");
-    log.debug("Payment Option Retry Sent");
+    log.debug("RTP Message Sent");
     MDC.remove("topic");
     MDC.remove("action");
 
