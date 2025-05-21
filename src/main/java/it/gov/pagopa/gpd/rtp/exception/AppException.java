@@ -51,6 +51,19 @@ public class AppException extends RuntimeException {
     this.appErrorCode = appError;
   }
 
+  /**
+   * @param httpStatus HTTP status returned to the response
+   * @param title title returned to the response when this exception occurred
+   * @param message the detail message returned to the response
+   */
+  public AppException(
+          @NotNull HttpStatus httpStatus, @NotNull String title, @NotNull String message) {
+    super(message);
+    this.title = title;
+    this.httpStatus = httpStatus;
+    this.appErrorCode = null;
+  }
+
   private static String formatDetails(AppError appError, Object[] args) {
     return String.format(appError.details, args);
   }
