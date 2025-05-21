@@ -12,6 +12,8 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
+import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,18 +41,22 @@ public class IngestionServiceImpl implements IngestionService {
     private final ObjectMapper objectMapper;
     private final RTPMessageProducer rtpMessageProducer;
     private final FilterService filterService;
+    private final TransferRepository transferRepository;
+    private final PaymentOptionRepository paymentOptionRepository;
 
     @Autowired
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
             RTPMessageProducer rtpMessageProducer,
             @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories,
-            FilterService filterService
-    ) {
+            FilterService filterService,
+            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.validTransferCategories = validTransferCategories;
         this.filterService = filterService;
+        this.transferRepository = transferRepository;
+        this.paymentOptionRepository = paymentOptionRepository;
     }
 
     public void ingestPaymentOptions(List<Message<String>> messages) {
@@ -91,13 +97,13 @@ public class IngestionServiceImpl implements IngestionService {
                             LocalDateTime.now(),
                             valuesAfter.getId());
 
-                    // TODO loop: query su DB replica di payment_option per recuperare la last_updated_date e verificare che il DB replica sia allineato
-                    // TODO nack when db not aligned, duration in config
-                    acknowledgment.nack(Duration.ofSeconds(1));
+                    PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId());
+                    if(poFromDBReplica == null || poFromDBReplica.getLastUpdateDate() < valuesAfter.getLastUpdateDate()){
+                        acknowledgment.nack(Duration.ofSeconds(1));
+                    }
 
                     // Retrieve Transfer's data
-                    // TODO query transfer
-                    List<Transfer> transferList = new ArrayList<>();
+                    List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
 
                     // Filter based on Transfer's taxonomy
                     if (verifyTransferCategories(transferList)) {
@@ -124,7 +130,7 @@ public class IngestionServiceImpl implements IngestionService {
                 handleException(String.format("%s PaymentOption ingestion error JsonProcessingException at %s", LOG_PREFIX, LocalDateTime.now()));
             } catch (AppException e) {
                 if (e.getAppErrorCode().equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-                    handleException(String.format("%s PaymentOption ingestion error CUSTOM exception at %s", LOG_PREFIX, LocalDateTime.now()));
+                    handleException(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
                 } else {
                     acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
                 }
@@ -174,7 +180,7 @@ public class IngestionServiceImpl implements IngestionService {
 
     private boolean verifyTransferCategories(List<Transfer> transferList) {
         // TODO all transfers must match?
-        if (!transferList.stream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
+        if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
             return true;
         }
         return false;
