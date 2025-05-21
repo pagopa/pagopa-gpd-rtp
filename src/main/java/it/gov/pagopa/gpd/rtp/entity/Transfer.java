@@ -14,13 +14,14 @@ public class Transfer {
     @Id
     private int id;
 
-    @JsonProperty("remittance_information")
     @Column(name = "remittance_information")
     private String remittanceInformation;
 
     private String category;
 
-    @JsonProperty("payment_option_id")
     @Column(name = "payment_option_id")
     private int paymentOptionId;
+
+    @Column(name = "organization_fiscal_code")
+    private String organizationFiscalCode;
 }

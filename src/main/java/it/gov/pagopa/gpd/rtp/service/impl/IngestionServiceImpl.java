@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.rtp.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
 import it.gov.pagopa.gpd.rtp.config.KafkaConfig;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +43,7 @@ public class IngestionServiceImpl implements IngestionService {
     private final FilterService filterService;
     private final TransferRepository transferRepository;
     private final PaymentOptionRepository paymentOptionRepository;
+    private final AnonymizerClient anonymizerClient;
 
     @Autowired
     public IngestionServiceImpl(
@@ -50,13 +51,14 @@ public class IngestionServiceImpl implements IngestionService {
             RTPMessageProducer rtpMessageProducer,
             @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories,
             FilterService filterService,
-            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository) {
+            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.validTransferCategories = validTransferCategories;
         this.filterService = filterService;
         this.transferRepository = transferRepository;
         this.paymentOptionRepository = paymentOptionRepository;
+        this.anonymizerClient = anonymizerClient;
     }
 
     public void ingestPaymentOptions(List<Message<String>> messages) {
@@ -99,7 +101,7 @@ public class IngestionServiceImpl implements IngestionService {
 
                     PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId());
                     if(poFromDBReplica == null || poFromDBReplica.getLastUpdateDate() < valuesAfter.getLastUpdateDate()){
-                        acknowledgment.nack(Duration.ofSeconds(1));
+                        acknowledgment.nack(Duration.ofSeconds(1)); // TODO avoid loop
                     }
 
                     // Retrieve Transfer's data
@@ -110,10 +112,7 @@ public class IngestionServiceImpl implements IngestionService {
                         throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
                     }
 
-                    // Anonymize remittance information
-                    // TODO presidio anonymizer
-                    String remittanceInformation = transferList.get(0).getRemittanceInformation();
-
+                    String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
 
                     // Map RTP message
                     rtpMessage = mapRTPMessage(paymentOption, valuesAfter, remittanceInformation);
@@ -143,6 +142,11 @@ public class IngestionServiceImpl implements IngestionService {
                 "PaymentOptions ingested at {}: total messages {}",
                 LocalDateTime.now(),
                 messages.size());
+    }
+
+    private String anonymizeRemittanceInformation(PaymentOption valuesAfter, List<Transfer> transferList) {
+        Transfer primaryTransfer = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP));
+        return this.anonymizerClient.anonymize(primaryTransfer.getRemittanceInformation());
     }
 
     private RTPMessage mapRTPMessage(DataCaptureMessage<PaymentOption> paymentOption, PaymentOption valuesAfter, String remittanceInformation) {
