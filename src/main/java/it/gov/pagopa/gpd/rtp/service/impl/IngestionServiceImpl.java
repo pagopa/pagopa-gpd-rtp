@@ -90,7 +90,7 @@ public class IngestionServiceImpl implements IngestionService {
                     rtpMessage = mapRTPDeleteMessage(paymentOption);
                 } else {
                     // Filter paymentOption message, throws AppException
-                    filterService.isValidPaymentOptionForRTP(paymentOption);
+                    filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
 
                     PaymentOption valuesAfter = paymentOption.getAfter();
 
@@ -100,21 +100,16 @@ public class IngestionServiceImpl implements IngestionService {
                             valuesAfter.getId());
 
                     PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId());
-                    if(poFromDBReplica == null || poFromDBReplica.getLastUpdateDate() < valuesAfter.getLastUpdateDate()){
-                        acknowledgment.nack(Duration.ofSeconds(1)); // TODO avoid loop
+                    if (poFromDBReplica == null || poFromDBReplica.getLastUpdateDate() < valuesAfter.getLastUpdateDate()) {
+                        acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
                     }
 
                     // Retrieve Transfer's data
                     List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
-
-                    // Filter based on Transfer's taxonomy
-                    if (verifyTransferCategories(transferList)) {
-                        throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
-                    }
-
+                    // Filter based on Transfer's categories, throws AppException
+                    hasValidTransferCategoriesOrElseThrow(transferList);
                     String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
 
-                    // Map RTP message
                     rtpMessage = mapRTPMessage(paymentOption, valuesAfter, remittanceInformation);
                 }
 
@@ -182,11 +177,10 @@ public class IngestionServiceImpl implements IngestionService {
         new KafkaConfig().errorHandler();
     }
 
-    private boolean verifyTransferCategories(List<Transfer> transferList) {
+    private void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {
         // TODO all transfers must match?
         if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
-            return true;
+            throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
         }
-        return false;
     }
 }

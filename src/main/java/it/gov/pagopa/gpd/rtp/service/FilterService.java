@@ -11,5 +11,5 @@ public interface FilterService {
      *
      * @param paymentOption PaymentOption message
      */
-    void isValidPaymentOptionForRTP(DataCaptureMessage<PaymentOption> paymentOption);
+    void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOption> paymentOption);
 }

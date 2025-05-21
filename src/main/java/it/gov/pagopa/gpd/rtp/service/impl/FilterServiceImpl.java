@@ -27,7 +27,7 @@ public class FilterServiceImpl implements FilterService {
     }
 
     @Override
-    public void isValidPaymentOptionForRTP(DataCaptureMessage<PaymentOption> paymentOption) {
+    public void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOption> paymentOption) {
         PaymentOption valuesBefore = paymentOption.getBefore();
         PaymentOption valuesAfter = paymentOption.getAfter();
 
