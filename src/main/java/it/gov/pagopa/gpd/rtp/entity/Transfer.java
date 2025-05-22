@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.rtp.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -12,7 +11,7 @@ import lombok.*;
 @Table(name = "transfer")
 public class Transfer {
     @Id
-    private int id;
+    private Long id;
 
     @Column(name = "remittance_information")
     private String remittanceInformation;

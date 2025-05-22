@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public class RTPMessage {
 
-    private int id;
+    private Long id;
     private DebeziumOperationCode operation;
     private Long timestamp;
     private String iuv;
