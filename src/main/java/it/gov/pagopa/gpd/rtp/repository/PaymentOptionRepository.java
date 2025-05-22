@@ -7,7 +7,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PaymentOptionRepository
-    extends JpaRepository<PaymentOption, Long>, JpaSpecificationExecutor<PaymentOption> {
-
-    PaymentOption findById(int id);
-}
+    extends JpaRepository<PaymentOption, Long>, JpaSpecificationExecutor<PaymentOption> { }
