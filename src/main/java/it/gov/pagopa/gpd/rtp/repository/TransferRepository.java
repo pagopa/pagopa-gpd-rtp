@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
-    List<Transfer> findByPaymentOptionId(int paymentOptionId);
+    List<Transfer> findByPaymentOptionId(long paymentOptionId);
 }
