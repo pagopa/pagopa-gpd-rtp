@@ -78,9 +78,9 @@ public class IngestionServiceImpl implements IngestionService {
 
         // persist the item
         for (int i = 0; i < messageList.size(); i++) {
-            try {
-                String msg = messageList.get(i);
+            String msg = messageList.get(i);
 
+            try {
                 DataCaptureMessage<PaymentOptionEvent> paymentOption =
                         this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
                         });
