@@ -16,7 +16,7 @@ public class RTPMessage {
     private String iuv;
     private String subject;
     private String description;
-    @JsonProperty("ex_tax_code")
+    @JsonProperty("ec_tax_code")
     private String ecTaxCode;
     @JsonProperty("debtor_tax_code")
     private String debtorTaxCode;
