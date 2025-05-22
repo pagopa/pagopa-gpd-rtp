@@ -13,7 +13,7 @@ public class KafkaConfig {
     private int maxRetries;
 
     @Bean
-    public KafkaListenerErrorHandler errorHandler() {
+    public KafkaListenerErrorHandler kafkaListenerErrorHandler() {
 
         return (msg, ex) -> {
             if (msg.getHeaders().get(KafkaHeaders.DELIVERY_ATTEMPT, Integer.class) > maxRetries) {

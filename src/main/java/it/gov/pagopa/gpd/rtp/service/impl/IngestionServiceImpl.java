@@ -174,7 +174,7 @@ public class IngestionServiceImpl implements IngestionService {
     private void handleException(String errorMsg) {
         log.error(errorMsg);
 
-        new KafkaConfig().errorHandler();
+        new KafkaConfig().kafkaListenerErrorHandler();
     }
 
     private void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {

@@ -3,7 +3,9 @@ package it.gov.pagopa.gpd.rtp.config.feign;
 import feign.RequestInterceptor;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public abstract class AuthFeignConfig {
 
   protected String subscriptionKey;

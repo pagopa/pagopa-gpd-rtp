@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.rtp.client;
 
-import feign.FeignException;
 import it.gov.pagopa.gpd.rtp.config.feign.AnonymizerFeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
