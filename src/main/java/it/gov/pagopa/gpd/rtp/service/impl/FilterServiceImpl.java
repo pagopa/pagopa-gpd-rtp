@@ -1,9 +1,9 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.entity.redis.FlagOptIn;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.redis.FlagOptInRepository;
@@ -27,9 +27,9 @@ public class FilterServiceImpl implements FilterService {
     }
 
     @Override
-    public void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOption> paymentOption) {
-        PaymentOption valuesBefore = paymentOption.getBefore();
-        PaymentOption valuesAfter = paymentOption.getAfter();
+    public void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        PaymentOptionEvent valuesBefore = paymentOption.getBefore();
+        PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
         // Check payment position status
         if (!verifyPaymentPositionStatus(valuesBefore, valuesAfter))
@@ -48,7 +48,7 @@ public class FilterServiceImpl implements FilterService {
         // TODO se Flag rtp_cache_created_at è null o troppo vecchio (+2 days) chiama l’api RTP per aggiornare la cache (vedi paragrafo su update cache)
     }
 
-    private static boolean verifyPaymentPositionStatus(PaymentOption valuesBefore, PaymentOption valuesAfter) {
+    private static boolean verifyPaymentPositionStatus(PaymentOptionEvent valuesBefore, PaymentOptionEvent valuesAfter) {
         if (valuesBefore != null && (
                 valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
                         valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID)

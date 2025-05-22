@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.rtp.service;
 
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
+import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 
 public interface FilterService {
 
@@ -11,5 +12,5 @@ public interface FilterService {
      *
      * @param paymentOption PaymentOption message
      */
-    void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOption> paymentOption);
+    void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption);
 }

@@ -14,6 +14,6 @@ public interface IngestionService {
      *
      * @param messages PaymentOption messages
      */
-    void ingestPaymentOptions(List<Message<String>> messages);
+    void ingestPaymentOptions(Message<List<String>> messages);
 
 }

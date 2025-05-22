@@ -8,6 +8,7 @@ import it.gov.pagopa.gpd.rtp.config.KafkaConfig;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
@@ -26,7 +27,9 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 
@@ -61,48 +64,47 @@ public class IngestionServiceImpl implements IngestionService {
         this.anonymizerClient = anonymizerClient;
     }
 
-    public void ingestPaymentOptions(List<Message<String>> messages) {
+    public void ingestPaymentOptions(Message<List<String>> messages) {
+        List<String> messageList = messages.getPayload();
+
+        Acknowledgment acknowledgment = messages.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+
         log.debug(
                 "PaymentOption ingestion called at {} for payment options with events list size {}",
                 LocalDateTime.now(),
-                messages.size());
-        messages.removeAll(Collections.singleton(null));
+                messageList.size());
+
+        messageList.removeAll(Collections.singleton(null));
 
         // persist the item
-        for (int i = 0; i < messages.size(); i++) {
+        for (int i = 0; i < messageList.size(); i++) {
             RTPMessage rtpMessage;
-
-            Message<String> message = messages.get(i);
-
-            String msg = message.getPayload();
-
-            Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
 
             try {
                 // TODO if snapshot message discard?
+                String msg = messageList.get(i);
 
-                DataCaptureMessage<PaymentOption> paymentOption =
-                        this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOption>>() {
+                DataCaptureMessage<PaymentOptionEvent> paymentOption =
+                        this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
                         });
 
-                if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
+                if (paymentOption.getOp().equals(DebeziumOperationCode.r)) { // TODO check with team
+                    throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
+                } else if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
                     // Map RTP delete message
                     rtpMessage = mapRTPDeleteMessage(paymentOption);
                 } else {
                     // Filter paymentOption message, throws AppException
                     filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
 
-                    PaymentOption valuesAfter = paymentOption.getAfter();
+                    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
                     log.debug(
                             "PaymentOption ingestion called at {} with payment option id {}",
                             LocalDateTime.now(),
                             valuesAfter.getId());
 
-                    PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId());
-                    if (poFromDBReplica == null || poFromDBReplica.getLastUpdateDate() < valuesAfter.getLastUpdateDate()) {
-                        acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
-                    }
+                    verifyDBReplicaSync(valuesAfter);
 
                     // Retrieve Transfer's data
                     List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
@@ -110,7 +112,7 @@ public class IngestionServiceImpl implements IngestionService {
                     hasValidTransferCategoriesOrElseThrow(transferList);
                     String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
 
-                    rtpMessage = mapRTPMessage(paymentOption, valuesAfter, remittanceInformation);
+                    rtpMessage = mapRTPMessage(paymentOption, remittanceInformation);
                 }
 
                 boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
@@ -125,6 +127,8 @@ public class IngestionServiceImpl implements IngestionService {
             } catch (AppException e) {
                 if (e.getAppErrorCode().equals(AppError.RTP_MESSAGE_NOT_SENT)) {
                     handleException(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+                } else if (e.getAppErrorCode().equals(AppError.DB_REPLICA_NOT_UPDATED)) {
+                    acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
                 } else {
                     acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
                 }
@@ -136,15 +140,25 @@ public class IngestionServiceImpl implements IngestionService {
         log.debug(
                 "PaymentOptions ingested at {}: total messages {}",
                 LocalDateTime.now(),
-                messages.size());
+                messageList.size());
     }
 
-    private String anonymizeRemittanceInformation(PaymentOption valuesAfter, List<Transfer> transferList) {
+    private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
+        PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.DB_REPLICA_NOT_UPDATED));
+        Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
+        LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
+        if (poFromDBReplica == null || poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
+            throw new AppException(AppError.DB_REPLICA_NOT_UPDATED);
+        }
+    }
+
+    private String anonymizeRemittanceInformation(PaymentOptionEvent valuesAfter, List<Transfer> transferList) {
         Transfer primaryTransfer = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP));
         return this.anonymizerClient.anonymize(primaryTransfer.getRemittanceInformation());
     }
 
-    private RTPMessage mapRTPMessage(DataCaptureMessage<PaymentOption> paymentOption, PaymentOption valuesAfter, String remittanceInformation) {
+    private RTPMessage mapRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption, String remittanceInformation) {
+        PaymentOptionEvent valuesAfter = paymentOption.getAfter();
         return RTPMessage.builder()
                 .id(valuesAfter.getId())
                 .operation(paymentOption.getOp())
@@ -163,7 +177,7 @@ public class IngestionServiceImpl implements IngestionService {
                 .build();
     }
 
-    private RTPMessage mapRTPDeleteMessage(DataCaptureMessage<PaymentOption> paymentOption) {
+    private RTPMessage mapRTPDeleteMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         return RTPMessage.builder()
                 .id(paymentOption.getBefore().getId())
                 .operation(paymentOption.getOp())
@@ -174,7 +188,7 @@ public class IngestionServiceImpl implements IngestionService {
     private void handleException(String errorMsg) {
         log.error(errorMsg);
 
-        new KafkaConfig().kafkaListenerErrorHandler();
+        new KafkaConfig().kafkaListenerErrorHandler(); // TODO
     }
 
     private void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {

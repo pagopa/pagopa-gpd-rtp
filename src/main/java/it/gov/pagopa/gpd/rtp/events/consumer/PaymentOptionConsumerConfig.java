@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 public class PaymentOptionConsumerConfig {
 
     @Bean
-    public Consumer<List<Message<String>>> ingestPaymentOption(IngestionService ingestionService) {
+    public Consumer<Message<List<String>>> ingestPaymentOption(IngestionService ingestionService) {
         return ingestionService::ingestPaymentOptions;
     }
 
