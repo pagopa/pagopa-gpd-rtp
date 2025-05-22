@@ -30,7 +30,7 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
 
   private static Message<RTPMessage> buildMessage(
           RTPMessage rtpMessage) {
-    return MessageBuilder.withPayload(rtpMessage).setHeader("id", rtpMessage.getId()).build();
+    return MessageBuilder.withPayload(rtpMessage).setHeader("payment_option_id", rtpMessage.getId()).build();
   }
 
   @Override
