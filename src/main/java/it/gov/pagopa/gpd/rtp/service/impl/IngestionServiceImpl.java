@@ -11,6 +11,7 @@ import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
+import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
@@ -39,7 +40,7 @@ public class IngestionServiceImpl implements IngestionService {
     private static final String LOG_PREFIX = "[GPDxRTP]";
 
     // TODO category with 9/.../ or remove from transfer's string?
-    private List<String> validTransferCategories;
+
 
     private final ObjectMapper objectMapper;
     private final RTPMessageProducer rtpMessageProducer;
@@ -52,12 +53,11 @@ public class IngestionServiceImpl implements IngestionService {
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
             RTPMessageProducer rtpMessageProducer,
-            @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories,
+
             FilterService filterService,
             TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
-        this.validTransferCategories = validTransferCategories;
         this.filterService = filterService;
         this.transferRepository = transferRepository;
         this.paymentOptionRepository = paymentOptionRepository;
@@ -78,42 +78,14 @@ public class IngestionServiceImpl implements IngestionService {
 
         // persist the item
         for (int i = 0; i < messageList.size(); i++) {
-            RTPMessage rtpMessage;
-
             try {
-                // TODO if snapshot message discard?
                 String msg = messageList.get(i);
 
                 DataCaptureMessage<PaymentOptionEvent> paymentOption =
                         this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
                         });
 
-                if (paymentOption.getOp().equals(DebeziumOperationCode.r)) { // TODO check with team
-                    throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
-                } else if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
-                    // Map RTP delete message
-                    rtpMessage = mapRTPDeleteMessage(paymentOption);
-                } else {
-                    // Filter paymentOption message, throws AppException
-                    filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
-
-                    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
-                    log.debug(
-                            "PaymentOption ingestion called at {} with payment option id {}",
-                            LocalDateTime.now(),
-                            valuesAfter.getId());
-
-                    verifyDBReplicaSync(valuesAfter);
-
-                    // Retrieve Transfer's data
-                    List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
-                    // Filter based on Transfer's categories, throws AppException
-                    hasValidTransferCategoriesOrElseThrow(transferList);
-                    String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
-
-                    rtpMessage = mapRTPMessage(paymentOption, remittanceInformation);
-                }
+                RTPMessage rtpMessage = elaborateRTPMessage(paymentOption);
 
                 boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
                 if (!response) {
@@ -143,6 +115,35 @@ public class IngestionServiceImpl implements IngestionService {
                 messageList.size());
     }
 
+    private RTPMessage elaborateRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
+            // Map RTP delete message
+            return mapRTPDeleteMessage(paymentOption);
+        } else if (paymentOption.getOp().equals(DebeziumOperationCode.c) || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
+            // Filter paymentOption message, throws AppException
+            this.filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
+
+            PaymentOptionEvent valuesAfter = paymentOption.getAfter();
+
+            log.debug(
+                    "PaymentOption ingestion called at {} with payment option id {}",
+                    LocalDateTime.now(),
+                    valuesAfter.getId());
+
+            verifyDBReplicaSync(valuesAfter);
+
+            // Retrieve Transfer's data
+            List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
+            // Filter based on Transfer's categories, throws AppException
+            this.filterService.hasValidTransferCategoriesOrElseThrow(transferList);
+            String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
+
+            return mapRTPMessage(paymentOption, remittanceInformation);
+        } else {
+            throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
+        }
+    }
+
     private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
         PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.DB_REPLICA_NOT_UPDATED));
         Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
@@ -161,7 +162,7 @@ public class IngestionServiceImpl implements IngestionService {
         PaymentOptionEvent valuesAfter = paymentOption.getAfter();
         return RTPMessage.builder()
                 .id(valuesAfter.getId())
-                .operation(paymentOption.getOp())
+                .operation(paymentOption.getOp().equals(DebeziumOperationCode.c) ? RTPOperationCode.CREATE : RTPOperationCode.UPDATE)
                 .timestamp(paymentOption.getTsMs())
                 .iuv(valuesAfter.getIuv())
                 .subject(remittanceInformation)
@@ -180,7 +181,7 @@ public class IngestionServiceImpl implements IngestionService {
     private RTPMessage mapRTPDeleteMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         return RTPMessage.builder()
                 .id(paymentOption.getBefore().getId())
-                .operation(paymentOption.getOp())
+                .operation(RTPOperationCode.DELETE)
                 .timestamp(paymentOption.getTsMs())
                 .build();
     }
@@ -189,12 +190,5 @@ public class IngestionServiceImpl implements IngestionService {
         log.error(errorMsg);
 
         new KafkaConfig().kafkaListenerErrorHandler(); // TODO
-    }
-
-    private void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {
-        // TODO all transfers must match?
-        if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
-            throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
-        }
     }
 }

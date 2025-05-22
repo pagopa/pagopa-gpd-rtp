@@ -2,7 +2,7 @@ package it.gov.pagopa.gpd.rtp.events.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
-import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
+import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,7 +11,7 @@ import lombok.Getter;
 public class RTPMessage {
 
     private Long id;
-    private DebeziumOperationCode operation;
+    private RTPOperationCode operation;
     private Long timestamp;
     private String iuv;
     private String subject;

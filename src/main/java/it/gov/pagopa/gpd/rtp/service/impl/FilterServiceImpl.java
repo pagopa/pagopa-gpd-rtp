@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.entity.redis.FlagOptIn;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
@@ -10,8 +11,10 @@ import it.gov.pagopa.gpd.rtp.repository.redis.FlagOptInRepository;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -19,11 +22,15 @@ import java.util.regex.Pattern;
 @Slf4j
 public class FilterServiceImpl implements FilterService {
 
+    private final List<String> validTransferCategories;
+
     private final FlagOptInRepository flagOptInRepository;
 
     @Autowired
-    public FilterServiceImpl(FlagOptInRepository flagOptInRepository) {
+    public FilterServiceImpl(FlagOptInRepository flagOptInRepository,
+                             @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories) {
         this.flagOptInRepository = flagOptInRepository;
+        this.validTransferCategories = validTransferCategories;
     }
 
     @Override
@@ -75,5 +82,13 @@ public class FilterServiceImpl implements FilterService {
         }
 
         return true;
+    }
+
+    @Override
+    public void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {
+        // TODO all transfers must match?
+        if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
+            throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
+        }
     }
 }
