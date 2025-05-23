@@ -48,10 +48,11 @@ public class FilterServiceImpl implements FilterService {
         }
 
         // Check flag opt-in
-        Optional<FlagOptIn> flagOptInOptional = flagOptInRepository.findById(valuesAfter.getFiscalCode());
+        // TODO uncomment when flag opt-in funcionality is ready
+      /*  Optional<FlagOptIn> flagOptInOptional = flagOptInRepository.findById(valuesAfter.getFiscalCode());
         if (flagOptInOptional.isEmpty() || !flagOptInOptional.get().isFlagOptIn()) {
             throw new AppException(AppError.EC_NOT_ENABLED_FOR_RTP);
-        }
+        }*/
         // TODO se Flag rtp_cache_created_at è null o troppo vecchio (+2 days) chiama l’api RTP per aggiornare la cache (vedi paragrafo su update cache)
     }
 

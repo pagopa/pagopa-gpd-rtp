@@ -136,7 +136,7 @@ public class IngestionServiceImpl implements IngestionService {
             List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
             // Filter based on Transfer's categories, throws AppException
             this.filterService.hasValidTransferCategoriesOrElseThrow(transferList);
-            String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
+            String remittanceInformation = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP)).getRemittanceInformation(); // TODO uncomment when ready anonymizeRemittanceInformation(valuesAfter, transferList);
 
             return mapRTPMessage(paymentOption, remittanceInformation);
         } else {
