@@ -16,7 +16,8 @@ public enum AppError {
     PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Payment position status not valid for RTP", "Payment option filtered by paymentPositionStatus"),
     TAX_CODE_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Tax code not valid for RTP", "Payment option filtered by tax code"),
     EC_NOT_ENABLED_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Creditor Institution not enabled for RTP", "Payment option filtered because flag opt-in for Creditor Institution is not enabled"),
-    TRANSFER_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Transfers' category not valid for RTP", "Payment option filtered by transfer category"),
+    TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Transfers' category not valid for RTP", "Payment option filtered by transfer category"),
+    TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING(HttpStatus.INTERNAL_SERVER_ERROR, "Transfers' total amount not matching", "The transfer's combined total amount is not matching with the payment option amount"),
     CDC_OPERATION_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "CDC's operation not valid for RTP", "The CDC's type of operation is not valid for RTP"),
     DB_REPLICA_NOT_UPDATED(HttpStatus.INTERNAL_SERVER_ERROR, "DB replica not updated", "Postgres' DB replica is not in sync with primary DB"),
     UNKNOWN(null, null, null);

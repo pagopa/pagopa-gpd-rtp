@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
-import it.gov.pagopa.gpd.rtp.config.KafkaConfig;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
@@ -21,7 +20,6 @@ import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -95,17 +93,20 @@ public class IngestionServiceImpl implements IngestionService {
                 acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
 
             } catch (JsonProcessingException e) {
-                handleException(String.format("%s PaymentOption ingestion error JsonProcessingException at %s", LOG_PREFIX, LocalDateTime.now()));
+                log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
+                acknowledgment.acknowledge(i);
+                // TODO send to dead letter
             } catch (AppException e) {
                 if (e.getAppErrorCode().equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-                    handleException(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+                    handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
                 } else if (e.getAppErrorCode().equals(AppError.DB_REPLICA_NOT_UPDATED)) {
                     acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
+                    // TODO save on redis po.id & after 100(?) retries send to dead letter
                 } else {
                     acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
                 }
             } catch (Exception e) {
-                handleException(String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+                handleException(AppError.INTERNAL_SERVER_ERROR, String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
             }
         }
 
@@ -135,8 +136,8 @@ public class IngestionServiceImpl implements IngestionService {
             // Retrieve Transfer's data
             List<Transfer> transferList = this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
             // Filter based on Transfer's categories, throws AppException
-            this.filterService.hasValidTransferCategoriesOrElseThrow(transferList);
-            String remittanceInformation = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP)).getRemittanceInformation(); // TODO uncomment when ready anonymizeRemittanceInformation(valuesAfter, transferList);
+            this.filterService.hasValidTransferCategoriesOrElseThrow(valuesAfter, transferList);
+            String remittanceInformation = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP)).getRemittanceInformation(); // TODO uncomment when ready anonymizeRemittanceInformation(valuesAfter, transferList);
 
             return mapRTPMessage(paymentOption, remittanceInformation);
         } else {
@@ -154,7 +155,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private String anonymizeRemittanceInformation(PaymentOptionEvent valuesAfter, List<Transfer> transferList) {
-        Transfer primaryTransfer = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP));
+        Transfer primaryTransfer = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
         return this.anonymizerClient.anonymize(primaryTransfer.getRemittanceInformation());
     }
 
@@ -186,9 +187,9 @@ public class IngestionServiceImpl implements IngestionService {
                 .build();
     }
 
-    private void handleException(String errorMsg) {
+    private void handleException(AppError e, String errorMsg) {
         log.error(errorMsg);
 
-        new KafkaConfig().kafkaListenerErrorHandler(); // TODO
+        throw new AppException(e); // TODO
     }
 }

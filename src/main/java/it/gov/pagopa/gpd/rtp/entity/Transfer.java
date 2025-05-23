@@ -23,4 +23,6 @@ public class Transfer {
 
     @Column(name = "organization_fiscal_code")
     private String organizationFiscalCode;
+
+    private long amount;
 }

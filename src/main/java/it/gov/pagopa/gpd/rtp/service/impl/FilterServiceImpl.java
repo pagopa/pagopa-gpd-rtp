@@ -86,10 +86,14 @@ public class FilterServiceImpl implements FilterService {
     }
 
     @Override
-    public void hasValidTransferCategoriesOrElseThrow(List<Transfer> transferList) {
+    public void hasValidTransferCategoriesOrElseThrow(PaymentOptionEvent paymentOption, List<Transfer> transferList) {
         // TODO all transfers must match?
         if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
-            throw new AppException(AppError.TRANSFER_NOT_VALID_FOR_RTP);
+            throw new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP);
+        }
+        long totalTransfersAmount = transferList.stream().reduce(0L, (subtotal, element) -> subtotal + element.getAmount(), Long::sum);
+        if(totalTransfersAmount != paymentOption.getAmount()){
+            throw new AppException(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
         }
     }
 }
