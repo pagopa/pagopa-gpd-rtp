@@ -75,6 +75,11 @@ microservice-chart:
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
+    EVENT_HUB_RTP_NAME: "rtp-events"
+    EVENT_HUB_RTP_SENDER: "rtp-events-tx"
+    KAFKA_BROKER: "pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093"
+    GPD_DB_URL: "jdbc:postgresql://gpd-db.d.internal.postgresql.pagopa.it:6432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
+    REDIS_PORT: "6380"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
@@ -86,6 +91,12 @@ microservice-chart:
     # required
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'app-insight-connection-string'
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
+    EVENT_HUB_RTP_CONN_STRING: "ehub-u-tx-rtp-connection-string"
+    EVENT_HUB_PAYMENT_OPTION_INPUT_CONN_STRING: "payment-option-topic-input-conn-string"
+    GPD_DB_USERNAME: "db-apd-user-name"
+    GPD_DB_PASSWORD: "db-apd-user-password"
+    REDIS_PWD: "redis-password"
+    REDIS_HOST: "redis-hostname"
   keyvault:
     name: "pagopa-u-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
