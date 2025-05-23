@@ -29,16 +29,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @Slf4j
 public class IngestionServiceImpl implements IngestionService {
     private static final String LOG_PREFIX = "[GPDxRTP]";
-
-    // TODO category with 9/.../ or remove from transfer's string?
-
 
     private final ObjectMapper objectMapper;
     private final RTPMessageProducer rtpMessageProducer;
@@ -62,59 +58,48 @@ public class IngestionServiceImpl implements IngestionService {
         this.anonymizerClient = anonymizerClient;
     }
 
-    public void ingestPaymentOptions(Message<List<String>> messages) {
-        List<String> messageList = messages.getPayload();
-
-        Acknowledgment acknowledgment = messages.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-
+    public void ingestPaymentOption(Message<String> message) {
         log.debug(
-                "PaymentOption ingestion called at {} for payment options with events list size {}",
+                "PaymentOption ingestion called at {} for payment options with message id {}",
                 LocalDateTime.now(),
-                messageList.size());
+                message.getHeaders().getId());
 
-        messageList.removeAll(Collections.singleton(null));
+        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
 
         // persist the item
-        for (int i = 0; i < messageList.size(); i++) {
-            String msg = messageList.get(i);
+        String msg = message.getPayload();
 
-            try {
-                DataCaptureMessage<PaymentOptionEvent> paymentOption =
-                        this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
-                        });
+        try {
+            DataCaptureMessage<PaymentOptionEvent> paymentOption =
+                    this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
+                    });
 
-                RTPMessage rtpMessage = elaborateRTPMessage(paymentOption);
+            RTPMessage rtpMessage = elaborateRTPMessage(paymentOption);
 
-                boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-                if (!response) {
-                    throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
-                }
-                log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
-                acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
-
-            } catch (JsonProcessingException e) {
-                log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
-                acknowledgment.acknowledge(i);
-                // TODO send to dead letter
-            } catch (AppException e) {
-                AppError appErrorCode = e.getAppErrorCode();
-                if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-                    handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
-                } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
-                    acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
-                    // TODO save on redis po.id & after 100(?) retries send to dead letter?
-                } else {
-                    acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
-                }
-            } catch (Exception e) {
-                handleException(AppError.INTERNAL_SERVER_ERROR, String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+            boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
+            if (!response) {
+                throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
             }
-        }
+            log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+            acknowledgment.acknowledge();
 
-        log.debug(
-                "PaymentOptions ingested at {}: total messages {}",
-                LocalDateTime.now(),
-                messageList.size());
+        } catch (JsonProcessingException e) {
+            log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
+            acknowledgment.acknowledge();
+            // TODO send to dead letter
+        } catch (AppException e) {
+            AppError appErrorCode = e.getAppErrorCode();
+            if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
+                handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+            } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
+                acknowledgment.nack(Duration.ofSeconds(1));
+                // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
+            } else {
+                acknowledgment.acknowledge();
+            }
+        } catch (Exception e) {
+            handleException(AppError.INTERNAL_SERVER_ERROR, String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+        }
     }
 
     private RTPMessage elaborateRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
@@ -191,6 +176,6 @@ public class IngestionServiceImpl implements IngestionService {
     private void handleException(AppError e, String errorMsg) {
         log.error(errorMsg);
 
-        throw new AppException(e); // TODO
+        throw new AppException(e);
     }
 }
