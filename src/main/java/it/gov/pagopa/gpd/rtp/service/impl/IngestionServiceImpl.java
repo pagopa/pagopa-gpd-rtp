@@ -97,11 +97,12 @@ public class IngestionServiceImpl implements IngestionService {
                 acknowledgment.acknowledge(i);
                 // TODO send to dead letter
             } catch (AppException e) {
-                if (e.getAppErrorCode().equals(AppError.RTP_MESSAGE_NOT_SENT)) {
+                AppError appErrorCode = e.getAppErrorCode();
+                if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
                     handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
-                } else if (e.getAppErrorCode().equals(AppError.DB_REPLICA_NOT_UPDATED)) {
+                } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
                     acknowledgment.nack(i, Duration.ofSeconds(1)); // TODO avoid loop
-                    // TODO save on redis po.id & after 100(?) retries send to dead letter
+                    // TODO save on redis po.id & after 100(?) retries send to dead letter?
                 } else {
                     acknowledgment.acknowledge(i); // TODO verify ack index if logic of message retry works with nack
                 }
