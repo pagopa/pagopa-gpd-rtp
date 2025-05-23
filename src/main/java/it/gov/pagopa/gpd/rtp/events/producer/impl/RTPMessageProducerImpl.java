@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,8 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
 
   private static Message<RTPMessage> buildMessage(
           RTPMessage rtpMessage) {
-    return MessageBuilder.withPayload(rtpMessage).setHeader("payment_option_id", rtpMessage.getId()).build();
+    return MessageBuilder.withPayload(rtpMessage).setHeader(KafkaHeaders.KEY, rtpMessage.getId().toString())
+            .build();
   }
 
   @Override
