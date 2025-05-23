@@ -120,10 +120,7 @@
       <artifactId>spring-cloud-starter-stream-kafka</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.azure.spring</groupId>
-      <artifactId>spring-cloud-azure-stream-binder-eventhubs</artifactId>
-    </dependency>
+
 
     <!-- Jackson -->
     <dependency>
