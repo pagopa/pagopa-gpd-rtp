@@ -13,7 +13,7 @@ public class PaymentOptionEvent {
     @JsonProperty("payment_position_id")
     private int paymentPositionId;
 
-    private int amount;
+    private long amount;
     private String description;
 
     @JsonProperty("due_date")

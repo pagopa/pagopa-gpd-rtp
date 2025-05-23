@@ -18,7 +18,7 @@ public class PaymentOption {
     @Column(name = "payment_position_id")
     private int paymentPositionId;
 
-    private int amount;
+    private long amount;
     private String description;
 
     @JsonProperty("due_date")

@@ -23,7 +23,7 @@ public class RTPMessage {
     private String nav;
     @JsonProperty("due_date")
     private Long dueDate;
-    private int amount;
+    private long amount;
     private PaymentPositionStatus status;
     @JsonProperty("psp_code")
     private String pspCode;
