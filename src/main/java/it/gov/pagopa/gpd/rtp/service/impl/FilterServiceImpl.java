@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.rtp.service.impl;
 
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
-import it.gov.pagopa.gpd.rtp.entity.redis.FlagOptIn;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
@@ -35,15 +33,14 @@ public class FilterServiceImpl implements FilterService {
 
     @Override
     public void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-        PaymentOptionEvent valuesBefore = paymentOption.getBefore();
         PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
         // Check payment position status
-        if (!verifyPaymentPositionStatus(valuesBefore, valuesAfter))
+        if (!verifyPaymentPositionStatus(valuesAfter))
             throw new AppException(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP);
 
         // Debtor Tax Code Validation
-        if (valuesAfter == null || valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()) || isInvalidFiscalCode(valuesAfter.getFiscalCode())) {
+        if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()) || isInvalidFiscalCode(valuesAfter.getFiscalCode())) {
             throw new AppException(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
         }
 
@@ -56,20 +53,12 @@ public class FilterServiceImpl implements FilterService {
         // TODO se Flag rtp_cache_created_at è null o troppo vecchio (+2 days) chiama l’api RTP per aggiornare la cache (vedi paragrafo su update cache)
     }
 
-    private static boolean verifyPaymentPositionStatus(PaymentOptionEvent valuesBefore, PaymentOptionEvent valuesAfter) {
-        if (valuesBefore != null && (
-                valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
-                        valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID)
-        )) {
-            return true;
-        }
-        if (valuesAfter != null && (
+    private static boolean verifyPaymentPositionStatus(PaymentOptionEvent valuesAfter) {
+        return valuesAfter != null && (
                 valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
-                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID)
-        )) {
-            return true;
-        }
-        return false;
+                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID) ||
+                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PAID) ||
+                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.INVALID));
     }
 
     private boolean isInvalidFiscalCode(String fiscalCode) {
