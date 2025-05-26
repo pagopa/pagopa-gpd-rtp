@@ -21,6 +21,7 @@ public enum AppError {
     TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING(HttpStatus.INTERNAL_SERVER_ERROR, "Transfers' total amount not matching", "The transfer's combined total amount is not matching with the payment option amount"),
     CDC_OPERATION_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "CDC's operation not valid for RTP", "The CDC's type of operation is not valid for RTP"),
     DB_REPLICA_NOT_UPDATED(HttpStatus.INTERNAL_SERVER_ERROR, "DB replica not updated", "Postgres' DB replica is not in sync with primary DB"),
+    PAYMENT_OPTION_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "Payment option not found", "The payment option is not present on the DB"),
     UNKNOWN(null, null, null);
 
     public final HttpStatus httpStatus;

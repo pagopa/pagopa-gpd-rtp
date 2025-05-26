@@ -68,6 +68,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // Discard null messages
         if(message.getHeaders().getId() == null){
+            log.debug("Null message ignored");
             acknowledgment.acknowledge();
             return;
         }
@@ -144,10 +145,13 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
-        PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.DB_REPLICA_NOT_UPDATED));
+        PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.PAYMENT_OPTION_NOT_FOUND));
         Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
         LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
-        if (poFromDBReplica == null || poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
+        if(poFromDBReplica == null){
+            throw new AppException(AppError.PAYMENT_OPTION_NOT_FOUND);
+        }
+        if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
             throw new AppException(AppError.DB_REPLICA_NOT_UPDATED);
         }
     }
