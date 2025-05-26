@@ -58,7 +58,7 @@ public class IngestionServiceImpl implements IngestionService {
         this.anonymizerClient = anonymizerClient;
     }
 
-    public void ingestPaymentOption(Message<String> message) {
+    public void createRTPMessageOrElseThrow(Message<String> message) {
         log.debug(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
                 LocalDateTime.now(),
@@ -90,7 +90,8 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (AppException e) {
             AppError appErrorCode = e.getAppErrorCode();
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-                handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+                log.error(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+                throw e;
             } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
                 acknowledgment.nack(Duration.ofSeconds(1));
                 // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
@@ -98,7 +99,8 @@ public class IngestionServiceImpl implements IngestionService {
                 acknowledgment.acknowledge();
             }
         } catch (Exception e) {
-            handleException(AppError.INTERNAL_SERVER_ERROR, String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+            log.error(String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+            throw e;
         }
     }
 
@@ -106,7 +108,8 @@ public class IngestionServiceImpl implements IngestionService {
         if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
             // Map RTP delete message
             return mapRTPDeleteMessage(paymentOption);
-        } else if (paymentOption.getOp().equals(DebeziumOperationCode.c) || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
+        }
+        if (paymentOption.getOp().equals(DebeziumOperationCode.c) || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
             // Filter paymentOption message, throws AppException
             this.filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
 
@@ -126,9 +129,8 @@ public class IngestionServiceImpl implements IngestionService {
             String remittanceInformation = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP)).getRemittanceInformation(); // TODO uncomment when ready anonymizeRemittanceInformation(valuesAfter, transferList);
 
             return mapRTPMessage(paymentOption, remittanceInformation);
-        } else {
-            throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
         }
+        throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
     }
 
     private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
@@ -171,11 +173,5 @@ public class IngestionServiceImpl implements IngestionService {
                 .operation(RTPOperationCode.DELETE)
                 .timestamp(paymentOption.getTsMs())
                 .build();
-    }
-
-    private void handleException(AppError e, String errorMsg) {
-        log.error(errorMsg);
-
-        throw new AppException(e);
     }
 }

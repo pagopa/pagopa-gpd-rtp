@@ -12,6 +12,6 @@ public interface IngestionService {
      *
      * @param message PaymentOption messages
      */
-    void ingestPaymentOption(Message<String> message);
+    void createRTPMessageOrElseThrow(Message<String> message);
 
 }
