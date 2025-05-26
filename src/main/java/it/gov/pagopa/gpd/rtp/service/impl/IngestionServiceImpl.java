@@ -63,14 +63,18 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     public void createRTPMessageOrElseThrow(Message<String> message) {
+        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+
+        // Discard null messages
+        if(message.getHeaders().getId() == null){
+            acknowledgment.acknowledge();
+            return;
+        }
+
         log.debug(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
                 LocalDateTime.now(),
                 message.getHeaders().getId());
-
-        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-
-        // persist the item
         String msg = message.getPayload();
 
         try {
@@ -90,21 +94,22 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (JsonProcessingException e) {
             log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
-            this.deadLetterService.sendToDeadLetter(new ErrorMessage(e, message));
+            this.deadLetterService.sendToDeadLetter(new ErrorMessage(new AppException(AppError.JSON_NOT_PROCESSABLE), message));
         } catch (AppException e) {
             AppError appErrorCode = e.getAppErrorCode();
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
                 log.error(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
                 throw e;
-            } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
+            } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
                 acknowledgment.nack(Duration.ofSeconds(1));
                 // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
             } else {
+                log.debug(e.getMessage());
                 acknowledgment.acknowledge();
             }
         } catch (Exception e) {
             log.error(String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
-            throw e;
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR);
         }
     }
 
