@@ -63,7 +63,7 @@ public class IngestionServiceImpl implements IngestionService {
         this.deadLetterService = deadLetterService;
     }
 
-    public void createRTPMessageOrElseThrow(Message<String> message) {
+    public void ingestPaymentOption(Message<String> message) {
         Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
 
         // Discard null messages
@@ -84,7 +84,7 @@ public class IngestionServiceImpl implements IngestionService {
                     this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
                     });
 
-            RTPMessage rtpMessage = elaborateRTPMessage(paymentOption);
+            RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
             if (!response) {
@@ -115,7 +115,7 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    private RTPMessage elaborateRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    private RTPMessage createRTPMessageOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
             // Map RTP delete message
             return mapRTPDeleteMessage(paymentOption);

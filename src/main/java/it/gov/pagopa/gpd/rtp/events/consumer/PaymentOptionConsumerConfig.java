@@ -16,7 +16,7 @@ public class PaymentOptionConsumerConfig {
 
     @Bean
     public Consumer<Message<String>> ingestPaymentOption(IngestionService ingestionService) {
-        return ingestionService::createRTPMessageOrElseThrow;
+        return ingestionService::ingestPaymentOption;
     }
 
     @Bean
