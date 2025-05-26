@@ -14,17 +14,16 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 public class BlobStorageClientImpl implements BlobStorageClient {
-
-    @Value("${dead.letter.storage.container.name}")
-    private String containerName;
-
+    private final String containerName;
     private static final String FILE_EXTENSION = ".json";
-
     private final BlobServiceClient blobServiceClient;
 
     @Autowired
-    BlobStorageClientImpl(BlobServiceClient blobServiceClient) {
+    BlobStorageClientImpl(
+            BlobServiceClient blobServiceClient,
+            @Value("${dead.letter.storage.container.name}") String containerName) {
         this.blobServiceClient = blobServiceClient;
+        this.containerName = containerName;
     }
 
     @Override
