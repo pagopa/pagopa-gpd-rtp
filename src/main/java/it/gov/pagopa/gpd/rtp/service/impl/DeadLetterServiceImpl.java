@@ -52,7 +52,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                 Instant.now());
 
         String stringJSON = String.format(
-                "{\"id\":%s, \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":%s}",
+                "{\"id\":%s, \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":\"%s\"}",
                 messageId,
                 appException.getMessage(),
                 appException.getAppErrorCode(),

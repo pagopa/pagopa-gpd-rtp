@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
@@ -94,7 +95,7 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (JsonProcessingException e) {
             log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
-            this.deadLetterService.sendToDeadLetter(new ErrorMessage(new AppException(AppError.JSON_NOT_PROCESSABLE), message));
+            this.deadLetterService.sendToDeadLetter(new ErrorMessage(new MessageHandlingException(message, new AppException(AppError.JSON_NOT_PROCESSABLE)), message));
         } catch (AppException e) {
             AppError appErrorCode = e.getAppErrorCode();
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
