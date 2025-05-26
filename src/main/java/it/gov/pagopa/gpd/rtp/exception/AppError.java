@@ -12,6 +12,7 @@ public enum AppError {
     FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden", "This method is forbidden"),
     RESPONSE_NOT_READABLE(
             HttpStatus.BAD_GATEWAY, "Response Not Readable", "The response body is not readable"),
+    JSON_NOT_PROCESSABLE(HttpStatus.INTERNAL_SERVER_ERROR, "JSON not processable", "Payment option message is not a processable JSON"),
     RTP_MESSAGE_NOT_SENT(HttpStatus.INTERNAL_SERVER_ERROR, "RTP message not sent", "The RTP message has not been sent to eventhub"),
     PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Payment position status not valid for RTP", "Payment option filtered by paymentPositionStatus"),
     TAX_CODE_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "Tax code not valid for RTP", "Payment option filtered by tax code"),
