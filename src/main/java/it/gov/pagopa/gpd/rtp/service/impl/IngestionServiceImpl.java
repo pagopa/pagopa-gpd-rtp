@@ -16,6 +16,7 @@ import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
+import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -42,6 +44,7 @@ public class IngestionServiceImpl implements IngestionService {
     private final TransferRepository transferRepository;
     private final PaymentOptionRepository paymentOptionRepository;
     private final AnonymizerClient anonymizerClient;
+    private final DeadLetterService deadLetterService;
 
     @Autowired
     public IngestionServiceImpl(
@@ -49,13 +52,14 @@ public class IngestionServiceImpl implements IngestionService {
             RTPMessageProducer rtpMessageProducer,
 
             FilterService filterService,
-            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient) {
+            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient, DeadLetterService deadLetterService) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.filterService = filterService;
         this.transferRepository = transferRepository;
         this.paymentOptionRepository = paymentOptionRepository;
         this.anonymizerClient = anonymizerClient;
+        this.deadLetterService = deadLetterService;
     }
 
     public void createRTPMessageOrElseThrow(Message<String> message) {
@@ -86,7 +90,7 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (JsonProcessingException e) {
             log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
-            // TODO send to dead letter
+            this.deadLetterService.sendToDeadLetter(new ErrorMessage(e, message));
         } catch (AppException e) {
             AppError appErrorCode = e.getAppErrorCode();
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
