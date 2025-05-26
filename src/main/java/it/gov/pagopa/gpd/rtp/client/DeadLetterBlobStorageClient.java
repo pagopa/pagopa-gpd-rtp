@@ -1,15 +1,12 @@
 package it.gov.pagopa.gpd.rtp.client;
 
-import org.springframework.messaging.support.ErrorMessage;
-
 public interface DeadLetterBlobStorageClient {
 
     /**
      * Handles saving the ErrorMessage JSON to the blob storage
      *
      * @param errorMessage errorMessage
-     * @param paymentOptionId Filename to save the JSON with
-     * @return boolean
+     * @param fileName Filename to save the JSON with
      */
-    boolean saveErrorMessageToBlobStorage(ErrorMessage errorMessage, String paymentOptionId);
+    void saveErrorMessageToBlobStorage(String errorMessage, String fileName);
 }

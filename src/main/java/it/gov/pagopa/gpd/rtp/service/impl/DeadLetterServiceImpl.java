@@ -1,14 +1,17 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
 import it.gov.pagopa.gpd.rtp.client.DeadLetterBlobStorageClient;
+import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -16,22 +19,44 @@ public class DeadLetterServiceImpl implements DeadLetterService {
 
     private final DeadLetterBlobStorageClient deadLetterBlobStorageClient;
 
-    DeadLetterServiceImpl(DeadLetterBlobStorageClient deadLetterBlobStorageClient){
+    DeadLetterServiceImpl(DeadLetterBlobStorageClient deadLetterBlobStorageClient) {
         this.deadLetterBlobStorageClient = deadLetterBlobStorageClient;
     }
 
     @Override
-    public void sendToDeadLetter(ErrorMessage errorMessage){
-        Acknowledgment acknowledgment = errorMessage.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+    public void sendToDeadLetter(ErrorMessage errorMessage) {
+        LocalDateTime now = LocalDateTime.now();
+        AppException appException = (AppException) errorMessage.getPayload().getCause();
 
-        boolean response = this.deadLetterBlobStorageClient.saveErrorMessageToBlobStorage(errorMessage, "test_id"); // TODO
+        Message<String> originalMessage = (Message<String>) errorMessage.getOriginalMessage();
 
-        if (acknowledgment != null) {
-            if(response){
-                acknowledgment.acknowledge();
-            } else {
-                acknowledgment.nack(Duration.ofSeconds(1));
-            }
+        String messageId;
+        String originalMessagePayload;
+        try {
+            messageId = new JSONObject(new String((byte[]) originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY))).getString("id");
+        } catch (Exception e) {
+            messageId = errorMessage.getHeaders().getId().toString();
         }
+        try {
+            originalMessagePayload = new String((byte[]) errorMessage.getOriginalMessage().getPayload());
+        } catch (Exception e) {
+            originalMessagePayload = "[ERROR] Retrieving original message payload";
+        }
+        String filePath = String.format("%s/%s/%s/%s/%s/%s_%s",
+                now.getYear(),
+                now.getMonthValue(),
+                now.getDayOfMonth(),
+                now.getHour(),
+                messageId,
+                appException.getAppErrorCode(),
+                Instant.now());
+
+        String stringJSON = String.format(
+                "{\"id\":%s, \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":%s}",
+                messageId,
+                appException.getMessage(),
+                appException.getAppErrorCode(),
+                originalMessagePayload);
+        this.deadLetterBlobStorageClient.saveErrorMessageToBlobStorage(stringJSON, filePath);
     }
 }
