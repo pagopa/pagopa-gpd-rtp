@@ -51,9 +51,11 @@ public class IngestionServiceImpl implements IngestionService {
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
             RTPMessageProducer rtpMessageProducer,
-
             FilterService filterService,
-            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient, DeadLetterService deadLetterService) {
+            TransferRepository transferRepository,
+            PaymentOptionRepository paymentOptionRepository,
+            AnonymizerClient anonymizerClient,
+            DeadLetterService deadLetterService) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.filterService = filterService;
@@ -68,7 +70,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // Discard null messages
         if(message.getHeaders().getId() == null){
-            log.debug("Null message ignored");
+            log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
             return;
         }
@@ -87,7 +89,7 @@ public class IngestionServiceImpl implements IngestionService {
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-            if (!response) {
+            if (response) {
                 throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
             }
             log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
@@ -102,15 +104,16 @@ public class IngestionServiceImpl implements IngestionService {
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
                 log.error(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
                 throw e;
-            } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
+            }
+            if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
                 acknowledgment.nack(Duration.ofSeconds(1));
                 // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
             } else {
-                log.debug(e.getMessage());
+                log.debug("{} AppException error at {}: {}", LOG_PREFIX, LocalDateTime.now(), e.getMessage());
                 acknowledgment.acknowledge();
             }
         } catch (Exception e) {
-            log.error(String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+            log.error("{} PaymentOption ingestion error Generic exception at {}", LOG_PREFIX, LocalDateTime.now());
             throw new AppException(AppError.INTERNAL_SERVER_ERROR);
         }
     }

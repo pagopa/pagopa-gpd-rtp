@@ -3,8 +3,7 @@ package it.gov.pagopa.gpd.rtp.client.impl;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
-import it.gov.pagopa.gpd.rtp.client.DeadLetterBlobStorageClient;
+import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 @Service
-public class DeadLetterBlobStorageClientImpl implements DeadLetterBlobStorageClient {
+public class BlobStorageClientImpl implements BlobStorageClient {
 
     @Value("${dead.letter.storage.container.name}")
     private String containerName;
@@ -24,19 +23,13 @@ public class DeadLetterBlobStorageClientImpl implements DeadLetterBlobStorageCli
     private final BlobServiceClient blobServiceClient;
 
     @Autowired
-    DeadLetterBlobStorageClientImpl(
-            @Value("${dead.letter.storage.account.connection.string}") String connectionString,
-            @Value("${dead.letter.storage.account.endpoint}") String storageAccount
-    ) {
-        this.blobServiceClient = new BlobServiceClientBuilder()
-                .endpoint(storageAccount)
-                .connectionString(connectionString)
-                .buildClient();
+    BlobStorageClientImpl(BlobServiceClient blobServiceClient) {
+        this.blobServiceClient = blobServiceClient;
     }
 
     @Override
-    public void saveErrorMessageToBlobStorage(String errorMessage, String fileName) {
-        InputStream file = new ByteArrayInputStream(errorMessage.getBytes(StandardCharsets.UTF_8));
+    public void saveStringJsonToBlobStorage(String stringJSON, String fileName) {
+        InputStream file = new ByteArrayInputStream(stringJSON.getBytes(StandardCharsets.UTF_8));
 
         //Create the container and return a container client object
         BlobContainerClient blobContainerClient = this.blobServiceClient.getBlobContainerClient(containerName);

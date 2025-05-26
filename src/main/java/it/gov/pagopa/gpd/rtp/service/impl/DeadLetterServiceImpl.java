@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import it.gov.pagopa.gpd.rtp.client.DeadLetterBlobStorageClient;
+import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 @Slf4j
 public class DeadLetterServiceImpl implements DeadLetterService {
 
-    private final DeadLetterBlobStorageClient deadLetterBlobStorageClient;
+    private final BlobStorageClient blobStorageClient;
 
-    DeadLetterServiceImpl(DeadLetterBlobStorageClient deadLetterBlobStorageClient) {
-        this.deadLetterBlobStorageClient = deadLetterBlobStorageClient;
+    DeadLetterServiceImpl(BlobStorageClient blobStorageClient) {
+        this.blobStorageClient = blobStorageClient;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         try {
             originalMessagePayload = new String((byte[]) errorMessage.getOriginalMessage().getPayload());
         } catch (Exception e) {
-            originalMessagePayload = "[ERROR] Retrieving original message payload";
+            originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
         }
         String filePath = String.format("%s/%s/%s/%s/%s/%s_%s",
                 now.getYear(),
@@ -52,11 +52,11 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                 Instant.now());
 
         String stringJSON = String.format(
-                "{\"id\":%s, \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":\"%s\"}",
+                "{\"id\":%s, \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":%s}",
                 messageId,
                 appException.getMessage(),
                 appException.getAppErrorCode(),
                 originalMessagePayload);
-        this.deadLetterBlobStorageClient.saveErrorMessageToBlobStorage(stringJSON, filePath);
+        this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
     }
 }
