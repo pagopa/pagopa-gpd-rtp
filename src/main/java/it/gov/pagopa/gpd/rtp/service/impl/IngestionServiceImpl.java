@@ -16,6 +16,7 @@ import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
+import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandlingException;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -42,31 +45,40 @@ public class IngestionServiceImpl implements IngestionService {
     private final TransferRepository transferRepository;
     private final PaymentOptionRepository paymentOptionRepository;
     private final AnonymizerClient anonymizerClient;
+    private final DeadLetterService deadLetterService;
 
     @Autowired
     public IngestionServiceImpl(
             ObjectMapper objectMapper,
             RTPMessageProducer rtpMessageProducer,
-
             FilterService filterService,
-            TransferRepository transferRepository, PaymentOptionRepository paymentOptionRepository, AnonymizerClient anonymizerClient) {
+            TransferRepository transferRepository,
+            PaymentOptionRepository paymentOptionRepository,
+            AnonymizerClient anonymizerClient,
+            DeadLetterService deadLetterService) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.filterService = filterService;
         this.transferRepository = transferRepository;
         this.paymentOptionRepository = paymentOptionRepository;
         this.anonymizerClient = anonymizerClient;
+        this.deadLetterService = deadLetterService;
     }
 
     public void ingestPaymentOption(Message<String> message) {
+        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+
+        // Discard null messages
+        if(message.getHeaders().getId() == null){
+            log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
+            acknowledgment.acknowledge();
+            return;
+        }
+
         log.debug(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
                 LocalDateTime.now(),
                 message.getHeaders().getId());
-
-        Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-
-        // persist the item
         String msg = message.getPayload();
 
         try {
@@ -74,7 +86,7 @@ public class IngestionServiceImpl implements IngestionService {
                     this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
                     });
 
-            RTPMessage rtpMessage = elaborateRTPMessage(paymentOption);
+            RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
             if (!response) {
@@ -86,27 +98,32 @@ public class IngestionServiceImpl implements IngestionService {
         } catch (JsonProcessingException e) {
             log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
-            // TODO send to dead letter
+            this.deadLetterService.sendToDeadLetter(new ErrorMessage(new MessageHandlingException(message, new AppException(AppError.JSON_NOT_PROCESSABLE)), message));
         } catch (AppException e) {
             AppError appErrorCode = e.getAppErrorCode();
             if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-                handleException(e.getAppErrorCode(), String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
-            } else if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED) || appErrorCode.equals(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING)) {
+                log.error(String.format("%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+                throw e;
+            }
+            if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
                 acknowledgment.nack(Duration.ofSeconds(1));
                 // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
             } else {
+                log.debug("{} AppException error at {}: {}", LOG_PREFIX, LocalDateTime.now(), e.getMessage());
                 acknowledgment.acknowledge();
             }
         } catch (Exception e) {
-            handleException(AppError.INTERNAL_SERVER_ERROR, String.format("%s PaymentOption ingestion error Generic exception at %s", LOG_PREFIX, LocalDateTime.now()));
+            log.error("{} PaymentOption ingestion error Generic exception at {}", LOG_PREFIX, LocalDateTime.now());
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private RTPMessage elaborateRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    private RTPMessage createRTPMessageOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
             // Map RTP delete message
             return mapRTPDeleteMessage(paymentOption);
-        } else if (paymentOption.getOp().equals(DebeziumOperationCode.c) || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
+        }
+        if (paymentOption.getOp().equals(DebeziumOperationCode.c) || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
             // Filter paymentOption message, throws AppException
             this.filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
 
@@ -126,16 +143,18 @@ public class IngestionServiceImpl implements IngestionService {
             String remittanceInformation = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP)).getRemittanceInformation(); // TODO uncomment when ready anonymizeRemittanceInformation(valuesAfter, transferList);
 
             return mapRTPMessage(paymentOption, remittanceInformation);
-        } else {
-            throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
         }
+        throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
     }
 
     private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
-        PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.DB_REPLICA_NOT_UPDATED));
+        PaymentOption poFromDBReplica = paymentOptionRepository.findById(valuesAfter.getId()).orElseThrow(() -> new AppException(AppError.PAYMENT_OPTION_NOT_FOUND));
         Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
         LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
-        if (poFromDBReplica == null || poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
+        if(poFromDBReplica == null){
+            throw new AppException(AppError.PAYMENT_OPTION_NOT_FOUND);
+        }
+        if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
             throw new AppException(AppError.DB_REPLICA_NOT_UPDATED);
         }
     }
@@ -171,11 +190,5 @@ public class IngestionServiceImpl implements IngestionService {
                 .operation(RTPOperationCode.DELETE)
                 .timestamp(paymentOption.getTsMs())
                 .build();
-    }
-
-    private void handleException(AppError e, String errorMsg) {
-        log.error(errorMsg);
-
-        throw new AppException(e);
     }
 }

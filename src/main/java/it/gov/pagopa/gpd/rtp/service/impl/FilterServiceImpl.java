@@ -2,9 +2,9 @@ package it.gov.pagopa.gpd.rtp.service.impl;
 
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
-import it.gov.pagopa.gpd.rtp.entity.redis.FlagOptIn;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
+import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.redis.FlagOptInRepository;
@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
@@ -35,15 +34,14 @@ public class FilterServiceImpl implements FilterService {
 
     @Override
     public void isValidPaymentOptionForRTPOrElseThrow(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-        PaymentOptionEvent valuesBefore = paymentOption.getBefore();
         PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
         // Check payment position status
-        if (!verifyPaymentPositionStatus(valuesBefore, valuesAfter))
+        if (isInvalidPaymentPositionStatus(valuesAfter, paymentOption.getOp()))
             throw new AppException(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP);
 
         // Debtor Tax Code Validation
-        if (valuesAfter == null || valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()) || isInvalidFiscalCode(valuesAfter.getFiscalCode())) {
+        if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()) || isInvalidFiscalCode(valuesAfter.getFiscalCode())) {
             throw new AppException(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
         }
 
@@ -56,20 +54,12 @@ public class FilterServiceImpl implements FilterService {
         // TODO se Flag rtp_cache_created_at è null o troppo vecchio (+2 days) chiama l’api RTP per aggiornare la cache (vedi paragrafo su update cache)
     }
 
-    private static boolean verifyPaymentPositionStatus(PaymentOptionEvent valuesBefore, PaymentOptionEvent valuesAfter) {
-        if (valuesBefore != null && (
-                valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
-                        valuesBefore.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID)
-        )) {
-            return true;
-        }
-        if (valuesAfter != null && (
-                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
-                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID)
-        )) {
-            return true;
-        }
-        return false;
+    private static boolean isInvalidPaymentPositionStatus(PaymentOptionEvent valuesAfter, DebeziumOperationCode debeziumOperationCode) {
+        return valuesAfter == null ||
+                (debeziumOperationCode.equals(DebeziumOperationCode.c) &&
+                        (valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.DRAFT) ||
+                                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PUBLISHED))) ||
+                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.REPORTED);
     }
 
     private boolean isInvalidFiscalCode(String fiscalCode) {
@@ -92,7 +82,7 @@ public class FilterServiceImpl implements FilterService {
             throw new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP);
         }
         long totalTransfersAmount = transferList.stream().reduce(0L, (subtotal, element) -> subtotal + element.getAmount(), Long::sum);
-        if(totalTransfersAmount != paymentOption.getAmount()){
+        if (totalTransfersAmount != paymentOption.getAmount()) {
             throw new AppException(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
         }
     }
