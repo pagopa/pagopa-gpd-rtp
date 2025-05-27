@@ -58,8 +58,8 @@ microservice-chart:
       cpu: "0.25"
   autoscaling:
     enable: true
-    minReplica: 3
-    maxReplica: 10
+    minReplica: 1
+    maxReplica: 3
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
@@ -75,11 +75,17 @@ microservice-chart:
     APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    EVENT_HUB_RTP_NAME: "rtp-events"
-    EVENT_HUB_RTP_SENDER: "rtp-events-tx"
-    KAFKA_BROKER: "pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093"
-    GPD_DB_URL: "jdbc:postgresql://gpd-db.d.internal.postgresql.pagopa.it:6432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
+    RTP_KAFKA_BROKER: "pagopa-u-itn-gps-rtp-evh.servicebus.windows.net:9093"
+    PAYMENT_OPTION_KAFKA_BROKER: "pagopa-u-itn-observ-gpd-evh.servicebus.windows.net:9093"
+    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://gpd-db.u.internal.postgresql.pagopa.it:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
+    SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
+    SCHEMA_NAME: "apd"
     REDIS_PORT: "6380"
+    # ANONYMIZER_URL_HOST: "<anonymizer-url-host>"
+    # ANONYMIZER_URL_PATH: "<anonymizer-url-path>"
+    DEAD_LETTER_ENDPOINT: "https://pagopauweugpsrtpsa.blob.core.windows.net/"
+    DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
@@ -88,15 +94,16 @@ microservice-chart:
     OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
   envSecret:
-    # required
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'app-insight-connection-string'
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
-    EVENT_HUB_RTP_CONN_STRING: "ehub-u-tx-rtp-connection-string"
-    EVENT_HUB_PAYMENT_OPTION_INPUT_CONN_STRING: "payment-option-topic-input-conn-string"
-    GPD_DB_USERNAME: "db-apd-user-name"
-    GPD_DB_PASSWORD: "db-apd-user-password"
-    REDIS_PWD: "redis-password"
-    REDIS_HOST: "redis-hostname"
+    RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-u-tx-rtp-connection-string"
+    PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
+    SPRING_DATASOURCE_USERNAME: "db-apd-user-name"
+    SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
+    REDIS_HOSTNAME: "redis-hostname"
+    REDIS_PASSWORD: "redis-password"
+    # SHARED_SUBSCRIPTION_KEY: "<shared-sub-key>"
+    DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
   keyvault:
     name: "pagopa-u-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -107,12 +114,12 @@ microservice-chart:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-              - key: node_type
+              - key: nodo
                 operator: In
                 values:
-                  - user
+                  - "true"
   canaryDelivery:
-    create: true
+    create: false
     ingress:
       create: true
       canary:
@@ -128,6 +135,6 @@ microservice-chart:
         repository: ghcr.io/pagopa/pagopa-gpd-rtp
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: { }
-      envSecret: { }
+      envConfig: {}
+      envSecret: {}
 

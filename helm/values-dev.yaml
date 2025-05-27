@@ -132,7 +132,7 @@ microservice-chart:
     deployment:
       create: true
       image:
-        repository: ghcr.io/pagopa/pagopa-gpd-ingestion-manager
+        repository: ghcr.io/pagopa/pagopa-gpd-rtp
         tag: "0.0.0"
         pullPolicy: Always
       envConfig: {}
