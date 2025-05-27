@@ -113,10 +113,10 @@ microservice-chart:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-              - key: nodo
+              - key: node_type
                 operator: In
                 values:
-                  - "true"
+                  - 'user'
   canaryDelivery:
     create: false
     ingress:
