@@ -89,7 +89,7 @@ public class IngestionServiceImpl implements IngestionService {
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-            if (response) {
+            if (!response) {
                 throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
             }
             log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
