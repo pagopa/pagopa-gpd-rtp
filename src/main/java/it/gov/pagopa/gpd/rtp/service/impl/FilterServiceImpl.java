@@ -54,11 +54,7 @@ public class FilterServiceImpl implements FilterService {
     }
 
     private static boolean verifyPaymentPositionStatus(PaymentOptionEvent valuesAfter) {
-        return valuesAfter != null && (
-                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.VALID) ||
-                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PARTIALLY_PAID) ||
-                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PAID) ||
-                        valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.INVALID));
+        return valuesAfter != null && !valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.REPORTED);
     }
 
     private boolean isInvalidFiscalCode(String fiscalCode) {
