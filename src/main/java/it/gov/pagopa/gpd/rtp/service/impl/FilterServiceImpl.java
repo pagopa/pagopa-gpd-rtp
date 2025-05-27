@@ -56,6 +56,7 @@ public class FilterServiceImpl implements FilterService {
 
     private static boolean isInvalidPaymentPositionStatus(PaymentOptionEvent valuesAfter, DebeziumOperationCode debeziumOperationCode) {
         return valuesAfter == null ||
+                valuesAfter.getPaymentPositionStatus() == null ||
                 (debeziumOperationCode.equals(DebeziumOperationCode.c) &&
                         (valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.DRAFT) ||
                                 valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PUBLISHED))) ||
