@@ -82,8 +82,8 @@ microservice-chart:
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
     REDIS_PORT: "6380"
-    ANONYMIZER_URL_HOST: "<anonymizer-url-host>"
-    ANONYMIZER_URL_PATH: "<anonymizer-url-path>"
+    ANONYMIZER_URL_HOST: "placeholder:5000" # TODO
+    ANONYMIZER_URL_PATH: "placeholder" # TODO
     DEAD_LETTER_ENDPOINT: "https://pagopauweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
@@ -102,7 +102,7 @@ microservice-chart:
     SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
     REDIS_HOSTNAME: "redis-hostname"
     REDIS_PASSWORD: "redis-password"
-    SHARED_SUBSCRIPTION_KEY: "<shared-sub-key>"
+    SHARED_SUBSCRIPTION_KEY: "redis-password" # TODO
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
   keyvault:
     name: "pagopa-u-gps-kv"
