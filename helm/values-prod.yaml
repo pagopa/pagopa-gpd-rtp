@@ -86,15 +86,15 @@ microservice-chart:
     DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
+    OTEL_SERVICE_ENVIRONMENT: "prod"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc:4317"
+    OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
-    OTEL_LOGS_EXPORTER: none
-    OTEL_TRACES_SAMPLER: "always_on"
+    OTEL_LOGS_EXPORTER: otlp
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
-    OTEL_EXPORTER_OTLP_HEADERS: "elastic-apm-secret-token"
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
     PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
     SPRING_DATASOURCE_USERNAME: "db-apd-user-name"
