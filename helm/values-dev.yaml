@@ -84,7 +84,7 @@ microservice-chart:
     REDIS_PORT: "6380"
     # ANONYMIZER_URL_HOST: "<anonymizer-url-host>"
     # ANONYMIZER_URL_PATH: "<anonymizer-url-path>"
-    DEAD_LETTER_ENDPOINT: "https://pagopadweugpssa.blob.core.windows.net/"
+    DEAD_LETTER_ENDPOINT: "https://pagopadweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
