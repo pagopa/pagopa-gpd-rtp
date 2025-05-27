@@ -25,9 +25,8 @@ public class ResponseValidator {
    * @param joinPoint not used
    * @param result the response to validate
    */
-  // TODO: set your package
   @AfterReturning(
-      pointcut = "execution(* it.gov.pagopa.microservice.controller.*.*(..))",
+      pointcut = "execution(* it.gov.pagopa.gpd.rtp.controller.*.*(..))",
       returning = "result")
   public void validateResponse(JoinPoint joinPoint, Object result) {
     if (result instanceof ResponseEntity) {
