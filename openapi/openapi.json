@@ -1,33 +1,40 @@
 {
-  "openapi" : "3.0.1",
-  "info" : {
-    "title" : "test-artifactId",
-    "description" : "placeholder-description",
-    "termsOfService" : "https://www.pagopa.gov.it/",
-    "version" : "placeholder-version"
+  "openapi": "3.0.1",
+  "info": {
+    "title": "test-artifactId",
+    "description": "placeholder-description",
+    "termsOfService": "https://www.pagopa.gov.it/",
+    "version": "0.0.0-3-PAGOPA-3068-deploy-dev-uat"
   },
-  "servers" : [ {
-    "url" : "http://localhost:8080"
-  }, {
-    "url" : "https://{host}{basePath}",
-    "variables" : {
-      "host" : {
-        "default" : "",
-        "enum" : [ "dev", "uat", "prod" ]
-      },
-      "basePath" : {
-        "default" : ""
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    },
+    {
+      "url": "https://{host}{basePath}",
+      "variables": {
+        "host": {
+          "default": "",
+          "enum": [
+            "dev",
+            "uat",
+            "prod"
+          ]
+        },
+        "basePath": {
+          "default": ""
+        }
       }
     }
-  } ],
-  "paths" : { },
-  "components" : {
-    "securitySchemes" : {
-      "ApiKey" : {
-        "type" : "apiKey",
-        "description" : "The API key to access this function app.",
-        "name" : "Ocp-Apim-Subscription-Key",
-        "in" : "header"
+  ],
+  "paths": {},
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "description": "The API key to access this function app.",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
       }
     }
   }

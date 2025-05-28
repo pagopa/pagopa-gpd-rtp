@@ -56,6 +56,7 @@ public class FilterServiceImpl implements FilterService {
 
     private static boolean isInvalidPaymentPositionStatus(PaymentOptionEvent valuesAfter, DebeziumOperationCode debeziumOperationCode) {
         return valuesAfter == null ||
+                valuesAfter.getPaymentPositionStatus() == null ||
                 (debeziumOperationCode.equals(DebeziumOperationCode.c) &&
                         (valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.DRAFT) ||
                                 valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PUBLISHED))) ||
@@ -66,7 +67,7 @@ public class FilterServiceImpl implements FilterService {
         if (fiscalCode != null && !fiscalCode.isEmpty()) {
             Pattern patternCF =
                     Pattern.compile(
-                            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$"); // TODO VERIFICA CHECKSUM?
+                            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$");
             Pattern patternPIVA = Pattern.compile("/^[0-9]{11}$/");
 
             return !(patternCF.matcher(fiscalCode).find() || patternPIVA.matcher(fiscalCode).find());
@@ -77,7 +78,6 @@ public class FilterServiceImpl implements FilterService {
 
     @Override
     public void hasValidTransferCategoriesOrElseThrow(PaymentOptionEvent paymentOption, List<Transfer> transferList) {
-        // TODO all transfers must match?
         if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
             throw new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP);
         }
