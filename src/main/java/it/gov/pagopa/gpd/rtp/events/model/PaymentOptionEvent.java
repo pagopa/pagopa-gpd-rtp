@@ -3,9 +3,11 @@ package it.gov.pagopa.gpd.rtp.events.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import jakarta.persistence.Id;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class PaymentOptionEvent {
     @Id
     private Long id;

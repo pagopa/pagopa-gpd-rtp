@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Getter
+@Setter
 @Entity
 @Table(name = "transfer")
 public class Transfer {
