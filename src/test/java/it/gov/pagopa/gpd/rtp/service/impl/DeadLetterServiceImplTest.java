@@ -50,7 +50,7 @@ class DeadLetterServiceImplTest {
 
 
     @Test
-    void sendToDeadLetter_success_case() {
+    void sendToDeadLetter_OK() {
         ErrorMessage errorMessage = buildErrorMessage();
 
         assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
@@ -68,7 +68,7 @@ class DeadLetterServiceImplTest {
     }
 
     @Test
-    void sendToDeadLetter_error_parsing_original_key() {
+    void sendToDeadLetter_KO_ERROR_PARSING_MESSAGE_KEY() {
         ErrorMessage errorMessage = buildErrorMessageWithoutOriginalMessageHeaders();
 
         assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
@@ -80,7 +80,7 @@ class DeadLetterServiceImplTest {
     }
 
     @Test
-    void sendToDeadLetter_error_parsing_payload() {
+    void sendToDeadLetter_KO_ERROR_PARSING_MESSAGE_PAYLOAD() {
         ErrorMessage errorMessage = buildErrorMessageWithInvalidOriginalMessagePayload();
 
         assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
@@ -92,7 +92,7 @@ class DeadLetterServiceImplTest {
     }
 
     @Test
-    void sendToDeadLetter_null_originalMessage() {
+    void sendToDeadLetter__KO_NULL_ORIGINAL_MESSAGE() {
         ErrorMessage errorMessage = buildErrorMessageWithoutMessage();
 
         assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
