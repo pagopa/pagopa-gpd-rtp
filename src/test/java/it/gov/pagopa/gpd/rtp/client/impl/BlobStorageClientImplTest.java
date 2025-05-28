@@ -27,7 +27,7 @@ class BlobStorageClientImplTest {
     private BlobStorageClientImpl sut;
 
     @Test
-    void saveStringJsonToBlobStorageOK(){
+    void saveStringJsonToBlobStorage_OK(){
         BlobContainerClient blobContainerClient = Mockito.mock(BlobContainerClient.class);
         BlobClient blobClient = Mockito.mock(BlobClient.class);
 
