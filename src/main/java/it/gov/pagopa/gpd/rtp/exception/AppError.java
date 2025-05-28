@@ -22,6 +22,7 @@ public enum AppError {
     CDC_OPERATION_NOT_VALID_FOR_RTP(HttpStatus.INTERNAL_SERVER_ERROR, "CDC's operation not valid for RTP", "The CDC's type of operation is not valid for RTP"),
     DB_REPLICA_NOT_UPDATED(HttpStatus.INTERNAL_SERVER_ERROR, "DB replica not updated", "Postgres' DB replica is not in sync with primary DB"),
     PAYMENT_OPTION_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "Payment option not found", "The payment option is not present on the DB"),
+    ACKNOWLEDGMENT_NOT_PRESENT(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", "Acknowledgment not found in message header, unable to process messages"),
     UNKNOWN(null, null, null);
 
     public final HttpStatus httpStatus;

@@ -26,8 +26,10 @@ public class FilterServiceImpl implements FilterService {
     private final FlagOptInRepository flagOptInRepository;
 
     @Autowired
-    public FilterServiceImpl(FlagOptInRepository flagOptInRepository,
-                             @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories) {
+    public FilterServiceImpl(
+            @Value("#{'${gpd.rtp.ingestion.service.transfer.categories}'.split(',')}") List<String> validTransferCategories,
+            FlagOptInRepository flagOptInRepository
+    ) {
         this.flagOptInRepository = flagOptInRepository;
         this.validTransferCategories = validTransferCategories;
     }
@@ -54,28 +56,6 @@ public class FilterServiceImpl implements FilterService {
         // TODO se Flag rtp_cache_created_at è null o troppo vecchio (+2 days) chiama l’api RTP per aggiornare la cache (vedi paragrafo su update cache)
     }
 
-    private static boolean isInvalidPaymentPositionStatus(PaymentOptionEvent valuesAfter, DebeziumOperationCode debeziumOperationCode) {
-        return valuesAfter == null ||
-                valuesAfter.getPaymentPositionStatus() == null ||
-                (debeziumOperationCode.equals(DebeziumOperationCode.c) &&
-                        (valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.DRAFT) ||
-                                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.PUBLISHED))) ||
-                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.REPORTED);
-    }
-
-    private boolean isInvalidFiscalCode(String fiscalCode) {
-        if (fiscalCode != null && !fiscalCode.isEmpty()) {
-            Pattern patternCF =
-                    Pattern.compile(
-                            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$");
-            Pattern patternPIVA = Pattern.compile("/^[0-9]{11}$/");
-
-            return !(patternCF.matcher(fiscalCode).find() || patternPIVA.matcher(fiscalCode).find());
-        }
-
-        return true;
-    }
-
     @Override
     public void hasValidTransferCategoriesOrElseThrow(PaymentOptionEvent paymentOption, List<Transfer> transferList) {
         if (!transferList.parallelStream().allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
@@ -85,5 +65,32 @@ public class FilterServiceImpl implements FilterService {
         if (totalTransfersAmount != paymentOption.getAmount()) {
             throw new AppException(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
         }
+    }
+
+    private boolean isInvalidPaymentPositionStatus(PaymentOptionEvent valuesAfter, DebeziumOperationCode debeziumOperationCode) {
+        return valuesAfter == null ||
+                valuesAfter.getPaymentPositionStatus() == null ||
+                isPaymentPositionCreateWithStatusDraftOrPublished(debeziumOperationCode, valuesAfter.getPaymentPositionStatus()) ||
+                valuesAfter.getPaymentPositionStatus().equals(PaymentPositionStatus.REPORTED);
+    }
+
+    private boolean isPaymentPositionCreateWithStatusDraftOrPublished(
+            DebeziumOperationCode debeziumOperationCode, PaymentPositionStatus paymentPositionStatus
+    ) {
+        return debeziumOperationCode.equals(DebeziumOperationCode.c) &&
+                (paymentPositionStatus.equals(PaymentPositionStatus.DRAFT) ||
+                        paymentPositionStatus.equals(PaymentPositionStatus.PUBLISHED));
+    }
+
+    private boolean isInvalidFiscalCode(String fiscalCode) {
+        if (fiscalCode != null && !fiscalCode.isEmpty()) {
+            Pattern patternCF =
+                    Pattern.compile(
+                            "^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$");
+            Pattern patternPIVA = Pattern.compile("^\\d{11}$");
+
+            return !(patternCF.matcher(fiscalCode).find() || patternPIVA.matcher(fiscalCode).find());
+        }
+        return true;
     }
 }
