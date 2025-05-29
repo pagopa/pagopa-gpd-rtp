@@ -28,20 +28,9 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         LocalDateTime now = LocalDateTime.now();
         AppException appException = (AppException) errorMessage.getPayload().getCause();
 
-        Message<String> originalMessage = (Message<String>) errorMessage.getOriginalMessage();
+        String messageId = getMessageId(errorMessage);
+        String originalMessagePayload = getOriginalMessagePayload(errorMessage);
 
-        String messageId;
-        String originalMessagePayload;
-        try {
-            messageId = new JSONObject(new String((byte[]) originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY))).getString("id");
-        } catch (Exception e) {
-            messageId = errorMessage.getHeaders().getId().toString();
-        }
-        try {
-            originalMessagePayload = new String((byte[]) errorMessage.getOriginalMessage().getPayload());
-        } catch (Exception e) {
-            originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
-        }
         String filePath = String.format("%s/%s/%s/%s/%s/%s_%s",
                 now.getYear(),
                 now.getMonthValue(),
@@ -57,6 +46,36 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                 appException.getMessage(),
                 appException.getAppErrorCode(),
                 originalMessagePayload);
+
         this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
+    }
+
+    private String getOriginalMessagePayload(ErrorMessage errorMessage) {
+        String originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
+        Message<?> originalMessage = errorMessage.getOriginalMessage();
+        if (originalMessage != null) {
+            try {
+                originalMessagePayload = new String((byte[]) originalMessage.getPayload());
+            } catch (Exception ignored) {
+                // handled after
+            }
+        }
+        return originalMessagePayload;
+    }
+
+    private String getMessageId(ErrorMessage errorMessage) {
+        String messageId = String.valueOf(errorMessage.getHeaders().getId());
+        Message<?> originalMessage = errorMessage.getOriginalMessage();
+        if (originalMessage != null) {
+            Object cdcMessageKey = originalMessage.getHeaders().get(KafkaHeaders.RECEIVED_KEY);
+            if (cdcMessageKey != null) {
+                try {
+                    messageId = new JSONObject(new String((byte[]) cdcMessageKey)).getString("id");
+                } catch (Exception ignored) {
+                    // handled after
+                }
+            }
+        }
+        return messageId;
     }
 }

@@ -55,7 +55,8 @@ public class IngestionServiceImpl implements IngestionService {
             TransferRepository transferRepository,
             PaymentOptionRepository paymentOptionRepository,
             AnonymizerClient anonymizerClient,
-            DeadLetterService deadLetterService) {
+            DeadLetterService deadLetterService
+    ) {
         this.objectMapper = objectMapper;
         this.rtpMessageProducer = rtpMessageProducer;
         this.filterService = filterService;
@@ -67,6 +68,9 @@ public class IngestionServiceImpl implements IngestionService {
 
     public void ingestPaymentOption(Message<String> message) {
         Acknowledgment acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+        if (acknowledgment == null) {
+            throw new AppException(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
+        }
 
         // Discard null messages
         if(message.getHeaders().getId() == null){
@@ -82,19 +86,16 @@ public class IngestionServiceImpl implements IngestionService {
         String msg = message.getPayload();
 
         try {
-            DataCaptureMessage<PaymentOptionEvent> paymentOption =
-                    this.objectMapper.readValue(msg, new TypeReference<DataCaptureMessage<PaymentOptionEvent>>() {
-                    });
-
+            DataCaptureMessage<PaymentOptionEvent> paymentOption = this.objectMapper.readValue(msg, new TypeReference<>() {});
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
             if (!response) {
                 throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
             }
+
             log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
-
         } catch (JsonProcessingException e) {
             log.error("{} PaymentOption ingestion error JsonProcessingException at {}, message ignored", LOG_PREFIX, LocalDateTime.now());
             acknowledgment.acknowledge();
