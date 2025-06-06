@@ -14,6 +14,7 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
@@ -162,7 +163,8 @@ public class IngestionServiceImpl implements IngestionService {
 
     private String anonymizeRemittanceInformation(PaymentOptionEvent valuesAfter, List<Transfer> transferList) {
         Transfer primaryTransfer = transferList.stream().filter(el -> el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())).findFirst().orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
-        return this.anonymizerClient.anonymize(primaryTransfer.getRemittanceInformation());
+        AnonymizerModel request = AnonymizerModel.builder().text(primaryTransfer.getRemittanceInformation()).build();
+        return this.anonymizerClient.anonymize(request).getText();
     }
 
     private RTPMessage mapRTPMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption, String remittanceInformation) {

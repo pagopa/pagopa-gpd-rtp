@@ -15,6 +15,7 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
@@ -47,7 +48,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = {IngestionServiceImpl.class, ObjectMapper.class})
 class IngestionServiceImplTest {
     private static final String REMITTANCE_INFORMATION = "remittanceInformation";
-    private static final String ANONIMIZED_REMITTANCE = "anonimizedRemittance";
+    private static final AnonymizerModel ANONIMIZED_RESPONSE = AnonymizerModel.builder().text("anonimizedRemittance").build();
     private static final LocalDateTime DATE_NOW = LocalDateTime.now();
 
     @MockBean
@@ -127,14 +128,14 @@ class IngestionServiceImplTest {
 
         when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
-        when(anonymizerClient.anonymize(anyString())).thenReturn(ANONIMIZED_REMITTANCE);
+        when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
         // test execution
         assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
         verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
         verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
-        verify(anonymizerClient).anonymize(anyString());
+        verify(anonymizerClient).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
         verify(acknowledgment).acknowledge();
         verify(acknowledgment, never()).nack(any());
@@ -145,7 +146,7 @@ class IngestionServiceImplTest {
         assertEquals(po.getTsMs(), captured.getTimestamp());
         assertEquals(RTPOperationCode.CREATE, captured.getOperation());
         assertEquals(po.getAfter().getIuv(), captured.getIuv());
-        assertEquals(ANONIMIZED_REMITTANCE, captured.getSubject());
+        assertEquals(ANONIMIZED_RESPONSE.getText(), captured.getSubject());
         assertEquals(po.getAfter().getDescription(), captured.getDescription());
         assertEquals(po.getAfter().getOrganizationFiscalCode(), captured.getEcTaxCode());
         assertEquals(po.getAfter().getFiscalCode(), captured.getDebtorTaxCode());
@@ -172,7 +173,7 @@ class IngestionServiceImplTest {
         transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
         when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-        when(anonymizerClient.anonymize(anyString())).thenReturn(ANONIMIZED_REMITTANCE);
+        when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
         when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
@@ -181,7 +182,7 @@ class IngestionServiceImplTest {
 
         verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
         verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
-        verify(anonymizerClient).anonymize(anyString());
+        verify(anonymizerClient).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
         verify(acknowledgment).acknowledge();
         verify(acknowledgment, never()).nack(any());
@@ -192,7 +193,7 @@ class IngestionServiceImplTest {
         assertEquals(po.getTsMs(), captured.getTimestamp());
         assertEquals(RTPOperationCode.UPDATE, captured.getOperation());
         assertEquals(po.getAfter().getIuv(), captured.getIuv());
-        assertEquals(ANONIMIZED_REMITTANCE, captured.getSubject());
+        assertEquals(ANONIMIZED_RESPONSE.getText(), captured.getSubject());
         assertEquals(po.getAfter().getDescription(), captured.getDescription());
         assertEquals(po.getAfter().getOrganizationFiscalCode(), captured.getEcTaxCode());
         assertEquals(po.getAfter().getFiscalCode(), captured.getDebtorTaxCode());
@@ -221,7 +222,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(acknowledgment, never()).nack(any());
     }
@@ -241,7 +242,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -261,7 +262,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -281,7 +282,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -301,7 +302,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -323,7 +324,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -345,7 +346,7 @@ class IngestionServiceImplTest {
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository, never()).findById(anyLong());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -367,7 +368,7 @@ class IngestionServiceImplTest {
         verify(acknowledgment, never()).nack(any());
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
     }
@@ -390,7 +391,7 @@ class IngestionServiceImplTest {
         verify(acknowledgment).nack(any());
         verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(acknowledgment, never()).acknowledge();
         verify(deadLetterService, never()).sendToDeadLetter(any());
@@ -418,7 +419,7 @@ class IngestionServiceImplTest {
         verify(paymentOptionRepository).findById(anyLong());
         verify(transferRepository).findByPaymentOptionId(anyLong());
         verify(acknowledgment).acknowledge();
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
@@ -445,7 +446,7 @@ class IngestionServiceImplTest {
         verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository).findById(anyLong());
         verify(transferRepository).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(acknowledgment).acknowledge();
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(acknowledgment, never()).nack(any());
@@ -474,7 +475,7 @@ class IngestionServiceImplTest {
         verify(paymentOptionRepository).findById(anyLong());
         verify(transferRepository).findByPaymentOptionId(anyLong());
         verify(acknowledgment).acknowledge();
-        verify(anonymizerClient, never()).anonymize(anyString());
+        verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer, never()).sendRTPMessage(any());
         verify(acknowledgment, never()).nack(any());
         verify(deadLetterService, never()).sendToDeadLetter(any());
@@ -495,7 +496,7 @@ class IngestionServiceImplTest {
         transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
         when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-        when(anonymizerClient.anonymize(anyString())).thenReturn(ANONIMIZED_REMITTANCE);
+        when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
         when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(false);
 
@@ -510,7 +511,7 @@ class IngestionServiceImplTest {
         verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository).findById(anyLong());
         verify(transferRepository).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient).anonymize(anyString());
+        verify(anonymizerClient).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer).sendRTPMessage(any());
         verify(acknowledgment, never()).acknowledge();
         verify(acknowledgment, never()).nack(any());
@@ -532,7 +533,7 @@ class IngestionServiceImplTest {
         transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
         when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-        when(anonymizerClient.anonymize(anyString())).thenReturn(ANONIMIZED_REMITTANCE);
+        when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
         doThrow(RuntimeException.class).when(rtpMessageProducer).sendRTPMessage(any(RTPMessage.class));
 
@@ -547,7 +548,7 @@ class IngestionServiceImplTest {
         verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
         verify(paymentOptionRepository).findById(anyLong());
         verify(transferRepository).findByPaymentOptionId(anyLong());
-        verify(anonymizerClient).anonymize(anyString());
+        verify(anonymizerClient).anonymize(any(AnonymizerModel.class));
         verify(rtpMessageProducer).sendRTPMessage(any());
         verify(acknowledgment, never()).acknowledge();
         verify(acknowledgment, never()).nack(any());

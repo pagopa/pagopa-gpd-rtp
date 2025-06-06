@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.rtp.client;
 
 import it.gov.pagopa.gpd.rtp.config.feign.AnonymizerFeignConfig;
+import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
@@ -17,5 +18,5 @@ public interface AnonymizerClient {
   @PostMapping(
       value = "${service.anonymizer.path}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  String anonymize(@RequestBody String body); // TODO FIX with right configuration
+  AnonymizerModel anonymize(@RequestBody AnonymizerModel body);
 }
