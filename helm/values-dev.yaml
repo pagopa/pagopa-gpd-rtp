@@ -97,7 +97,7 @@ microservice-chart:
     SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
     REDIS_HOSTNAME: "redis-hostname"
     REDIS_PASSWORD: "redis-password"
-    SHARED_SUBSCRIPTION_KEY: "redis-password" # TODO
+    SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
   keyvault:
     name: "pagopa-d-gps-kv"
