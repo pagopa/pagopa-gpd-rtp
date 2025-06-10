@@ -116,7 +116,7 @@ public class IngestionServiceImpl implements IngestionService {
             }
         } catch (Exception e) {
             log.error("{} PaymentOption ingestion error Generic exception at {}", LOG_PREFIX, LocalDateTime.now());
-            throw new AppException(AppError.INTERNAL_SERVER_ERROR);
+            throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
         }
     }
 

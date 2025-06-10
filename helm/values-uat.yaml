@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.0.1"
+    tag: "0.0.1-1-fix-anonym"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
@@ -84,7 +84,7 @@ microservice-chart:
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
     REDIS_PORT: "6380"
-    ANONYMIZER_URL_HOST: "https://api.dev.platform.pagopa.it/anonymizer/v1"
+    ANONYMIZER_URL_HOST: "https://api.uat.platform.pagopa.it/anonymizer/v1"
     ANONYMIZER_URL_PATH: "/anonymize"
     DEAD_LETTER_ENDPOINT: "https://pagopauweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
