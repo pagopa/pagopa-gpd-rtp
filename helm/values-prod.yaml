@@ -88,6 +88,7 @@ microservice-chart:
     DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
+    RTP_URL_HOST: "https://api-rtp.cstar.pagopa.it"
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
@@ -98,6 +99,7 @@ microservice-chart:
     REDIS_PASSWORD: "redis-password"
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
+    RTP_SUBSCRIPTION_KEY: "TBD"
   keyvault:
     name: "pagopa-p-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

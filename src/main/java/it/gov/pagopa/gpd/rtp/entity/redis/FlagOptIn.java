@@ -1,16 +1,17 @@
 package it.gov.pagopa.gpd.rtp.entity.redis;
 
+import java.io.Serializable;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.io.Serializable;
-
 @Getter
 @Setter
 @RedisHash("FlagOptIn")
+@Builder
 public class FlagOptIn implements Serializable {
 
-    private String id; // Organization Fiscal Code
-    private boolean flagOptIn;
+  private String idEc; // Organization Fiscal Code
+  private boolean flagValue;
 }
