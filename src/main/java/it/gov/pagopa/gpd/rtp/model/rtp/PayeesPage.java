@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.model.rtp;
 
+import java.util.List;
 import lombok.*;
 
 @Builder
@@ -7,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Data
 public class PayeesPage {
-  private Payee[] payees;
+  private List<Payee> payees;
   private PageMetadata pageMetadata;
 }

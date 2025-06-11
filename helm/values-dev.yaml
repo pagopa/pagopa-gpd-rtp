@@ -89,7 +89,10 @@ microservice-chart:
     DEAD_LETTER_ENDPOINT: "https://pagopadweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
-    RTP_URL_HOST: "https://api-rtp.dev.cstar.pagopa.it"
+    RTP_URL_HOST: "https://api-rtp.dev.cstar.pagopa.it/rtp"
+    RTP_MIL_HOST: "https://api-mcshared.dev.cstar.pagopa.it"
+    RTP_MIL_CLIENT_ID : "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
+    REST_CLIENT_LOGGER_LEVEL: "NONE"
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-d-tx-rtp-connection-string"
@@ -100,7 +103,7 @@ microservice-chart:
     REDIS_PASSWORD: "redis-password"
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
-    RTP_SUBSCRIPTION_KEY: "TBD"
+    RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -134,3 +137,46 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+
+refresh-rtp-job:
+  namespace: "refresh-rtp-job"
+  schedule: "* * * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+  keyvault:
+    name: "pagopa-d-apiconfig-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  serviceAccount:
+    name: "gps-workload-identity"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "apiconfig"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user

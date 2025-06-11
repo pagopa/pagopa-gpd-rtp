@@ -4,6 +4,7 @@ import java.io.Serializable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 @Getter
@@ -12,6 +13,6 @@ import org.springframework.data.redis.core.RedisHash;
 @Builder
 public class FlagOptIn implements Serializable {
 
-  private String idEc; // Organization Fiscal Code
+  @Id private String idEc; // Organization Fiscal Code
   private boolean flagValue;
 }
