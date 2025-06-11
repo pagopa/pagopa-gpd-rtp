@@ -1,7 +1,7 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
     tag: "0.0.1-1-PAGOPA-3062-gp-dx-rtp-creazione-nuova-get-per-update-flag-in-cache"
@@ -37,7 +37,7 @@ microservice-chart:
   serviceAccount:
     name: "gps-workload-identity"
   azure:
-    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
+    workloadIdentityClientId: "28793c44-d0fe-4c90-8c81-832a10ff86e2"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -136,3 +136,48 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+refresh-cache-cron:
+  namespace: "gps"
+  schedule: "* * * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
+  keyvault:
+    name: "pagopa-p-gps-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  serviceAccount:
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: "28793c44-d0fe-4c90-8c81-832a10ff86e2"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user

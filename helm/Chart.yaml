@@ -11,4 +11,4 @@ dependencies:
   - name: cron-chart
     version: 3.0.0
     repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
-    alias: refresh-rtp-job
+    alias: refresh-cache-cron

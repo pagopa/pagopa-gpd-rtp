@@ -1,7 +1,7 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
     tag: "0.0.1-1-PAGOPA-3062-gp-dx-rtp-creazione-nuova-get-per-update-flag-in-cache"
@@ -38,7 +38,7 @@ microservice-chart:
   serviceAccount:
     name: "gps-workload-identity"
   azure:
-    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
+    workloadIdentityClientId: "8a7f62fa-6865-4fc0-a774-337e3982d20f"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -72,7 +72,7 @@ microservice-chart:
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "dev"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
-    APP_LOGGING_LEVEL: 'INFO'
+    APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     KAFKA_LOGGING_LEVEL: 'WARN'
     KAFKA_START_OFFSET: 'earliest'
@@ -137,9 +137,9 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
-refresh-rtp-job:
-  namespace: "refresh-rtp-job"
-  schedule: "* * * * *"
+refresh-cache-cron:
+  namespace: "gps"
+  schedule: "0 0 * * *"
   timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
@@ -160,15 +160,18 @@ refresh-rtp-job:
       memory: "512Mi"
       cpu: "150m"
   envSecrets:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
   keyvault:
-    name: "pagopa-d-apiconfig-kv"
+    name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   serviceAccount:
     name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: "8a7f62fa-6865-4fc0-a774-337e3982d20f"
   tolerations:
     - key: dedicated
       operator: Equal
-      value: "apiconfig"
+      value: "gps"
       effect: NoSchedule
   affinity:
     nodeAffinity:
