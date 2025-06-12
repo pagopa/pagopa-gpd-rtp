@@ -1,7 +1,7 @@
 package it.gov.pagopa.gpd.rtp.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.gov.pagopa.gpd.rtp.events.boardcast.RedisPublisher;
+import it.gov.pagopa.gpd.rtp.events.broadcast.RedisPublisher;
 import it.gov.pagopa.gpd.rtp.model.EventEnum;
 import java.util.Map;
 import java.util.Optional;

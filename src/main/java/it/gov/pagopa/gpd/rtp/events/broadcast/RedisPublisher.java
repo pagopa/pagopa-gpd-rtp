@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.rtp.events.boardcast;
+package it.gov.pagopa.gpd.rtp.events.broadcast;
 
 import static it.gov.pagopa.gpd.rtp.util.Constants.STREAM_KEY;
 
