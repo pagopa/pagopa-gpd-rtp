@@ -47,4 +47,7 @@ public class PaymentOptionEvent {
 
     @JsonProperty("payment_position_status")
     private PaymentPositionStatus paymentPositionStatus;
+
+    @JsonProperty("is_partial_payment")
+    private Boolean isPartialPayment;
 }
