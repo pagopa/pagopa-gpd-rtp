@@ -7,24 +7,19 @@ import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.service.OptinService;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class OptinServiceImpl implements OptinService {
 
   private final RtpClientService rtpClientService;
 
   private final RedisCacheRepository redisCacheRepository;
+  private final KafkaConsumerService kafkaConsumerService;
 
   public static final int PAGE_SIZE = 100;
-
-  @Autowired
-  public OptinServiceImpl(
-      RtpClientService rtpClientService, RedisCacheRepository redisCacheRepository) {
-    this.rtpClientService = rtpClientService;
-    this.redisCacheRepository = redisCacheRepository;
-  }
 
   @Override
   public void optInRefresh() {
@@ -40,5 +35,6 @@ public class OptinServiceImpl implements OptinService {
         && page.getPageMetadata() != null
         && pageNumber < page.getPageMetadata().getTotalPages());
     redisCacheRepository.saveAll(toCache);
+    kafkaConsumerService.startAllConsumers();
   }
 }
