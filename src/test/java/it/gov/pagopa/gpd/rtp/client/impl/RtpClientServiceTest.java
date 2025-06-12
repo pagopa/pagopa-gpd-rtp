@@ -3,7 +3,6 @@ package it.gov.pagopa.gpd.rtp.client.impl;
 import it.gov.pagopa.gpd.rtp.model.rtp.PageMetadata;
 import it.gov.pagopa.gpd.rtp.model.rtp.Payee;
 import it.gov.pagopa.gpd.rtp.model.rtp.PayeesPage;
-import it.gov.pagopa.gpd.rtp.model.rtp.TokenResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
