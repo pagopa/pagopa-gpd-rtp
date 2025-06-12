@@ -29,4 +29,6 @@ public class RTPMessage {
     private String pspCode;
     @JsonProperty("psp_tax_code")
     private String pspTaxCode;
+    @JsonProperty("is_partial_payment")
+    private Boolean isPartialPayment;
 }
