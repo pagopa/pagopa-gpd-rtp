@@ -21,16 +21,17 @@ public class RtpClientService {
   private String host;
 
   private final RtpMilClientService rtpMilClientService;
+  private final RestOperations restTemplate;
 
   @Autowired
-  public RtpClientService(RtpMilClientService rtpMilClientService) {
+  public RtpClientService(RtpMilClientService rtpMilClientService, RestTemplate restTemplate) {
     this.rtpMilClientService = rtpMilClientService;
+    this.restTemplate = restTemplate;
   }
 
   public PayeesPage payees(int page, int size) {
     String token = rtpMilClientService.getToken();
 
-    RestOperations restTemplate = new RestTemplate();
     URI uri =
         UriComponentsBuilder.fromHttpUrl(host + "/payees/payees")
             .queryParam("page", page)
