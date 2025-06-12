@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -20,9 +21,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RedisSubscriber {
 
-  public static final String EVENT = "event";
-  private final RedisTemplate<String, Object> redisTemplate;
+  @Value("${info.application.version}")
+  private String version;
 
+  private final RedisTemplate<String, Object> redisTemplate;
   private final KafkaConsumerService kafkaConsumerService;
   private final GracefulShutdownHandler gracefulShutdownHandler;
 
@@ -59,13 +61,16 @@ public class RedisSubscriber {
           if (message.getValue() != null && message.getValue() instanceof Map) {
             Map<Object, Object> payload = message.getValue();
 
-            if (payload.get(EVENT) != null && payload.get(EVENT).equals(EventEnum.START_CONSUMER)) {
+            if (payload.get(version) != null
+                && payload.get(version).equals(EventEnum.START_CONSUMER)) {
               kafkaConsumerService.startAllConsumers();
             }
-            if (payload.get(EVENT) != null && payload.get(EVENT).equals(EventEnum.STOP_CONSUMER)) {
+            if (payload.get(version) != null
+                && payload.get(version).equals(EventEnum.STOP_CONSUMER)) {
               kafkaConsumerService.stopAllConsumers();
             }
-            if (payload.get(EVENT) != null && payload.get(EVENT).equals(EventEnum.FORCE_KILL)) {
+            if (payload.get(version) != null
+                && payload.get(version).equals(EventEnum.ENABLE_FORCE_KILL)) {
               gracefulShutdownHandler.withForceKill(true);
             }
           }

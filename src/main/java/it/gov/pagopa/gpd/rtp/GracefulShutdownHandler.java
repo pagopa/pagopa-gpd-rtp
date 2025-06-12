@@ -40,7 +40,7 @@ public class GracefulShutdownHandler implements SmartLifecycle {
 
       while (processingTracker.isProcessing()) {
         try {
-          log.debug(
+          log.info(
               "Waiting for {} messages to finish processing...",
               processingTracker.getActiveProcessingCount());
           Thread.sleep(500);
