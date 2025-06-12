@@ -4,6 +4,7 @@ import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.service.impl.KafkaConsumerService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
@@ -11,12 +12,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Setter
 public class GracefulShutdownHandler implements SmartLifecycle {
 
   private final KafkaConsumerService kafkaConsumerService;
   private final ProcessingTracker processingTracker;
 
   private final AtomicBoolean running = new AtomicBoolean(false);
+  public final AtomicBoolean forceKill = new AtomicBoolean(false);
 
   @Override
   public void start() {
@@ -31,17 +34,21 @@ public class GracefulShutdownHandler implements SmartLifecycle {
 
     kafkaConsumerService.stopAllConsumers();
     log.info("Kafka consumers stopped. Waiting for in-flight messages to complete...");
+    log.info("force kill: {}", forceKill.get());
 
-    while (processingTracker.isProcessing()) {
-      try {
-        log.debug(
-            "Waiting for {} messages to finish processing...",
-            processingTracker.getActiveProcessingCount());
-        Thread.sleep(500);
-      } catch (InterruptedException e) {
-        log.warn("Shutdown wait was interrupted.");
-        Thread.currentThread().interrupt();
-        break;
+    if (!forceKill.get()) {
+
+      while (processingTracker.isProcessing()) {
+        try {
+          log.debug(
+              "Waiting for {} messages to finish processing...",
+              processingTracker.getActiveProcessingCount());
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          log.warn("Shutdown wait was interrupted.");
+          Thread.currentThread().interrupt();
+          break;
+        }
       }
     }
 
@@ -56,5 +63,9 @@ public class GracefulShutdownHandler implements SmartLifecycle {
   @Override
   public int getPhase() {
     return Integer.MAX_VALUE - 1000;
+  }
+
+  public void withForceKill(boolean b) {
+    this.forceKill.set(b);
   }
 }

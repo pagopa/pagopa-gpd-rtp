@@ -6,7 +6,7 @@ microservice-chart:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
     tag: "0.0.1-1-PAGOPA-3062-gp-dx-rtp-creazione-nuova-get-per-update-flag-in-cache"
     pullPolicy: Always
-  terminationGracePeriodSeconds: 30
+  terminationGracePeriodSeconds: 300
   livenessProbe:
     handlerType: httpGet
     httpGet:
