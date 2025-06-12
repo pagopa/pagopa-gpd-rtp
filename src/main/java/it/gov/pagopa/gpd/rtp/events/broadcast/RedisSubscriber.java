@@ -39,7 +39,7 @@ public class RedisSubscriber {
     new Thread(this::listen).start();
   }
 
-  private void listen() {
+  void listen() {
     log.info("CONSUMER {}: start listening...", GROUP_NAME);
     while (true) {
       List<MapRecord<String, Object, Object>> messages =
