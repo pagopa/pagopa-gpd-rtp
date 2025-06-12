@@ -214,6 +214,7 @@ public class IngestionServiceImpl implements IngestionService {
         .status(valuesAfter.getPaymentPositionStatus())
         .pspCode(valuesAfter.getPspCode())
         .pspTaxCode(valuesAfter.getPspTaxCode())
+        .isPartialPayment(valuesAfter.getIsPartialPayment())
         .build();
   }
 

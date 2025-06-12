@@ -592,6 +592,7 @@ class IngestionServiceImplTest {
             .pspCode("pspCode")
             .pspTaxCode("pspTaxCode")
             .paymentPositionStatus(PaymentPositionStatus.VALID)
+            .isPartialPayment(false)
             .build();
     return DataCaptureMessage.<PaymentOptionEvent>builder()
         .before(null)
