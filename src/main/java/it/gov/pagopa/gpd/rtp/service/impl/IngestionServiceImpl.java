@@ -104,13 +104,17 @@ public class IngestionServiceImpl implements IngestionService {
               message));
     } catch (AppException e) {
       AppError appErrorCode = e.getAppErrorCode();
-      if (appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
+      if (appErrorCode != null && appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
         log.error(
-            String.format(
-                "%s Error sending RTP message to eventhub at %s", LOG_PREFIX, LocalDateTime.now()));
+            "{} Error sending RTP message to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
         throw e;
       }
-      if (appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
+      if (appErrorCode != null && appErrorCode.equals(AppError.REDIS_CACHE_NOT_UPDATED)) {
+        log.error(
+            "{} Error sending RTP message to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+        throw e;
+      }
+      if (appErrorCode != null && appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
         acknowledgment.nack(Duration.ofSeconds(1));
         // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
       } else {
