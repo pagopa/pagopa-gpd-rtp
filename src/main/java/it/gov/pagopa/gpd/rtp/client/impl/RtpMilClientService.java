@@ -15,34 +15,39 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class RtpMilClientService {
 
-  @Value("${service.rtp-mil.host}")
-  private String host;
+    @Value("${service.rtp-mil.host}")
+    private String host;
 
-  @Value("${service.rtp-mil.clientId}")
-  private String clientId;
+    @Value("${service.rtp-mil.clientId}")
+    private String clientId;
 
-  @Value("${service.rtp-mil.clientSecret}")
-  private String clientSecret;
+    @Value("${service.rtp-mil.clientSecret}")
+    private String clientSecret;
 
-  public static final String PATH = "/auth/token";
+    private final RestOperations restTemplate;
 
-  public String getToken() {
+    RtpMilClientService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    public static final String PATH = "/auth/token";
 
-    MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-    map.add("grant_type", "client_credentials");
-    map.add("client_id", clientId);
-    map.add("client_secret", clientSecret);
+    public String getToken() {
 
-    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    RestOperations restTemplate = new RestTemplate();
-    ResponseEntity<TokenResponse> response =
-        restTemplate.postForEntity(host + PATH, request, TokenResponse.class);
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("grant_type", "client_credentials");
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
 
-    assert response.getBody() != null;
-    return response.getBody().getAccessToken();
-  }
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
+
+        ResponseEntity<TokenResponse> response =
+                restTemplate.postForEntity(host + PATH, request, TokenResponse.class);
+
+        assert response.getBody() != null;
+        return response.getBody().getAccessToken();
+    }
 }
