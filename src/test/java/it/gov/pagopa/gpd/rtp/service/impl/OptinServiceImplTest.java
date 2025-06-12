@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.rtp.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.rtp.client.impl.RtpClientService;
-import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.model.rtp.PageMetadata;
 import it.gov.pagopa.gpd.rtp.model.rtp.Payee;
 import it.gov.pagopa.gpd.rtp.model.rtp.PayeesPage;

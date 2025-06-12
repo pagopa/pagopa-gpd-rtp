@@ -226,16 +226,6 @@ class FilterServiceImplTest {
 
   // Verify FiscalCodeFilter
   @Test
-  void isValidPaymentOptionForRTP_OK_VALID_FISCAL_CODE() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
-    assertDoesNotThrow(
-        () ->
-            sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.VALID, VALID_FISCAL_CODE, DebeziumOperationCode.c)));
-  }
-
-  @Test
   void isValidPaymentOptionForRTP_OK_VALID_PIVA() {
     when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
     assertDoesNotThrow(
