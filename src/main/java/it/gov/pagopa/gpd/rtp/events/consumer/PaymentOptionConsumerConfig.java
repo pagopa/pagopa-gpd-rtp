@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.rtp.events.consumer;
 
-import it.gov.pagopa.gpd.rtp.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import java.util.function.Consumer;
@@ -16,25 +15,13 @@ import org.springframework.messaging.support.ErrorMessage;
 @RequiredArgsConstructor
 public class PaymentOptionConsumerConfig {
 
-  private final ProcessingTracker processingTracker;
-
   @Bean
   public Consumer<Message<String>> ingestPaymentOption(IngestionService ingestionService) {
-    try {
-      processingTracker.messageProcessingStarted();
-      return ingestionService::ingestPaymentOption;
-    } finally {
-      processingTracker.messageProcessingFinished();
-    }
+    return ingestionService::ingestPaymentOption;
   }
 
   @Bean
   public Consumer<ErrorMessage> deadLetterErrorHandler(DeadLetterService deadLetterService) {
-    try {
-      processingTracker.messageProcessingStarted();
-      return deadLetterService::sendToDeadLetter;
-    } finally {
-      processingTracker.messageProcessingFinished();
-    }
+    return deadLetterService::sendToDeadLetter;
   }
 }

@@ -1,4 +1,4 @@
-package it.gov.pagopa.gpd.rtp;
+package it.gov.pagopa.gpd.rtp.events.consumer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.stereotype.Component;

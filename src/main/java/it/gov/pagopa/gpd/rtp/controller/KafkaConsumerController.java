@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.rtp.controller;
 
-import it.gov.pagopa.gpd.rtp.ProcessingTracker;
+import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.service.impl.KafkaConsumerService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

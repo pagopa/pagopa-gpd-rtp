@@ -1,6 +1,6 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import it.gov.pagopa.gpd.rtp.ProcessingTracker;
+import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

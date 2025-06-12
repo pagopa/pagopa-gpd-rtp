@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
+import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
@@ -25,8 +26,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class IngestionServiceImpl implements IngestionService {
   private static final String LOG_PREFIX = "[GPDxRTP]";
 
@@ -46,26 +48,18 @@ public class IngestionServiceImpl implements IngestionService {
   private final PaymentOptionRepository paymentOptionRepository;
   private final AnonymizerClient anonymizerClient;
   private final DeadLetterService deadLetterService;
-
-  @Autowired
-  public IngestionServiceImpl(
-      ObjectMapper objectMapper,
-      RTPMessageProducer rtpMessageProducer,
-      FilterService filterService,
-      TransferRepository transferRepository,
-      PaymentOptionRepository paymentOptionRepository,
-      AnonymizerClient anonymizerClient,
-      DeadLetterService deadLetterService) {
-    this.objectMapper = objectMapper;
-    this.rtpMessageProducer = rtpMessageProducer;
-    this.filterService = filterService;
-    this.transferRepository = transferRepository;
-    this.paymentOptionRepository = paymentOptionRepository;
-    this.anonymizerClient = anonymizerClient;
-    this.deadLetterService = deadLetterService;
-  }
+  private final ProcessingTracker processingTracker;
 
   public void ingestPaymentOption(Message<String> message) {
+    try {
+      handleMessage(message);
+    } finally {
+      processingTracker.messageProcessingFinished();
+    }
+  }
+
+  private boolean handleMessage(Message<String> message) {
+    processingTracker.messageProcessingStarted();
     Acknowledgment acknowledgment =
         message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
     if (acknowledgment == null) {
@@ -76,7 +70,7 @@ public class IngestionServiceImpl implements IngestionService {
     if (message.getHeaders().getId() == null) {
       log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
       acknowledgment.acknowledge();
-      return;
+      return true;
     }
 
     log.debug(
@@ -131,6 +125,7 @@ public class IngestionServiceImpl implements IngestionService {
           LocalDateTime.now());
       throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
     }
+    return false;
   }
 
   private RTPMessage createRTPMessageOrElseThrow(
