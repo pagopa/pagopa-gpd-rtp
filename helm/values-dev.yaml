@@ -1,10 +1,10 @@
 microservice-chart:
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.0.1-1-fix-anonym"
+    tag: "0.0.1-1-PAGOPA-3062-gp-dx-rtp-creazione-nuova-get-per-update-flag-in-cache"
     pullPolicy: Always
   livenessProbe:
     handlerType: httpGet
@@ -38,7 +38,7 @@ microservice-chart:
   serviceAccount:
     name: "gps-workload-identity"
   azure:
-    workloadIdentityClientId: <workload-identity-client-id-set-automatically-by-gha>
+    workloadIdentityClientId: "8a7f62fa-6865-4fc0-a774-337e3982d20f"
   podAnnotations: {}
   podSecurityContext:
     seccompProfile:
@@ -72,7 +72,7 @@ microservice-chart:
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "dev"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
-    APP_LOGGING_LEVEL: 'INFO'
+    APP_LOGGING_LEVEL: 'DEBUG'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     KAFKA_LOGGING_LEVEL: 'WARN'
     KAFKA_START_OFFSET: 'earliest'
@@ -89,6 +89,10 @@ microservice-chart:
     DEAD_LETTER_ENDPOINT: "https://pagopadweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
+    RTP_URL_HOST: "https://api-rtp.dev.cstar.pagopa.it/rtp"
+    RTP_MIL_HOST: "https://api-mcshared.dev.cstar.pagopa.it"
+    RTP_MIL_CLIENT_ID: "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
+    REST_CLIENT_LOGGER_LEVEL: "NONE"
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-d-tx-rtp-connection-string"
@@ -99,6 +103,7 @@ microservice-chart:
     REDIS_PASSWORD: "redis-password"
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
+    RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -132,3 +137,48 @@ microservice-chart:
         pullPolicy: Always
       envConfig: {}
       envSecret: {}
+refresh-cache-cron:
+  namespace: "gps"
+  schedule: "0 0 * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
+  keyvault:
+    name: "pagopa-d-gps-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
+  serviceAccount:
+    name: "gps-workload-identity"
+  azure:
+    workloadIdentityClientId: "8a7f62fa-6865-4fc0-a774-337e3982d20f"
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node_type
+                operator: In
+                values:
+                  - user
