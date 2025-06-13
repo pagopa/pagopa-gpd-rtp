@@ -52,6 +52,7 @@ public class IngestionServiceImpl implements IngestionService {
 
   public void ingestPaymentOption(Message<String> message) {
     try {
+      processingTracker.messageProcessingStarted();
       handleMessage(message);
     } finally {
       processingTracker.messageProcessingFinished();
@@ -59,7 +60,6 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   private boolean handleMessage(Message<String> message) {
-    processingTracker.messageProcessingStarted();
     Acknowledgment acknowledgment =
         message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
     if (acknowledgment == null) {

@@ -73,6 +73,10 @@ public class RedisSubscriber {
                 && payload.get(version).equals(EventEnum.ENABLE_FORCE_KILL)) {
               gracefulShutdownHandler.withForceKill(true);
             }
+            if (payload.get(version) != null
+                && payload.get(version).equals(EventEnum.DISABLE_FORCE_KILL)) {
+              gracefulShutdownHandler.withForceKill(false);
+            }
           }
 
           redisTemplate.opsForStream().acknowledge(GROUP_NAME, message);
