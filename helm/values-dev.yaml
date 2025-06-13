@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.2.0-3-PAGOPA-3122-pipiline-deploy-per-comandare-consumer-eh"
+    tag: "0.2.0-4-PAGOPA-3122-pipiline-deploy-per-comandare-consumer-eh"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
