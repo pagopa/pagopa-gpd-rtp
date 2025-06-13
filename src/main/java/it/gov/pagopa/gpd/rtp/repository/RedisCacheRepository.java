@@ -6,6 +6,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class RedisCacheRepository {
 
   private final StringRedisTemplate redisTemplate;
-  private static final String KEY = "rtp_flag_optin";
+  public static final String KEY = "rtp_flag_optin";
   private static final String CREATED_AT_KEY = "rtp_created_at";
   private static final Duration TTL = Duration.ofDays(7);
 
@@ -25,12 +28,19 @@ public class RedisCacheRepository {
     redisTemplate.expire(CREATED_AT_KEY, TTL);
   }
 
-  public boolean isPresent(String idDominio) {
+  @NotNull
+  @Cacheable(value = "getFlags")
+  public SetOperations<String, String> getFlags() {
+    return redisTemplate.opsForSet();
+  }
+
+  @Cacheable(value = "isCacheUpdated")
+  public boolean isCacheUpdated() {
     String createdAt = redisTemplate.opsForValue().get(CREATED_AT_KEY);
     if (createdAt == null
         || LocalDateTime.now().isAfter(LocalDateTime.parse(createdAt).plusDays(2))) {
       throw new AppException(AppError.REDIS_CACHE_NOT_UPDATED);
     }
-    return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(KEY, idDominio));
+    return true;
   }
 }

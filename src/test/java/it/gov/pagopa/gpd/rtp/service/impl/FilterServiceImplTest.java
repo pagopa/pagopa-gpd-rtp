@@ -12,14 +12,15 @@ import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
-import java.util.List;
-
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.SetOperations;
 
 @SpringBootTest(classes = {FilterServiceImpl.class})
 class FilterServiceImplTest {
@@ -30,15 +31,17 @@ class FilterServiceImplTest {
   private static final String INVALID_FISCAL_CODE = "invalidFiscalCode";
   private static final long VALID_PAYMENT_OPTION_AMOUNT = 10L;
 
-  @MockBean
-  private RedisCacheRepository redisCacheRepository;
+  @MockBean private RedisCacheRepository redisCacheRepository;
 
   @Autowired @InjectMocks private FilterServiceImpl sut;
 
   // Verify PaymentPositionStatus
   @Test
   void isValidPaymentOptionForRTP_OK_VALID_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -48,7 +51,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_VALID_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -58,7 +64,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_PAID_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -68,7 +77,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_PAID_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -78,7 +90,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_PARTIALLY_PAID_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -90,7 +105,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_PARTIALLY_PAID_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -102,7 +120,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_EXPIRED_PAID_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -112,7 +133,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_EXPIRED_PAID_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -122,7 +146,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_INVALID_PAID_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -132,7 +159,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_INVALID_PAID_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -153,7 +183,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_DRAFT_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -163,7 +196,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_KO_PUBLISHED_OPERATION_C() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
           getDataCapureMessagePaymentOption(
@@ -175,7 +211,10 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_OK_PUBLISHED_OPERATION_U() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -227,7 +266,10 @@ class FilterServiceImplTest {
   // Verify FiscalCodeFilter
   @Test
   void isValidPaymentOptionForRTP_OK_VALID_PIVA() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(true);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
@@ -291,13 +333,29 @@ class FilterServiceImplTest {
 
   @Test
   void isValidPaymentOptionForRTP_KO_FLAG_OPT_IN_NOT_ENABLED() {
-    when(redisCacheRepository.isPresent(anyString())).thenReturn(false);
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(false);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-              getDataCapureMessagePaymentOption(
-                      PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c));
+          getDataCapureMessagePaymentOption(
+              PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.EC_NOT_ENABLED_FOR_RTP, e.getAppErrorCode());
+    }
+  }
+
+  @Test
+  void isValidPaymentOptionForRTP_CACHE_NOT_UPDATED() {
+    when(redisCacheRepository.isCacheUpdated())
+        .thenThrow(new AppException(AppError.REDIS_CACHE_NOT_UPDATED));
+    try {
+      sut.isValidPaymentOptionForRTPOrElseThrow(
+          getDataCapureMessagePaymentOption(
+              PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c));
+    } catch (AppException e) {
+      assertEquals(AppError.REDIS_CACHE_NOT_UPDATED, e.getAppErrorCode());
     }
   }
 

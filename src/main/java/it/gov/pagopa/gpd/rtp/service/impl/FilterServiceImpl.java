@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository.KEY;
+
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
@@ -49,10 +51,15 @@ public class FilterServiceImpl implements FilterService {
     }
 
     // Check flag opt-in
-    var hasRtpEnabled = redisCacheRepository.isPresent(valuesAfter.getFiscalCode());
+    var hasRtpEnabled = isPresent(valuesAfter.getFiscalCode());
     if (!hasRtpEnabled) {
       throw new AppException(AppError.EC_NOT_ENABLED_FOR_RTP);
     }
+  }
+
+  public boolean isPresent(String idDominio) {
+    return redisCacheRepository.isCacheUpdated()
+        && Boolean.TRUE.equals(redisCacheRepository.getFlags().isMember(KEY, idDominio));
   }
 
   @Override

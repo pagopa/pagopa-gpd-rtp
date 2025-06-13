@@ -10,25 +10,33 @@ import lombok.Getter;
 @Getter
 public class RTPMessage {
 
-    private Long id;
-    private RTPOperationCode operation;
-    private Long timestamp;
-    private String iuv;
-    private String subject;
-    private String description;
-    @JsonProperty("ec_tax_code")
-    private String ecTaxCode;
-    @JsonProperty("debtor_tax_code")
-    private String debtorTaxCode;
-    private String nav;
-    @JsonProperty("due_date")
-    private Long dueDate;
-    private long amount;
-    private PaymentPositionStatus status;
-    @JsonProperty("psp_code")
-    private String pspCode;
-    @JsonProperty("psp_tax_code")
-    private String pspTaxCode;
-    @JsonProperty("is_partial_payment")
-    private Boolean isPartialPayment;
+  private Long id;
+  private RTPOperationCode operation;
+  private Long timestamp;
+  private String iuv;
+  private String subject;
+  private String description;
+
+  @JsonProperty("ec_tax_code")
+  private String ecTaxCode;
+
+  @JsonProperty("debtor_tax_code")
+  private String debtorTaxCode;
+
+  private String nav;
+
+  @JsonProperty("due_date")
+  private Long dueDate;
+
+  private long amount;
+  private PaymentPositionStatus status;
+
+  @JsonProperty("psp_code")
+  private String pspCode;
+
+  @JsonProperty("psp_tax_code")
+  private String pspTaxCode;
+
+  @JsonProperty("is_partial_payment")
+  private Boolean isPartialPayment;
 }

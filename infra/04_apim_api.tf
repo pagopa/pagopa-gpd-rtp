@@ -1,56 +1,45 @@
 locals {
-  repo_name = "pagopa-gpd-rtp"
-
-  display_name = "GPD for RTP microservice"
-  description  = "GPD service to send debt position to RTP"
-  path  = "gpd-rtp/service"
-
-  host         = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
-  hostname     = var.hostname
+  apim_gpd_rtp_api = {
+    display_name          = "GPD x RTP"
+    description           = "Microservice to send RTP messages"
+    path                  = "gpd-rtp"
+    subscription_required = true
+    service_url           = null
+  }
 }
 
-resource "azurerm_api_management_group" "api_group" {
-  name                = local.apim.product_id
+resource "azurerm_api_management_api_version_set" "api_gpd_rtp_api" {
+  name                = "${var.env_short}-gpd-rtp-api"
   resource_group_name = local.apim.rg
   api_management_name = local.apim.name
-  display_name        = local.display_name
-  description         = local.description
-}
-
-resource "azurerm_api_management_api_version_set" "api_version_set" {
-  name                = format("%s-${local.repo_name}", var.env_short)
-  resource_group_name = local.apim.rg
-  api_management_name = local.apim.name
-  display_name        = local.display_name
+  display_name        = local.apim_gpd_rtp_api.display_name
   versioning_scheme   = "Segment"
 }
 
-module "api_v1" {
-  source = "git::https://github.com/pagopa/terraform-azurerm-v3.git//api_management_api?ref=v6.7.0"
+module "apim_api_gpd_rtp_api_v1" {
+  source = "./.terraform/modules/__v3__/api_management_api"
 
-  name                  = format("%s-${local.repo_name}", var.env_short)
+  name                  = "${local.project}-gpd_rtp-api"
   api_management_name   = local.apim.name
   resource_group_name   = local.apim.rg
   product_ids           = [local.apim.product_id]
-  subscription_required = true
+  subscription_required = local.apim_gpd_rtp_api.subscription_required
+  version_set_id        = azurerm_api_management_api_version_set.api_gpd_rtp_api.id
+  api_version           = "v1"
 
-  version_set_id = azurerm_api_management_api_version_set.api_version_set.id
-  api_version    = "v1"
-
-  description  = local.description
-  display_name = local.display_name
-  path         = local.path
+  description  = local.apim_gpd_rtp_api.description
+  display_name = local.apim_gpd_rtp_api.display_name
+  path         = local.apim_gpd_rtp_api.path
   protocols    = ["https"]
-
-  service_url = null
+  service_url  = local.apim_gpd_rtp_api.service_url
 
   content_format = "openapi"
-  content_value  = templatefile("../openapi/openapi.json", {
-    host = local.host
+  content_value  = templatefile("./api/v1/openapi.json", {
+    host = local.apim_hostname
   })
 
-  xml_content = templatefile("./policy/_base_policy.xml", {
-    hostname = var.hostname
+  xml_content = templatefile("./policy/v1/_base_policy.xml.tpl", {
+    hostname = local.hostname
   })
 }
 
