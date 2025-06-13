@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.controller;
 
+import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -57,21 +58,26 @@ public class HomeController {
 
   @GetMapping("/are-all-done")
   public ResponseEntity<String> allDone() {
-    boolean done = allPodsIdle("gps", "app.kubernetes.io/instance=pagopa-gpd-rtp");
+    boolean done = allPodsIdle();
     return ResponseEntity.ok(done ? "ALL_DONE" : "STILL_RUNNING");
   }
 
-  public boolean allPodsIdle(String namespace, String labelSelector) {
+  public boolean allPodsIdle() {
+    var labelSelectorObj = new LabelSelector();
+    Map<String, String> matchLabels = new java.util.HashMap<>();
+    matchLabels.put("app.kubernetes.io/instance", "pagopa-gpd-rtp");
+    matchLabels.put("app.kubernetes.io/version", version);
+    labelSelectorObj.setMatchLabels(matchLabels);
     List<Pod> pods =
-        client.pods().inNamespace(namespace).withLabelSelector(labelSelector).list().getItems();
+        client.pods().inNamespace("gps").withLabelSelector(labelSelectorObj).list().getItems();
 
     for (Pod pod : pods) {
       String podIP = pod.getStatus().getPodIP();
-      String url = "http://" + podIP + ":8080/status"; // oppure usa il Service DNS interno
+      String url = "http://" + podIP + ":8080/status";
       try {
         Map<?, ?> response = restTemplate.getForObject(url, Map.class);
-        Integer inProgress = (Integer) response.get("inProgress");
-        if (inProgress != null && inProgress > 0) {
+        Boolean inProgress = (Boolean) response.get("inProgress");
+        if (inProgress != null && inProgress) {
           return false;
         }
       } catch (Exception e) {
