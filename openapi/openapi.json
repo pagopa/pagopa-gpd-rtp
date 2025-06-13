@@ -4,7 +4,7 @@
     "title": "test-artifactId",
     "description": "placeholder-description",
     "termsOfService": "https://www.pagopa.gov.it/",
-    "version": "0.2.0-1-consumer"
+    "version": "0.2.0-2-PAGOPA-3122-pipiline-deploy-per-comandare-consumer-eh"
   },
   "servers": [
     {
