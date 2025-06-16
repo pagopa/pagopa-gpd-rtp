@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.2.0-6-PAGOPA-3122-pipiline-deploy-per-comandare-consumer-eh"
+    "version": "0.2.0-7-PAGOPA-3122-pipiline-deploy-per-comandare-consumer-eh"
   },
   "servers": [
     {
