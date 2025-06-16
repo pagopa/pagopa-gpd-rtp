@@ -23,7 +23,11 @@ on:
         type: boolean
         description: deploy beta version on AKS
         default: false
-
+      start_consumer:
+        required: true
+        type: boolean
+        description: start EH consumers
+        default: true
       version:
         required: false
         type: choice
@@ -139,6 +143,17 @@ jobs:
     with:
       environment: ${{ needs.setup.outputs.environment }}
     secrets: inherit
+
+  start_consumers:
+    name: Start Consumers
+    runs-on: ubuntu-latest
+    steps:
+      - name: start_consumers
+        if: ${{ inputs.start_consumer == 'true' }}
+        run: |
+          curl --location --request POST 'https://api.dev.platform.pagopa.it/gpd-rtp/v1/events/publish/START_CONSUMER' \
+          --header 'accept: */*' \
+          --header 'Ocp-Apim-Subscription-Key: secret'
 
   notify:
     needs: [ setup, release, deploy_aks ]
