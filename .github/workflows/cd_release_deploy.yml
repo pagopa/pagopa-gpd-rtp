@@ -147,9 +147,10 @@ jobs:
   start_consumers:
     name: Start Consumers
     runs-on: ubuntu-latest
+    needs: [ deploy_aks ]
+    if: ${{ inputs.start_consumer }}
     steps:
       - name: start_consumers
-        if: ${{ inputs.start_consumer == 'true' }}
         run: |
           curl --location --request POST 'https://api.dev.platform.pagopa.it/gpd-rtp/v1/events/publish/START_CONSUMER' \
           --header 'accept: */*' \
