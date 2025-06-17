@@ -148,7 +148,7 @@ jobs:
     name: Start Consumers
     runs-on: ubuntu-latest
     needs: [ deploy_aks ]
-    if: ${{ inputs.start_consumer == 'true' }}
+    if: ${{ inputs.start_consumer }}
     steps:
       - name: Set Subscription Key
         run: |
