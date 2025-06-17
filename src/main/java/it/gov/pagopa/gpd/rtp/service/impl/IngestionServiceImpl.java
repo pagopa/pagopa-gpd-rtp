@@ -96,7 +96,7 @@ public class IngestionServiceImpl implements IngestionService {
       acknowledgment.acknowledge();
     } catch (Exception e) {
       log.error(LOG_PREFIX + " Unexpected error raised", e);
-      throw e;
+      throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
     }
   }
 
