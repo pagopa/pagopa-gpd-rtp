@@ -24,7 +24,7 @@ import org.springframework.data.redis.core.SetOperations;
 
 @SpringBootTest(classes = {FilterServiceImpl.class})
 class FilterServiceImplTest {
-  private static final String VALID_TRANSFER_CATEGORY = "validTransferCategory";
+  private static final String VALID_TRANSFER_CATEGORY = "9/0201102IM/";
   private static final String INVALID_TRANSFER_CATEGORY = "invalidTransferCategory";
   private static final String VALID_FISCAL_CODE = "AAAAAA98L12B157A";
   private static final String VALID_PIVA = "01234567890";

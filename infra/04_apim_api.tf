@@ -34,11 +34,11 @@ module "apim_api_gpd_rtp_api_v1" {
   service_url  = local.apim_gpd_rtp_api.service_url
 
   content_format = "openapi"
-  content_value  = templatefile("./api/v1/openapi.json", {
+  content_value  = templatefile("../openapi/openapi.json", {
     host = local.apim_hostname
   })
 
-  xml_content = templatefile("./policy/v1/_base_policy.xml.tpl", {
+  xml_content = templatefile("./policy/_base_policy.xml", {
     hostname = local.hostname
   })
 }

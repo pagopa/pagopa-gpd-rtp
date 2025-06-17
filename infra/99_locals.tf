@@ -5,10 +5,10 @@ locals {
   apim = {
     name       = "${local.product}-apim"
     rg         = "${local.product}-api-rg"
-    product_id = "pagopa-gpd-rtp"
+    product_id = "gpdrtp"
   }
   apim_hostname = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
-  hostname      = var.env == "prod" ? "weuprod.shared.internal.platform.pagopa.it" : "weu${var.env}.shared.internal.${var.env}.platform.pagopa.it"
+  hostname      = var.env == "prod" ? "weuprod.gps.internal.platform.pagopa.it" : "weu${var.env}.gps.internal.${var.env}.platform.pagopa.it"
 
 
 }
