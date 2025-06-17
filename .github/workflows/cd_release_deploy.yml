@@ -152,9 +152,14 @@ jobs:
     steps:
       - name: start_consumers
         run: |
+          echo "SUBKEY=${{secrets.DEV_SUBKEY}}" >> $GITHUB_ENV 
+          
+          if [[ ${{ inputs.environment }} == "uat" ]]; then
+            echo "SUBKEY=${{secrets.UAT_SUBKEY}}" >> $GITHUB_ENV 
+          fi
+
           curl --location --request POST 'https://api.dev.platform.pagopa.it/gpd-rtp/v1/events/publish/START_CONSUMER' \
-          --header 'accept: */*' \
-          --header 'Ocp-Apim-Subscription-Key: secret'
+            --header 'Ocp-Apim-Subscription-Key: ${{ env.SUBKEY }}'
 
   notify:
     needs: [ setup, release, deploy_aks ]
