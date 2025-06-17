@@ -161,7 +161,7 @@ jobs:
       - name: Call START_CONSUMER event
         run: |
           curl --location --request POST 'https://api.dev.platform.pagopa.it/gpd-rtp/v1/events/publish/START_CONSUMER' \
-            --header "Ocp-Apim-Subscription-Key: $SUBKEY"
+            --header "Ocp-Apim-Subscription-Key: ${{ env.SUBKEY}}"
 
 #  notify:
 #    needs: [ setup, release, deploy_aks ]
