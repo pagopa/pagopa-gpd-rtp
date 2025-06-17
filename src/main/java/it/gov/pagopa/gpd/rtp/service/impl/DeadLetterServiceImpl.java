@@ -14,6 +14,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -59,6 +61,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
             originalMessagePayload);
 
     this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
+    log.error(
+            "{} Message sent to dead letter container at {}", LOG_PREFIX, LocalDateTime.now());
   }
 
   private String getOriginalMessagePayload(ErrorMessage errorMessage) {

@@ -35,11 +35,12 @@ import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class IngestionServiceImpl implements IngestionService {
-  private static final String LOG_PREFIX = "[GPDxRTP]";
 
   private final ObjectMapper objectMapper;
   private final RTPMessageProducer rtpMessageProducer;
@@ -111,7 +112,7 @@ public class IngestionServiceImpl implements IngestionService {
       }
       if (appErrorCode != null && appErrorCode.equals(AppError.REDIS_CACHE_NOT_UPDATED)) {
         log.error(
-            "{} Error sending RTP message to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+            "{} Error Redis Cache not updated at {}", LOG_PREFIX, LocalDateTime.now());
         throw e;
       }
       if (appErrorCode != null && appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
