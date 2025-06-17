@@ -1,7 +1,7 @@
 package it.gov.pagopa.gpd.rtp.repository;
 
 import it.gov.pagopa.gpd.rtp.exception.AppError;
-import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -39,7 +39,7 @@ public class RedisCacheRepository {
     String createdAt = redisTemplate.opsForValue().get(CREATED_AT_KEY);
     if (createdAt == null
         || LocalDateTime.now().isAfter(LocalDateTime.parse(createdAt).plusDays(2))) {
-      throw new AppException(AppError.REDIS_CACHE_NOT_UPDATED);
+      throw new FailAndNotify(AppError.REDIS_CACHE_NOT_UPDATED);
     }
     return true;
   }

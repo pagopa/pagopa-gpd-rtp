@@ -12,6 +12,10 @@ public enum AppError {
   FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden", "This method is forbidden"),
   RESPONSE_NOT_READABLE(
       HttpStatus.BAD_GATEWAY, "Response Not Readable", "The response body is not readable"),
+  NULL_MESSAGE(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      "Null Message",
+      "The message is null, unable to process messages"),
   JSON_NOT_PROCESSABLE(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "JSON not processable",

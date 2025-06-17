@@ -14,7 +14,9 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
-import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
+import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
+import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
@@ -59,77 +61,64 @@ public class IngestionServiceImpl implements IngestionService {
     }
   }
 
-  private boolean handleMessage(Message<String> message) {
+  private void handleMessage(Message<String> message) {
     Acknowledgment acknowledgment =
         message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-    if (acknowledgment == null) {
-      throw new AppException(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
-    }
-
-    // Discard null messages
-    if (message.getHeaders().getId() == null) {
-      log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
-      acknowledgment.acknowledge();
-      return true;
-    }
-
-    log.debug(
-        "PaymentOption ingestion called at {} for payment options with message id {}",
-        LocalDateTime.now(),
-        message.getHeaders().getId());
-    String msg = message.getPayload();
-
     try {
+      checkAck(acknowledgment);
+
+      // Discard null messages
+      if (message.getHeaders().getId() == null) {
+        log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
+        throw new FailAndIgnore(AppError.NULL_MESSAGE);
+      }
+
+      log.debug(
+          "PaymentOption ingestion called at {} for payment options with message id {}",
+          LocalDateTime.now(),
+          message.getHeaders().getId());
+      String msg = message.getPayload();
+
       DataCaptureMessage<PaymentOptionEvent> paymentOption =
-          this.objectMapper.readValue(msg, new TypeReference<>() {});
+          parseMessage(message, msg, acknowledgment);
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-      if (!response) {
-        throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
-      }
+      checkResponse(response);
 
       log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
       acknowledgment.acknowledge();
-    } catch (JsonProcessingException e) {
-      log.error(
-          "{} PaymentOption ingestion error JsonProcessingException at {}, message ignored",
-          LOG_PREFIX,
-          LocalDateTime.now());
+    } catch (FailAndPostpone e) {
+      acknowledgment.nack(Duration.ofSeconds(1));
+    } catch (FailAndIgnore e) {
       acknowledgment.acknowledge();
+    }
+  }
+
+  private static void checkResponse(boolean response) {
+    if (!response) {
+      throw new FailAndNotify(AppError.RTP_MESSAGE_NOT_SENT);
+    }
+  }
+
+  private static void checkAck(Acknowledgment acknowledgment) {
+    if (acknowledgment == null) {
+      throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
+    }
+  }
+
+  private DataCaptureMessage<PaymentOptionEvent> parseMessage(
+      Message<String> message, String msg, Acknowledgment acknowledgment) {
+    try {
+      return this.objectMapper.readValue(msg, new TypeReference<>() {});
+    } catch (JsonProcessingException e) {
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(
               new MessageHandlingException(
-                  message, new AppException(AppError.JSON_NOT_PROCESSABLE)),
+                  message, new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE)),
               message));
-    } catch (AppException e) {
-      AppError appErrorCode = e.getAppErrorCode();
-      if (appErrorCode != null && appErrorCode.equals(AppError.RTP_MESSAGE_NOT_SENT)) {
-        log.error(
-            "{} Error sending RTP message to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
-        throw e;
-      }
-      if (appErrorCode != null && appErrorCode.equals(AppError.REDIS_CACHE_NOT_UPDATED)) {
-        log.error(
-            "{} Error sending RTP message to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
-        throw e;
-      }
-      if (appErrorCode != null && appErrorCode.equals(AppError.DB_REPLICA_NOT_UPDATED)) {
-        acknowledgment.nack(Duration.ofSeconds(1));
-        // TODO avoid loop: save on redis po.id & after 100(?) retries send to dead letter?
-      } else {
-        log.debug(
-            "{} AppException error at {}: {}", LOG_PREFIX, LocalDateTime.now(), e.getMessage());
-        acknowledgment.acknowledge();
-      }
-    } catch (Exception e) {
-      log.error(
-          "{} PaymentOption ingestion error Generic exception at {}",
-          LOG_PREFIX,
-          LocalDateTime.now());
-      throw new AppException(AppError.INTERNAL_SERVER_ERROR, e);
+      throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
     }
-    return false;
   }
 
   private RTPMessage createRTPMessageOrElseThrow(
@@ -161,21 +150,21 @@ public class IngestionServiceImpl implements IngestionService {
 
       return mapRTPMessage(paymentOption, remittanceInformation);
     }
-    throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
+    throw new FailAndIgnore(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
   }
 
   private void verifyDBReplicaSync(PaymentOptionEvent valuesAfter) {
     PaymentOption poFromDBReplica =
         paymentOptionRepository
             .findById(valuesAfter.getId())
-            .orElseThrow(() -> new AppException(AppError.PAYMENT_OPTION_NOT_FOUND));
+            .orElseThrow(() -> new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND));
     Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
     LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
     if (poFromDBReplica == null) {
-      throw new AppException(AppError.PAYMENT_OPTION_NOT_FOUND);
+      throw new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND);
     }
     if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
-      throw new AppException(AppError.DB_REPLICA_NOT_UPDATED);
+      throw new FailAndPostpone(AppError.DB_REPLICA_NOT_UPDATED);
     }
   }
 
@@ -187,7 +176,7 @@ public class IngestionServiceImpl implements IngestionService {
                 el ->
                     el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()))
             .findFirst()
-            .orElseThrow(() -> new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
+            .orElseThrow(() -> new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
     AnonymizerModel request =
         AnonymizerModel.builder().text(primaryTransfer.getRemittanceInformation()).build();
     return this.anonymizerClient.anonymize(request).getText();

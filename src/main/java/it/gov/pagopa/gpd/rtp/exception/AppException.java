@@ -2,8 +2,6 @@ package it.gov.pagopa.gpd.rtp.exception;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.Formatter;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 
@@ -12,8 +10,6 @@ import org.springframework.validation.annotation.Validated;
  *
  * <p>See {@link ErrorHandler}
  */
-@EqualsAndHashCode(callSuper = true)
-@Value
 @Validated
 public class AppException extends RuntimeException {
 
@@ -57,7 +53,7 @@ public class AppException extends RuntimeException {
    * @param message the detail message returned to the response
    */
   public AppException(
-          @NotNull HttpStatus httpStatus, @NotNull String title, @NotNull String message) {
+      @NotNull HttpStatus httpStatus, @NotNull String title, @NotNull String message) {
     super(message);
     this.title = title;
     this.httpStatus = httpStatus;
