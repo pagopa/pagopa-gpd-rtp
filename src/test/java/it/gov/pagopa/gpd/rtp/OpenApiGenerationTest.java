@@ -16,18 +16,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest(classes = Application.class)
+@SpringBootTest
 @AutoConfigureMockMvc
 class OpenApiGenerationTest {
-
-  @Autowired ObjectMapper objectMapper;
 
   @Autowired private MockMvc mvc;
 
   @Test
   void swaggerSpringPlugin() throws Exception {
     saveOpenAPI("/v3/api-docs", "openapi.json");
-    saveOpenAPI("/v3/api-docs/external", "openapi_external.json");
   }
 
   private void saveOpenAPI(String fromUri, String toFile) throws Exception {
@@ -42,6 +39,7 @@ class OpenApiGenerationTest {
               assertFalse(content.contains("${"), "Generated swagger contains placeholders");
               assertFalse(
                   content.contains("@some.value@)"), "Generated swagger contains placeholders");
+              ObjectMapper objectMapper = new ObjectMapper();
               Object swagger =
                   objectMapper.readValue(result.getResponse().getContentAsString(), Object.class);
               String formatted =
