@@ -141,7 +141,7 @@ public class IngestionServiceImpl implements IngestionService {
     if (paymentOption.getOp().equals(DebeziumOperationCode.c)
         || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
       // Filter paymentOption message, throws AppException
-      //      this.filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
+      this.filterService.isValidPaymentOptionForRTPOrElseThrow(paymentOption);
 
       PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
@@ -156,11 +156,10 @@ public class IngestionServiceImpl implements IngestionService {
       List<Transfer> transferList =
           this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
       // Filter based on Transfer's categories, throws AppException
-      //      this.filterService.hasValidTransferCategoriesOrElseThrow(valuesAfter, transferList);
-      //      String remittanceInformation = anonymizeRemittanceInformation(valuesAfter,
-      // transferList);
+      this.filterService.hasValidTransferCategoriesOrElseThrow(valuesAfter, transferList);
+      String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
 
-      return mapRTPMessage(paymentOption, "prova");
+      return mapRTPMessage(paymentOption, remittanceInformation);
     }
     throw new AppException(AppError.CDC_OPERATION_NOT_VALID_FOR_RTP);
   }
