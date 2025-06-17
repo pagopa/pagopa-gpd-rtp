@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.rtp.exception;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.Formatter;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 
@@ -11,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>See {@link ErrorHandler}
  */
 @Validated
+@Data
 public class AppException extends RuntimeException {
 
   /** title returned to the response when this exception occurred */

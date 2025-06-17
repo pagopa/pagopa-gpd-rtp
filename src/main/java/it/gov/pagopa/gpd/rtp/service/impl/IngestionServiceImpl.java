@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +43,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class IngestionServiceImpl implements IngestionService {
-  private static final String LOG_PREFIX = "[GPDxRTP]";
 
   private final ObjectMapper objectMapper;
   private final RTPMessageProducer rtpMessageProducer;
@@ -79,8 +80,7 @@ public class IngestionServiceImpl implements IngestionService {
           message.getHeaders().getId());
       String msg = message.getPayload();
 
-      DataCaptureMessage<PaymentOptionEvent> paymentOption =
-          parseMessage(message, msg, acknowledgment);
+      DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
@@ -89,9 +89,14 @@ public class IngestionServiceImpl implements IngestionService {
       log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
       acknowledgment.acknowledge();
     } catch (FailAndPostpone e) {
+      log.error(LOG_PREFIX + " Retry reading message after", e);
       acknowledgment.nack(Duration.ofSeconds(1));
     } catch (FailAndIgnore e) {
+      log.info("{} Message ignored", LOG_PREFIX);
       acknowledgment.acknowledge();
+    } catch (Exception e) {
+      log.error(LOG_PREFIX + " Unexpected error raised", e);
+      throw e;
     }
   }
 
@@ -107,8 +112,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
   }
 
-  private DataCaptureMessage<PaymentOptionEvent> parseMessage(
-      Message<String> message, String msg, Acknowledgment acknowledgment) {
+  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<String> message, String msg) {
     try {
       return this.objectMapper.readValue(msg, new TypeReference<>() {});
     } catch (JsonProcessingException e) {

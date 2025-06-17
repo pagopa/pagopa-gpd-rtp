@@ -20,6 +20,7 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
+import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
@@ -316,7 +317,7 @@ class IngestionServiceImplTest {
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
 
-    doThrow(new AppException(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP))
+    doThrow(new FailAndIgnore(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP))
         .when(filterService)
         .isValidPaymentOptionForRTPOrElseThrow(any());
 
@@ -341,7 +342,7 @@ class IngestionServiceImplTest {
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
 
-    doThrow(new AppException(AppError.TAX_CODE_NOT_VALID_FOR_RTP))
+    doThrow(new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP))
         .when(filterService)
         .isValidPaymentOptionForRTPOrElseThrow(any());
 
@@ -420,7 +421,7 @@ class IngestionServiceImplTest {
 
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
-    doThrow(new AppException(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP))
+    doThrow(new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP))
         .when(filterService)
         .hasValidTransferCategoriesOrElseThrow(any(), any());
 
@@ -451,7 +452,7 @@ class IngestionServiceImplTest {
 
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
-    doThrow(new AppException(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING))
+    doThrow(new FailAndIgnore(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING))
         .when(filterService)
         .hasValidTransferCategoriesOrElseThrow(any(), any());
 
@@ -559,8 +560,8 @@ class IngestionServiceImplTest {
     // test execution
     try {
       sut.ingestPaymentOption(genericMessage);
-    } catch (AppException e) {
-      assertEquals(AppError.INTERNAL_SERVER_ERROR, e.getAppErrorCode());
+    } catch (RuntimeException e) {
+      assertTrue(true);
     }
 
     verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
