@@ -65,9 +65,11 @@ public class IngestionServiceImpl implements IngestionService {
   private void handleMessage(Message<String> message) {
     Acknowledgment acknowledgment =
         message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-    try {
-      checkAck(acknowledgment);
+    if (acknowledgment == null) {
+      throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
+    }
 
+    try {
       // Discard null messages
       if (message.getHeaders().getId() == null) {
         log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
@@ -106,12 +108,6 @@ public class IngestionServiceImpl implements IngestionService {
   private static void checkResponse(boolean response) {
     if (!response) {
       throw new FailAndNotify(AppError.RTP_MESSAGE_NOT_SENT);
-    }
-  }
-
-  private static void checkAck(Acknowledgment acknowledgment) {
-    if (acknowledgment == null) {
-      throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
     }
   }
 
