@@ -78,7 +78,7 @@ microservice-chart:
     KAFKA_LOGGING_LEVEL: 'WARN'
     KAFKA_START_OFFSET: 'earliest'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    RTP_KAFKA_BROKER: "pagopa-u-itn-gps-rtp-evh.servicebus.windows.net:9093"
+    RTP_KAFKA_BROKER: "pagopa-u-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-u-itn-observ-gpd-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
     SPRING_DATASOURCE_URL: "jdbc:postgresql://gpd-db.u.internal.postgresql.pagopa.it:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
