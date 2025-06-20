@@ -38,7 +38,7 @@ public class RedisCacheRepository {
   public boolean isCacheUpdated() {
     String createdAt = redisTemplate.opsForValue().get(CREATED_AT_KEY);
     if (createdAt == null
-        || LocalDateTime.now().isAfter(LocalDateTime.parse(createdAt).plusDays(2))) {
+        || LocalDateTime.now().isAfter(LocalDateTime.parse(createdAt).plusDays(3))) {
       throw new FailAndNotify(AppError.REDIS_CACHE_NOT_UPDATED);
     }
     return true;
