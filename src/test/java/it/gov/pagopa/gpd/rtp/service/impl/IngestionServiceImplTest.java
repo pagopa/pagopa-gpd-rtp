@@ -577,6 +577,36 @@ class IngestionServiceImplTest {
     verify(deadLetterService, never()).sendToDeadLetter(any());
   }
 
+  @Test
+  void ingestPaymentOption_KO_DB_REPLICA_SYNC_0_retry() throws JsonProcessingException {
+    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
+    Message<String> genericMessage =
+        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+
+    PaymentOption repoPO = new PaymentOption();
+    repoPO.setLastUpdatedDate(DATE_NOW.minusDays(1));
+    when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
+    sut.ingestPaymentOption(genericMessage);
+    verify(redisCacheRepository).setRetryCount(any(), anyInt());
+  }
+
+  @Test
+  void ingestPaymentOption_KO_DB_REPLICA_SYNC_4_retry() throws JsonProcessingException {
+    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
+    Message<String> genericMessage =
+        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+
+    PaymentOption repoPO = new PaymentOption();
+    repoPO.setLastUpdatedDate(DATE_NOW.minusDays(1));
+    when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
+    when(redisCacheRepository.getRetryCount(any())).thenReturn(4);
+    sut.ingestPaymentOption(genericMessage);
+
+    verify(redisCacheRepository).deleteRetryCount(any());
+  }
+
   private DataCaptureMessage<PaymentOptionEvent> getPaymentOption(
       DebeziumOperationCode debeziumOperationCode) {
     PaymentOptionEvent pp =
