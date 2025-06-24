@@ -21,6 +21,7 @@ import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
+import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
@@ -30,6 +31,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.support.Acknowledgment;
@@ -52,6 +54,7 @@ public class IngestionServiceImpl implements IngestionService {
   private final AnonymizerClient anonymizerClient;
   private final DeadLetterService deadLetterService;
   private final ProcessingTracker processingTracker;
+  private final RedisCacheRepository redisCacheRepository;
 
   public void ingestPaymentOption(Message<String> message) {
     try {
@@ -88,11 +91,11 @@ public class IngestionServiceImpl implements IngestionService {
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
       checkResponse(response);
 
-      log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+      log.debug("{} RTP Message sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
       acknowledgment.acknowledge();
+      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     } catch (FailAndPostpone e) {
-      log.error(LOG_PREFIX + " Retry reading message after", e);
-      acknowledgment.nack(Duration.ofSeconds(1));
+      handleRetry(message, e, acknowledgment);
     } catch (FailAndIgnore e) {
       log.info("{} Message ignored", LOG_PREFIX);
       acknowledgment.acknowledge();
@@ -102,6 +105,40 @@ public class IngestionServiceImpl implements IngestionService {
     } catch (Exception e) {
       log.error(LOG_PREFIX + " Unexpected error raised", e);
       throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+    }
+  }
+
+  /**
+   * Handles retry logic for failed messages.
+   *
+   * <p>If the retry count for the message is less than 3, the message is postponed and the retry
+   * count is increased by 1. If the retry count is 3 or more, the message is saved to the dead
+   * letter storage account.
+   *
+   * @param message The message to be retried.
+   * @param e The exception that caused the retry.
+   * @param acknowledgment The acknowledgment object to be used to nack the message.
+   */
+  private void handleRetry(
+      Message<String> message, FailAndPostpone e, Acknowledgment acknowledgment) {
+    // get id of the message
+    UUID uuid = message.getHeaders().getId();
+    if (uuid == null) {
+      throw new FailAndIgnore(AppError.NULL_MESSAGE);
+    }
+    // get retry count
+    int retryCount = redisCacheRepository.getRetryCount(uuid);
+    if (retryCount < 3) {
+      // if retry count < 3 then postpone the message and add 1 to the retry count
+      log.warn(LOG_PREFIX + " Retry reading message after", e);
+      redisCacheRepository.setRetryCount(uuid, retryCount + 1);
+      acknowledgment.nack(Duration.ofSeconds(1));
+    } else {
+      // if retry count >= 3 then save the message to dead letter
+      log.error(LOG_PREFIX + " Message sent to dead letter", e);
+      this.deadLetterService.sendToDeadLetter(
+          new ErrorMessage(new MessageHandlingException(message, e), message));
+      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     }
   }
 
