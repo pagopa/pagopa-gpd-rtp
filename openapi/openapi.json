@@ -1,371 +1,321 @@
 {
-  "openapi": "3.0.1",
-  "info": {
-    "description": "GPD service to forward debt positions to RTP",
-    "termsOfService": "https://www.pagopa.gov.it/",
-    "title": "pagopa-gpd-rtp",
-    "version": "0.2.7"
+  "openapi" : "3.0.1",
+  "info" : {
+    "description" : "GPD service to forward debt positions to RTP",
+    "termsOfService" : "https://www.pagopa.gov.it/",
+    "title" : "pagopa-gpd-rtp",
+    "version" : "0.2.7"
   },
-  "servers": [
-    {
-      "url": "http://localhost:8080"
-    },
-    {
-      "url": "https://{host}{basePath}",
-      "variables": {
-        "basePath": {
-          "default": ""
-        },
-        "host": {
-          "default": "",
-          "enum": [
-            "dev",
-            "uat",
-            "prod"
-          ]
-        }
+  "servers" : [ {
+    "url" : "http://localhost:8080"
+  }, {
+    "url" : "https://{host}{basePath}",
+    "variables" : {
+      "basePath" : {
+        "default" : "/gpd-rtp/v1",
+        "enum" : [ "/gpd-rtp/v1" ]
+      },
+      "host" : {
+        "default" : "https://api.platform.pagopa.it",
+        "enum" : [ "https://api.dev.platform.pagopa.it", "https://api.uat.platform.pagopa.it", "https://api.platform.pagopa.it" ]
       }
     }
-  ],
-  "tags": [
-    {
-      "description": "Utility endpoints",
-      "name": "Utils"
-    },
-    {
-      "description": "APIs to send events to all PODs",
-      "name": "Broadcast Events"
-    },
-    {
-      "description": "APIs to manage Kafka consumers manually of the single POD",
-      "name": "Kafka Consumer"
-    }
-  ],
-  "paths": {
-    "/events/publish/{event}": {
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+  } ],
+  "tags" : [ {
+    "description" : "Utility endpoints",
+    "name" : "Utils"
+  }, {
+    "description" : "APIs to send events to all PODs",
+    "name" : "Broadcast Events"
+  }, {
+    "description" : "APIs to manage Kafka consumers manually of the single POD",
+    "name" : "Kafka Consumer"
+  } ],
+  "paths" : {
+    "/events/publish/{event}" : {
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ],
-      "post": {
-        "operationId": "sendBroadcaseEvent",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "event",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "START_CONSUMER",
-                "STOP_CONSUMER",
-                "ENABLE_FORCE_KILL",
-                "DISABLE_FORCE_KILL"
-              ]
-            }
-          },
-          {
-            "in": "query",
-            "name": "version",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
+      } ],
+      "post" : {
+        "operationId" : "sendBroadcaseEvent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "event",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "START_CONSUMER", "STOP_CONSUMER", "ENABLE_FORCE_KILL", "DISABLE_FORCE_KILL" ]
           }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
+        }, {
+          "in" : "query",
+          "name" : "version",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "tags": [
-          "Broadcast Events"
-        ]
+        "tags" : [ "Broadcast Events" ]
       }
     },
-    "/info": {
-      "get": {
-        "description": "Return OK if application is started",
-        "operationId": "healthCheck",
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppInfo"
+    "/info" : {
+      "get" : {
+        "description" : "Return OK if application is started",
+        "operationId" : "healthCheck",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppInfo"
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "security": [
-          {
-            "ApiKey": []
-          }
-        ],
-        "summary": "health check",
-        "tags": [
-          "Home"
-        ]
+        "security" : [ {
+          "ApiKey" : [ ]
+        } ],
+        "summary" : "health check",
+        "tags" : [ "Home" ]
       },
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ]
+      } ]
     },
-    "/kafka/consumers/": {
-      "get": {
-        "operationId": "getConsumersDetails",
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object"
+    "/kafka/consumers/" : {
+      "get" : {
+        "operationId" : "getConsumersDetails",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object"
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "tags": [
-          "Kafka Consumer"
-        ]
+        "tags" : [ "Kafka Consumer" ]
       },
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ]
+      } ]
     },
-    "/kafka/consumers/start": {
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+    "/kafka/consumers/start" : {
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ],
-      "post": {
-        "operationId": "startAllConsumers",
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
+      } ],
+      "post" : {
+        "operationId" : "startAllConsumers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "tags": [
-          "Kafka Consumer"
-        ]
+        "tags" : [ "Kafka Consumer" ]
       }
     },
-    "/kafka/consumers/status": {
-      "get": {
-        "operationId": "getStatus",
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object"
+    "/kafka/consumers/status" : {
+      "get" : {
+        "operationId" : "getStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "object"
                   }
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "tags": [
-          "Kafka Consumer"
-        ]
+        "tags" : [ "Kafka Consumer" ]
       },
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ]
+      } ]
     },
-    "/kafka/consumers/stop": {
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+    "/kafka/consumers/stop" : {
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ],
-      "post": {
-        "operationId": "stopAllConsumers",
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
+      } ],
+      "post" : {
+        "operationId" : "stopAllConsumers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "tags": [
-          "Kafka Consumer"
-        ]
+        "tags" : [ "Kafka Consumer" ]
       }
     },
-    "/opt-in/refresh": {
-      "get": {
-        "description": "Return OK if Redis Cache is refreshed with opt-in flags",
-        "operationId": "optInRefresh",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "headers": {
-              "X-Request-Id": {
-                "description": "This header identifies the call",
-                "schema": {
-                  "type": "string"
+    "/opt-in/refresh" : {
+      "get" : {
+        "description" : "Return OK if Redis Cache is refreshed with opt-in flags",
+        "operationId" : "optInRefresh",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "headers" : {
+              "X-Request-Id" : {
+                "description" : "This header identifies the call",
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
           }
         },
-        "security": [
-          {
-            "ApiKey": []
-          }
-        ],
-        "summary": "Refresh the OPT-IN flags",
-        "tags": [
-          "Utils"
-        ]
+        "security" : [ {
+          "ApiKey" : [ ]
+        } ],
+        "summary" : "Refresh the OPT-IN flags",
+        "tags" : [ "Utils" ]
       },
-      "parameters": [
-        {
-          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-          "in": "header",
-          "name": "X-Request-Id",
-          "schema": {
-            "type": "string"
-          }
+      "parameters" : [ {
+        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+        "in" : "header",
+        "name" : "X-Request-Id",
+        "schema" : {
+          "type" : "string"
         }
-      ]
+      } ]
     }
   },
-  "components": {
-    "schemas": {
-      "AppInfo": {
-        "type": "object",
-        "properties": {
-          "environment": {
-            "type": "string"
+  "components" : {
+    "schemas" : {
+      "AppInfo" : {
+        "type" : "object",
+        "properties" : {
+          "environment" : {
+            "type" : "string"
           },
-          "name": {
-            "type": "string"
+          "name" : {
+            "type" : "string"
           },
-          "version": {
-            "type": "string"
+          "version" : {
+            "type" : "string"
           }
         }
       }
     },
-    "securitySchemes": {
-      "ApiKey": {
-        "description": "The API key to access this function app.",
-        "in": "header",
-        "name": "Ocp-Apim-Subscription-Key",
-        "type": "apiKey"
+    "securitySchemes" : {
+      "ApiKey" : {
+        "description" : "The API key to access this function app.",
+        "in" : "header",
+        "name" : "Ocp-Apim-Subscription-Key",
+        "type" : "apiKey"
       }
     }
   }

@@ -23,6 +23,7 @@ import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
+import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
@@ -61,6 +62,7 @@ class IngestionServiceImplTest {
   @MockBean private AnonymizerClient anonymizerClient;
   @MockBean private DeadLetterService deadLetterService;
   @MockBean private Acknowledgment acknowledgment;
+  @MockBean private RedisCacheRepository redisCacheRepository;
   @SpyBean private ObjectMapper objectMapper;
   @Autowired @InjectMocks private IngestionServiceImpl sut;
 
