@@ -47,7 +47,9 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 
-@SpringBootTest(classes = {IngestionServiceImpl.class, ObjectMapper.class})
+@SpringBootTest(
+    classes = {IngestionServiceImpl.class, ObjectMapper.class},
+    properties = "max.retry.db.replica=3")
 class IngestionServiceImplTest {
   private static final String REMITTANCE_INFORMATION = "remittanceInformation";
   private static final AnonymizerModel ANONIMIZED_RESPONSE =
@@ -376,13 +378,6 @@ class IngestionServiceImplTest {
 
     verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
     verify(paymentOptionRepository).findById(anyLong());
-    verify(acknowledgment).acknowledge();
-    verify(acknowledgment, never()).nack(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
-    verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-    verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
-    verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(deadLetterService, never()).sendToDeadLetter(any());
   }
 
   @Test

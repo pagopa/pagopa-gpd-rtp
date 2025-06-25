@@ -133,12 +133,12 @@ public class IngestionServiceImpl implements IngestionService {
     // get retry count
     int retryCount = redisCacheRepository.getRetryCount(uuid);
     if (retryCount < maxRetryDbReplica) {
-      // if retry count < 3 then postpone the message and add 1 to the retry count
+      // if retry count < n then postpone the message and add 1 to the retry count
       log.warn(LOG_PREFIX + " Retry reading message after", e);
       redisCacheRepository.setRetryCount(uuid, retryCount + 1);
-      acknowledgment.nack(Duration.ofSeconds(1));
+      acknowledgment.nack(Duration.ofSeconds(5));
     } else {
-      // if retry count >= 3 then save the message to dead letter
+      // if retry count >= n then save the message to dead letter
       log.error(LOG_PREFIX + " Message sent to dead letter", e);
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
@@ -201,11 +201,11 @@ public class IngestionServiceImpl implements IngestionService {
     PaymentOption poFromDBReplica =
         paymentOptionRepository
             .findById(valuesAfter.getId())
-            .orElseThrow(() -> new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND));
+            .orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND));
     Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
     LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
     if (poFromDBReplica == null) {
-      throw new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND);
+      throw new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND);
     }
     if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
       throw new FailAndPostpone(AppError.DB_REPLICA_NOT_UPDATED);
