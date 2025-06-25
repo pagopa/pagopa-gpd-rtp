@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -55,6 +56,9 @@ public class IngestionServiceImpl implements IngestionService {
   private final DeadLetterService deadLetterService;
   private final ProcessingTracker processingTracker;
   private final RedisCacheRepository redisCacheRepository;
+
+  @Value("${max.retry.db.replica}")
+  private Integer maxRetryDbReplica;
 
   public void ingestPaymentOption(Message<String> message) {
     try {
@@ -128,7 +132,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
     // get retry count
     int retryCount = redisCacheRepository.getRetryCount(uuid);
-    if (retryCount < 3) {
+    if (retryCount < maxRetryDbReplica) {
       // if retry count < 3 then postpone the message and add 1 to the retry count
       log.warn(LOG_PREFIX + " Retry reading message after", e);
       redisCacheRepository.setRetryCount(uuid, retryCount + 1);
