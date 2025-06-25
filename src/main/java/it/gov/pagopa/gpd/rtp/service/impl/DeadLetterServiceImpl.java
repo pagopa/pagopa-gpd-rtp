@@ -29,7 +29,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     try {
       processingTracker.messageProcessingStarted();
       handleErrorMessage(errorMessage);
-      log.error(LOG_PREFIX + " New Message in DeadLetter");
+      log.error(LOG_PREFIX + " New Message in DeadLetter", errorMessage.getPayload());
     } finally {
       processingTracker.messageProcessingFinished();
     }
