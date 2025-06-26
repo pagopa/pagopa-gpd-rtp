@@ -84,7 +84,7 @@ microservice-chart:
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
     REDIS_PORT: "6380"
-    ANONYMIZER_URL_HOST: "https://api.dev.platform.pagopa.it/anonymizer/v1"
+    ANONYMIZER_URL_HOST: "https://api.platform.pagopa.it/anonymizer/v1"
     ANONYMIZER_URL_PATH: "/anonymize"
     DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"

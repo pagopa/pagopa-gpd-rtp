@@ -78,7 +78,7 @@ public class IngestionServiceImpl implements IngestionService {
 
     try {
       // Discard null messages
-      if (message.getHeaders().getId() == null) {
+      if (message.getHeaders().getId() == null || message.getPayload() == null) {
         log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
         throw new FailAndIgnore(AppError.NULL_MESSAGE);
       }
@@ -87,6 +87,8 @@ public class IngestionServiceImpl implements IngestionService {
           "PaymentOption ingestion called at {} for payment options with message id {}",
           LocalDateTime.now(),
           message.getHeaders().getId());
+      log.debug(
+          "PaymentOption ingestion called with message {} at {}", message, message.getPayload());
       String msg = message.getPayload();
 
       DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
@@ -101,7 +103,7 @@ public class IngestionServiceImpl implements IngestionService {
     } catch (FailAndPostpone e) {
       handleRetry(message, e, acknowledgment);
     } catch (FailAndIgnore e) {
-      log.info("{} Message ignored", LOG_PREFIX);
+      log.info("{} Message ignored {}", LOG_PREFIX, e.getMessage());
       acknowledgment.acknowledge();
     } catch (FailAndNotify e) {
       log.error(LOG_PREFIX + " Unexpected error raised", e);

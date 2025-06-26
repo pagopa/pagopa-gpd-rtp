@@ -72,6 +72,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         originalMessagePayload = new String((byte[]) originalMessage.getPayload());
       } catch (Exception ignored) {
         // handled after
+        log.warn("Unable to retrieve original message payload for messageId", ignored);
       }
     }
     return originalMessagePayload;
