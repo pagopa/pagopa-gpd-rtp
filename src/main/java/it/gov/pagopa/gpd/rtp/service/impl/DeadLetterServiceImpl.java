@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
-
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
@@ -29,7 +27,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     try {
       processingTracker.messageProcessingStarted();
       handleErrorMessage(errorMessage);
-      log.error(LOG_PREFIX + " New Message in DeadLetter", errorMessage.getPayload());
+      log.error("New Message in DeadLetter", errorMessage.getPayload());
     } finally {
       processingTracker.messageProcessingFinished();
     }

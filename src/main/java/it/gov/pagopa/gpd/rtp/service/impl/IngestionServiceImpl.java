@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,7 +77,7 @@ public class IngestionServiceImpl implements IngestionService {
     try {
       // Discard null messages
       if (message.getHeaders().getId() == null || message.getPayload() == null) {
-        log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
+        log.debug("NULL message ignored at {}", LocalDateTime.now());
         throw new FailAndIgnore(AppError.NULL_MESSAGE);
       }
 
@@ -97,19 +95,19 @@ public class IngestionServiceImpl implements IngestionService {
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
       checkResponse(response);
 
-      log.debug("{} RTP Message sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+      log.debug("RTP Message sent to eventhub at {}", LocalDateTime.now());
       acknowledgment.acknowledge();
       redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     } catch (FailAndPostpone e) {
       handleRetry(message, e, acknowledgment);
     } catch (FailAndIgnore e) {
-      log.info("{} Message ignored {}", LOG_PREFIX, e.getMessage());
+      log.info("Message ignored {}", e.getMessage());
       acknowledgment.acknowledge();
     } catch (FailAndNotify e) {
-      log.error(LOG_PREFIX + " Unexpected error raised", e);
+      log.error("Unexpected error raised", e);
       throw e;
     } catch (Exception e) {
-      log.error(LOG_PREFIX + " Unexpected error raised", e);
+      log.error("Unexpected error raised", e);
       throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
     }
   }
@@ -136,14 +134,13 @@ public class IngestionServiceImpl implements IngestionService {
     int retryCount = redisCacheRepository.getRetryCount(uuid);
     if (retryCount < maxRetryDbReplica) {
       // if retry count < n then postpone the message and add 1 to the retry count
-      log.warn(LOG_PREFIX + " Retry reading message after", e);
+      log.warn("Retry reading message after", e);
       redisCacheRepository.setRetryCount(uuid, retryCount + 1);
       acknowledgment.nack(Duration.ofSeconds(5));
     } else {
       // if retry count >= n then save the message to dead letter
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
-      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     }
   }
 

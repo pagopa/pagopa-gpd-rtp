@@ -33,6 +33,7 @@ public class RedisCacheRepository {
 
   public void setRetryCount(UUID id, int retryCount) {
     redisTemplate.opsForValue().set(SUFFIX_KEY + id.toString(), String.valueOf(retryCount));
+    redisTemplate.expire(SUFFIX_KEY + id.toString(), Duration.ofHours(2));
   }
 
   public void deleteRetryCount(UUID id) {
