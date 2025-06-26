@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.2.7-3-PAGOPA-3155-gp-dx-rtp-sviluppi-test-propedeutici-al-rilascio-in-prod</version>
+  <version>0.2.7-4-PAGOPA-3155-gp-dx-rtp-sviluppi-test-propedeutici-al-rilascio-in-prod</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 

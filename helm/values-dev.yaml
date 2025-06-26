@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.2.7-3-PAGOPA-3155-gp-dx-rtp-sviluppi-test-propedeutici-al-rilascio-in-prod"
+    tag: "0.2.7-4-PAGOPA-3155-gp-dx-rtp-sviluppi-test-propedeutici-al-rilascio-in-prod"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
