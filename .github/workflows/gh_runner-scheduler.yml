@@ -1,0 +1,70 @@
+name: GitHub Runner Job AutoScaler
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 07 * * MON-FRI'
+    - cron: '0 19 * * MON-FRI'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  repo_short_name: 'gpd-rtp'
+  maximum_replica: 10
+
+jobs:
+  scheduler:
+    runs-on: ubuntu-22.04
+    environment:
+      name: oidc
+    strategy:
+      fail-fast: false
+      matrix:
+        short_env: [ d, u, p ]
+    steps:
+      - name: setup environment
+        id: setup
+        run: |
+          if [[ "${{ matrix.short_env }}" == "d" ]]; then
+            echo "CLIENT_ID=${{ secrets.DEV_CLIENT_ID }}" >> $GITHUB_ENV
+            echo "TENANT_ID=${{ secrets.DEV_TENANT_ID }}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_ID=${{ secrets.DEV_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          fi  
+          if [[ "${{ matrix.short_env }}" == "u" ]]; then
+            echo "CLIENT_ID=${{ secrets.UAT_CLIENT_ID}}" >> $GITHUB_ENV
+            echo "TENANT_ID=${{ secrets.UAT_TENANT_ID}}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_ID=${{ secrets.UAT_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          fi 
+          if [[ "${{ matrix.short_env }}" == "p" ]]; then
+            echo "CLIENT_ID=${{ secrets.PROD_CLIENT_ID}}" >> $GITHUB_ENV
+            echo "TENANT_ID=${{ secrets.PROD_TENANT_ID}}" >> $GITHUB_ENV
+            echo "SUBSCRIPTION_ID=${{ secrets.PROD_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          fi
+
+      - name: Azure Login
+        id: login
+        uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
+        with:
+          client-id: ${{ env.CLIENT_ID }}
+          tenant-id: ${{ env.TENANT_ID }}
+          subscription-id: ${{ env.SUBSCRIPTION_ID }}
+
+      - name: Increase minimum replicas
+        if: github.event.schedule == '0 07 * * MON-FRI'
+        run: |
+          az containerapp job update \
+            --resource-group 'pagopa-${{ matrix.short_env }}-identity-rg' \
+            --name 'pagopa-${{ matrix.short_env }}-${{ env.repo_short_name }}-ca-job' \
+            --min-executions 1 \
+            --max-executions ${{ env.maximum_replica }}
+
+      - name: Decrease minimum replicas
+        if: github.event.schedule == '0 19 * * MON-FRI'
+        run: |
+          az containerapp job update \
+            --resource-group 'pagopa-${{ matrix.short_env }}-identity-rg' \
+            --name 'pagopa-${{ matrix.short_env }}-${{ env.repo_short_name }}-ca-job' \
+            --min-executions 0 \
+            --max-executions ${{ env.maximum_replica }}
