@@ -80,7 +80,7 @@ microservice-chart:
     RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
-    SPRING_DATASOURCE_URL: "jdbc:postgresql://gpd-db.p.internal.postgresql.pagopa.it:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://pagopa-p-weu-gpd-pgflex-ve.reader.postgres.database.azure.com:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
     REDIS_PORT: "6380"
@@ -135,7 +135,8 @@ microservice-chart:
         repository: ghcr.io/pagopa/pagopa-gpd-rtp
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: {}
+      envConfig:
+        OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
 refresh-cache-cron:
   namespace: "gps"

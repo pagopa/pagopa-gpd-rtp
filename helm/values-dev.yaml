@@ -136,7 +136,8 @@ microservice-chart:
         repository: ghcr.io/pagopa/pagopa-gpd-rtp
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: {}
+      envConfig:
+        OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
 refresh-cache-cron:
   namespace: "gps"
