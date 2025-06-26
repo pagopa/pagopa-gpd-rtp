@@ -141,6 +141,7 @@ public class IngestionServiceImpl implements IngestionService {
       // if retry count >= n then save the message to dead letter
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
+      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     }
   }
 

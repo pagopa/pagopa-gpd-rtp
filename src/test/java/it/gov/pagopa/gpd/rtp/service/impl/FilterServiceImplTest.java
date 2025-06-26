@@ -45,8 +45,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.VALID, VALID_FISCAL_CODE, DebeziumOperationCode.c)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.VALID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   @Test
@@ -58,8 +61,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.VALID, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.VALID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
@@ -71,8 +77,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.PAID, VALID_FISCAL_CODE, DebeziumOperationCode.c)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.PAID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   @Test
@@ -84,8 +93,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.PAID, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.PAID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
@@ -97,8 +109,9 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
+                getDataCaptureMessagePaymentOption(
                     PaymentPositionStatus.PARTIALLY_PAID,
+                    VALID_PIVA,
                     VALID_FISCAL_CODE,
                     DebeziumOperationCode.c)));
   }
@@ -112,8 +125,9 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
+                getDataCaptureMessagePaymentOption(
                     PaymentPositionStatus.PARTIALLY_PAID,
+                    VALID_PIVA,
                     VALID_FISCAL_CODE,
                     DebeziumOperationCode.u)));
   }
@@ -127,8 +141,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.EXPIRED, VALID_FISCAL_CODE, DebeziumOperationCode.c)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.EXPIRED,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   @Test
@@ -140,8 +157,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.EXPIRED, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.EXPIRED,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
@@ -153,8 +173,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.INVALID, VALID_FISCAL_CODE, DebeziumOperationCode.c)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.INVALID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   @Test
@@ -166,16 +189,19 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.INVALID, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.INVALID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
   void isValidPaymentOptionForRTP_KO_DRAFT_OPERATION_C() {
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.DRAFT, VALID_FISCAL_CODE, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.DRAFT, VALID_PIVA, VALID_FISCAL_CODE, DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -190,8 +216,11 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.DRAFT, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.DRAFT,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
@@ -202,8 +231,11 @@ class FilterServiceImplTest {
     when(redisCacheRepository.getFlags()).thenReturn(mock);
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.PUBLISHED, VALID_FISCAL_CODE, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.PUBLISHED,
+              VALID_PIVA,
+              VALID_FISCAL_CODE,
+              DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -218,16 +250,22 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.PUBLISHED, VALID_FISCAL_CODE, DebeziumOperationCode.u)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.PUBLISHED,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.u)));
   }
 
   @Test
   void isValidPaymentOptionForRTP_KO_REPORTED_OPERATION_C() {
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.REPORTED, VALID_FISCAL_CODE, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.REPORTED,
+              VALID_PIVA,
+              VALID_FISCAL_CODE,
+              DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -237,8 +275,11 @@ class FilterServiceImplTest {
   void isValidPaymentOptionForRTP_KO_REPORTED_OPERATION_U() {
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.REPORTED, VALID_FISCAL_CODE, DebeziumOperationCode.u));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.REPORTED,
+              VALID_PIVA,
+              VALID_FISCAL_CODE,
+              DebeziumOperationCode.u));
     } catch (AppException e) {
       assertEquals(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -257,7 +298,8 @@ class FilterServiceImplTest {
   void isValidPaymentOptionForRTP_KO_PAYMENT_POSITION_STATUS_NULL() {
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(null, VALID_FISCAL_CODE, DebeziumOperationCode.u));
+          getDataCaptureMessagePaymentOption(
+              null, VALID_PIVA, VALID_FISCAL_CODE, DebeziumOperationCode.u));
     } catch (AppException e) {
       assertEquals(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -273,16 +315,22 @@ class FilterServiceImplTest {
     assertDoesNotThrow(
         () ->
             sut.isValidPaymentOptionForRTPOrElseThrow(
-                getDataCapureMessagePaymentOption(
-                    PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c)));
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.VALID,
+                    VALID_PIVA,
+                    VALID_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   @Test
   void isValidPaymentOptionForRTP_OK_INVALID_FISCAL_CODE() {
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.VALID, INVALID_FISCAL_CODE, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.VALID,
+              VALID_PIVA,
+              INVALID_FISCAL_CODE,
+              DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.TAX_CODE_NOT_VALID_FOR_RTP, e.getAppErrorCode());
     }
@@ -339,8 +387,8 @@ class FilterServiceImplTest {
     when(redisCacheRepository.getFlags()).thenReturn(mock);
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.VALID, VALID_PIVA, VALID_FISCAL_CODE, DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.EC_NOT_ENABLED_FOR_RTP, e.getAppErrorCode());
     }
@@ -352,15 +400,16 @@ class FilterServiceImplTest {
         .thenThrow(new AppException(AppError.REDIS_CACHE_NOT_UPDATED));
     try {
       sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCapureMessagePaymentOption(
-              PaymentPositionStatus.VALID, VALID_PIVA, DebeziumOperationCode.c));
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.VALID, VALID_PIVA, VALID_FISCAL_CODE, DebeziumOperationCode.c));
     } catch (AppException e) {
       assertEquals(AppError.REDIS_CACHE_NOT_UPDATED, e.getAppErrorCode());
     }
   }
 
-  private DataCaptureMessage<PaymentOptionEvent> getDataCapureMessagePaymentOption(
+  private DataCaptureMessage<PaymentOptionEvent> getDataCaptureMessagePaymentOption(
       PaymentPositionStatus paymentPositionStatus,
+      String orgFiscalCode,
       String fiscalCode,
       DebeziumOperationCode debeziumOperationCode) {
     return DataCaptureMessage.<PaymentOptionEvent>builder()
@@ -368,6 +417,7 @@ class FilterServiceImplTest {
         .after(
             PaymentOptionEvent.builder()
                 .paymentPositionStatus(paymentPositionStatus)
+                .organizationFiscalCode(orgFiscalCode)
                 .fiscalCode(fiscalCode)
                 .build())
         .op(debeziumOperationCode)
