@@ -34,7 +34,7 @@ microservice-chart:
   ingress:
     create: true
     host: "weudev.gps.internal.dev.platform.pagopa.it"
-    path: /gpd-rtp/(.*)
+    path: /gpd-rtp-service/(.*)
     servicePort: 8080
   serviceAccount:
     name: "gps-workload-identity"

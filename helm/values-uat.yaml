@@ -33,7 +33,7 @@ microservice-chart:
       - 8080
   ingress:
     create: true
-    host: "weuuat.gps.internal.dev.platform.pagopa.it"
+    host: "weuuat.gps.internal.uat.platform.pagopa.it"
     path: /gpd-rtp-service/(.*)
     servicePort: 8080
   serviceAccount:
@@ -158,7 +158,7 @@ refresh-cache-cron:
     - "-k"
     - "-m"
     - "\"300\""
-    - "https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
+    - "https://weuuat.gps.internal.uat.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
   resources:
     requests:
       memory: "256Mi"
