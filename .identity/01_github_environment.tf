@@ -51,7 +51,7 @@ locals {
     "SUBSCRIPTION_ID" : {
       "key" : "${upper(var.env)}_SUBSCRIPTION_ID",
       "value" : data.azurerm_subscription.current.subscription_id
-    }
+    },
   }
 }
 

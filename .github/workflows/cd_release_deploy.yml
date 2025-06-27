@@ -147,35 +147,33 @@ jobs:
   manage_consumers:
     name: Manage Consumers
     runs-on: ubuntu-latest
-    needs: [ deploy_aks ]
+    needs: [ setup, deploy_aks ]
+    environment: ${{ needs.setup.outputs.environment }}
     steps:
-      - name: Set Subscription Key
+      - name: Set Host
         run: |
           echo "HOST=api.dev.platform.pagopa.it" >> $GITHUB_ENV
-          echo "SUBKEY=${{ secrets.DEV_SUBKEY }}" >> $GITHUB_ENV
           
           if [[ "${{ inputs.environment }}" == "uat" ]]; then
             echo "HOST=api.uat.platform.pagopa.it" >> $GITHUB_ENV
-            echo "SUBKEY=${{ secrets.UAT_SUBKEY }}" >> $GITHUB_ENV
           fi
           
           if [[ "${{ inputs.environment }}" == "prod" ]]; then
             echo "HOST=api.platform.pagopa.it" >> $GITHUB_ENV
-            echo "SUBKEY=${{ secrets.PROD_SUBKEY }}" >> $GITHUB_ENV
           fi
 
       - name: Call START_CONSUMER event
         if: ${{ inputs.start_consumer }}
         run: |
           curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp/v1/events/publish/START_CONSUMER' \
-            --header "Ocp-Apim-Subscription-Key: ${{ env.SUBKEY}}" \
+            --header "Ocp-Apim-Subscription-Key: ${{ secrets.SUBKEY }}" \
             --header 'Content-Length: 0'
 
       - name: Call STOP_CONSUMER event
         if: ${{ inputs.start_consumer == false }}
         run: |
           curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp/v1/events/publish/STOP_CONSUMER' \
-            --header "Ocp-Apim-Subscription-Key: ${{ env.SUBKEY}}" \
+            --header "Ocp-Apim-Subscription-Key: ${{ secrets.SUBKEY}}" \
             --header 'Content-Length: 0'
 
   notify:
