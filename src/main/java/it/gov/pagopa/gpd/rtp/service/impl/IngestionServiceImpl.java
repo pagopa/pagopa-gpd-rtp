@@ -1,8 +1,11 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
@@ -13,10 +16,7 @@ import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
-import it.gov.pagopa.gpd.rtp.exception.AppError;
-import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
-import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
-import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
+import it.gov.pagopa.gpd.rtp.exception.*;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,7 @@ public class IngestionServiceImpl implements IngestionService {
   private final DeadLetterService deadLetterService;
   private final ProcessingTracker processingTracker;
   private final RedisCacheRepository redisCacheRepository;
+  private final TelemetryClient telemetryClient;
 
   @Value("${max.retry.db.replica}")
   private Integer maxRetryDbReplica;
@@ -92,11 +94,24 @@ public class IngestionServiceImpl implements IngestionService {
       acknowledgment.acknowledge();
     } catch (FailAndNotify e) {
       log.error("Unexpected error raised", e);
+      sendCustomEvent(e);
       throw e;
     } catch (Exception e) {
       log.error("Unexpected error raised", e);
-      throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+      FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+      sendCustomEvent(failAndNotify);
+      throw failAndNotify;
     }
+  }
+
+  private void sendCustomEvent(FailAndNotify e) {
+    Map<String, String> props =
+        Map.of(
+            "type", e.getAppErrorCode().name(),
+            "title", e.getAppErrorCode().getTitle(),
+            "details", e.getAppErrorCode().getDetails(),
+            "cause", e.getCause().getMessage());
+    telemetryClient.trackEvent(CUSTOM_EVENT, props, null);
   }
 
   private static String getOptionEvent(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
