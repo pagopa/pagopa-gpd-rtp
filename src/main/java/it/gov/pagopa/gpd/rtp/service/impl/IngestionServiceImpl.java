@@ -136,7 +136,7 @@ public class IngestionServiceImpl implements IngestionService {
       // if retry count < n then postpone the message and add 1 to the retry count
       log.warn("Retry reading message after", e);
       redisCacheRepository.setRetryCount(uuid, retryCount + 1);
-      acknowledgment.nack(Duration.ofSeconds(5));
+      acknowledgment.nack(Duration.ofSeconds(1));
     } else {
       // if retry count >= n then save the message to dead letter
       this.deadLetterService.sendToDeadLetter(

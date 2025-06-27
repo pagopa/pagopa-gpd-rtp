@@ -92,8 +92,10 @@ microservice-chart:
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
-    OTEL_LOGS_EXPORTER: none
     OTEL_TRACES_SAMPLER: "always_on"
+    OTEL_TRACES_EXPORTER: otlp
+    OTEL_METRICS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: none
     RTP_URL_HOST: "https://api-rtp.uat.cstar.pagopa.it/rtp"
     RTP_MIL_CLIENT_ID: "fe594504-4e5f-4611-9151-afbcd0da3df5"
     RTP_MIL_HOST: "https://api-mcshared.uat.cstar.pagopa.it"
