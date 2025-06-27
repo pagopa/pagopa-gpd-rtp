@@ -27,7 +27,6 @@ COPY --chown=spring:spring  --from=builder application/ ./
 EXPOSE 8080
 
 ENTRYPOINT ["/bin/sh", "-c", "exec java \
-  -javaagent:/applicationinsights-agent.jar \
   -javaagent:/opentelemetry-javaagent.jar \
   $JAVA_OPTS \
   org.springframework.boot.loader.launch.JarLauncher \"$@\"", "--"]
