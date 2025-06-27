@@ -167,14 +167,14 @@ jobs:
       - name: Call START_CONSUMER event
         if: ${{ inputs.start_consumer }}
         run: |
-          curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp-service/v1/events/publish/START_CONSUMER' \
+          curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp/v1/events/publish/START_CONSUMER' \
             --header "Ocp-Apim-Subscription-Key: ${{ env.SUBKEY}}" \
             --header 'Content-Length: 0'
 
       - name: Call STOP_CONSUMER event
         if: ${{ inputs.start_consumer == false }}
         run: |
-          curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp-service/v1/events/publish/STOP_CONSUMER' \
+          curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp/v1/events/publish/STOP_CONSUMER' \
             --header "Ocp-Apim-Subscription-Key: ${{ env.SUBKEY}}" \
             --header 'Content-Length: 0'
 
