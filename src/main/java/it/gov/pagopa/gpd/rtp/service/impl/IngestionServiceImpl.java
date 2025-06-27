@@ -29,9 +29,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -68,28 +69,12 @@ public class IngestionServiceImpl implements IngestionService {
   }
 
   private void handleMessage(Message<String> message) {
-    Acknowledgment acknowledgment =
-        message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
-    if (acknowledgment == null) {
-      throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
-    }
-
+    Acknowledgment acknowledgment = null;
+    DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
     try {
-      // Discard null messages
-      if (message.getHeaders().getId() == null || message.getPayload() == null) {
-        log.debug("NULL message ignored at {}", LocalDateTime.now());
-        throw new FailAndIgnore(AppError.NULL_MESSAGE);
-      }
+      acknowledgment = getAck(message);
 
-      log.debug(
-          "PaymentOption ingestion called at {} for payment options with message id {}",
-          LocalDateTime.now(),
-          message.getHeaders().getId());
-      log.debug(
-          "PaymentOption ingestion called with message {} at {}", message, message.getPayload());
-      String msg = message.getPayload();
-
-      DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
+      paymentOption = parseMessage(message);
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
@@ -97,11 +82,13 @@ public class IngestionServiceImpl implements IngestionService {
 
       log.debug("RTP Message sent to eventhub at {}", LocalDateTime.now());
       acknowledgment.acknowledge();
-      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
+
     } catch (FailAndPostpone e) {
-      handleRetry(message, e, acknowledgment);
+      assert paymentOption != null : "paymentOption cannot be null";
+      handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
     } catch (FailAndIgnore e) {
       log.info("Message ignored {}", e.getMessage());
+      assert acknowledgment != null : "acknowledgment cannot be null";
       acknowledgment.acknowledge();
     } catch (FailAndNotify e) {
       log.error("Unexpected error raised", e);
@@ -110,6 +97,40 @@ public class IngestionServiceImpl implements IngestionService {
       log.error("Unexpected error raised", e);
       throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
     }
+  }
+
+  private static String getOptionEvent(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    return Optional.ofNullable(paymentOption.getBefore())
+        .orElse(paymentOption.getAfter())
+        .getId()
+        .toString();
+  }
+
+  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<String> message) {
+    // Discard null messages
+    if (message.getHeaders().getId() == null || message.getPayload() == null) {
+      log.debug("NULL message ignored at {}", LocalDateTime.now());
+      throw new FailAndIgnore(AppError.NULL_MESSAGE);
+    }
+
+    log.debug(
+        "PaymentOption ingestion called at {} for payment options with message id {}",
+        LocalDateTime.now(),
+        message.getHeaders().getId());
+    String msg = message.getPayload();
+
+    DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
+    return paymentOption;
+  }
+
+  @NotNull
+  private static Acknowledgment getAck(Message<String> message) {
+    Acknowledgment acknowledgment =
+        message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+    if (acknowledgment == null) {
+      throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
+    }
+    return acknowledgment;
   }
 
   /**
@@ -124,24 +145,23 @@ public class IngestionServiceImpl implements IngestionService {
    * @param acknowledgment The acknowledgment object to be used to nack the message.
    */
   private void handleRetry(
-      Message<String> message, FailAndPostpone e, Acknowledgment acknowledgment) {
-    // get id of the message
-    UUID uuid = message.getHeaders().getId();
-    if (uuid == null) {
-      throw new FailAndIgnore(AppError.NULL_MESSAGE);
-    }
+      Message<String> message,
+      String paymentOptionId,
+      FailAndPostpone e,
+      Acknowledgment acknowledgment) {
+
     // get retry count
-    int retryCount = redisCacheRepository.getRetryCount(uuid);
+    int retryCount = redisCacheRepository.getRetryCount(paymentOptionId);
     if (retryCount < maxRetryDbReplica) {
       // if retry count < n then postpone the message and add 1 to the retry count
       log.warn("Retry reading message after", e);
-      redisCacheRepository.setRetryCount(uuid, retryCount + 1);
+      redisCacheRepository.setRetryCount(paymentOptionId, retryCount + 1);
       acknowledgment.nack(Duration.ofSeconds(1));
     } else {
       // if retry count >= n then save the message to dead letter
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
-      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
+      redisCacheRepository.deleteRetryCount(paymentOptionId);
     }
   }
 

@@ -61,14 +61,14 @@ class RedisCacheRepositoryTest {
   void setRetryCount() {
     ValueOperations mock = Mockito.mock(ValueOperations.class);
     when(stringRedisTemplate.opsForValue()).thenReturn(mock);
-    redisCacheRepository.setRetryCount(UUID.randomUUID(), 1);
+    redisCacheRepository.setRetryCount(UUID.randomUUID().toString(), 1);
   }
 
   @Test
   void getRetryCount() {
     ValueOperations mock = Mockito.mock(ValueOperations.class);
     when(stringRedisTemplate.opsForValue()).thenReturn(mock);
-    var retry = redisCacheRepository.getRetryCount(UUID.randomUUID());
+    var retry = redisCacheRepository.getRetryCount(UUID.randomUUID().toString());
     assertEquals(0, retry);
   }
 
@@ -76,6 +76,6 @@ class RedisCacheRepositoryTest {
   void deleteRetryCount() {
     ValueOperations mock = Mockito.mock(ValueOperations.class);
     when(stringRedisTemplate.opsForValue()).thenReturn(mock);
-    redisCacheRepository.deleteRetryCount(UUID.randomUUID());
+    redisCacheRepository.deleteRetryCount(UUID.randomUUID().toString());
   }
 }

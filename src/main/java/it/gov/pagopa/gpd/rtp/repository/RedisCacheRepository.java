@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,19 +30,18 @@ public class RedisCacheRepository {
     redisTemplate.expire(CREATED_AT_KEY, TTL);
   }
 
-  public void setRetryCount(UUID id, int retryCount) {
-    redisTemplate.opsForValue().set(SUFFIX_KEY + id.toString(), String.valueOf(retryCount));
-    redisTemplate.expire(SUFFIX_KEY + id.toString(), Duration.ofHours(2));
+  public void setRetryCount(String id, int retryCount) {
+    redisTemplate.opsForValue().set(SUFFIX_KEY + id, String.valueOf(retryCount));
+    redisTemplate.expire(SUFFIX_KEY + id, Duration.ofHours(2));
   }
 
-  public void deleteRetryCount(UUID id) {
-    redisTemplate.delete(SUFFIX_KEY + id.toString());
+  public void deleteRetryCount(String id) {
+    redisTemplate.delete(SUFFIX_KEY + id);
   }
 
-  public int getRetryCount(UUID id) {
+  public int getRetryCount(String id) {
     return Integer.parseInt(
-        Optional.ofNullable(redisTemplate.opsForValue().get(SUFFIX_KEY + id.toString()))
-            .orElse("0"));
+        Optional.ofNullable(redisTemplate.opsForValue().get(SUFFIX_KEY + id)).orElse("0"));
   }
 
   @NotNull
