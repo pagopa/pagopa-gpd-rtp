@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +19,7 @@ import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
+import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
@@ -30,8 +29,10 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -52,6 +53,10 @@ public class IngestionServiceImpl implements IngestionService {
   private final AnonymizerClient anonymizerClient;
   private final DeadLetterService deadLetterService;
   private final ProcessingTracker processingTracker;
+  private final RedisCacheRepository redisCacheRepository;
+
+  @Value("${max.retry.db.replica}")
+  private Integer maxRetryDbReplica;
 
   public void ingestPaymentOption(Message<String> message) {
     try {
@@ -71,8 +76,8 @@ public class IngestionServiceImpl implements IngestionService {
 
     try {
       // Discard null messages
-      if (message.getHeaders().getId() == null) {
-        log.debug("{} NULL message ignored at {}", LOG_PREFIX, LocalDateTime.now());
+      if (message.getHeaders().getId() == null || message.getPayload() == null) {
+        log.debug("NULL message ignored at {}", LocalDateTime.now());
         throw new FailAndIgnore(AppError.NULL_MESSAGE);
       }
 
@@ -80,6 +85,8 @@ public class IngestionServiceImpl implements IngestionService {
           "PaymentOption ingestion called at {} for payment options with message id {}",
           LocalDateTime.now(),
           message.getHeaders().getId());
+      log.debug(
+          "PaymentOption ingestion called with message {} at {}", message, message.getPayload());
       String msg = message.getPayload();
 
       DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
@@ -88,20 +95,53 @@ public class IngestionServiceImpl implements IngestionService {
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
       checkResponse(response);
 
-      log.debug("{} RTPMessage sent to eventhub at {}", LOG_PREFIX, LocalDateTime.now());
+      log.debug("RTP Message sent to eventhub at {}", LocalDateTime.now());
       acknowledgment.acknowledge();
+      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     } catch (FailAndPostpone e) {
-      log.error(LOG_PREFIX + " Retry reading message after", e);
-      acknowledgment.nack(Duration.ofSeconds(1));
+      handleRetry(message, e, acknowledgment);
     } catch (FailAndIgnore e) {
-      log.info("{} Message ignored", LOG_PREFIX);
+      log.info("Message ignored {}", e.getMessage());
       acknowledgment.acknowledge();
     } catch (FailAndNotify e) {
-      log.error(LOG_PREFIX + " Unexpected error raised", e);
+      log.error("Unexpected error raised", e);
       throw e;
     } catch (Exception e) {
-      log.error(LOG_PREFIX + " Unexpected error raised", e);
+      log.error("Unexpected error raised", e);
       throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+    }
+  }
+
+  /**
+   * Handles retry logic for failed messages.
+   *
+   * <p>If the retry count for the message is less than 3, the message is postponed and the retry
+   * count is increased by 1. If the retry count is 3 or more, the message is saved to the dead
+   * letter storage account.
+   *
+   * @param message The message to be retried.
+   * @param e The exception that caused the retry.
+   * @param acknowledgment The acknowledgment object to be used to nack the message.
+   */
+  private void handleRetry(
+      Message<String> message, FailAndPostpone e, Acknowledgment acknowledgment) {
+    // get id of the message
+    UUID uuid = message.getHeaders().getId();
+    if (uuid == null) {
+      throw new FailAndIgnore(AppError.NULL_MESSAGE);
+    }
+    // get retry count
+    int retryCount = redisCacheRepository.getRetryCount(uuid);
+    if (retryCount < maxRetryDbReplica) {
+      // if retry count < n then postpone the message and add 1 to the retry count
+      log.warn("Retry reading message after", e);
+      redisCacheRepository.setRetryCount(uuid, retryCount + 1);
+      acknowledgment.nack(Duration.ofSeconds(1));
+    } else {
+      // if retry count >= n then save the message to dead letter
+      this.deadLetterService.sendToDeadLetter(
+          new ErrorMessage(new MessageHandlingException(message, e), message));
+      redisCacheRepository.deleteRetryCount(message.getHeaders().getId());
     }
   }
 
@@ -160,11 +200,11 @@ public class IngestionServiceImpl implements IngestionService {
     PaymentOption poFromDBReplica =
         paymentOptionRepository
             .findById(valuesAfter.getId())
-            .orElseThrow(() -> new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND));
+            .orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND));
     Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
     LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
     if (poFromDBReplica == null) {
-      throw new FailAndIgnore(AppError.PAYMENT_OPTION_NOT_FOUND);
+      throw new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND);
     }
     if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
       throw new FailAndPostpone(AppError.DB_REPLICA_NOT_UPDATED);

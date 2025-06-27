@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
-import static it.gov.pagopa.gpd.rtp.util.Constants.LOG_PREFIX;
-
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
@@ -29,7 +27,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     try {
       processingTracker.messageProcessingStarted();
       handleErrorMessage(errorMessage);
-      log.error(LOG_PREFIX + " New Message in DeadLetter");
+      log.error("New Message in DeadLetter", errorMessage.getPayload());
     } finally {
       processingTracker.messageProcessingFinished();
     }
@@ -72,6 +70,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         originalMessagePayload = new String((byte[]) originalMessage.getPayload());
       } catch (Exception ignored) {
         // handled after
+        log.warn("Unable to retrieve original message payload for messageId", ignored);
       }
     }
     return originalMessagePayload;

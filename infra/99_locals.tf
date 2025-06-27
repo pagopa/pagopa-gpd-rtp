@@ -5,7 +5,7 @@ locals {
   apim = {
     name       = "${local.product}-apim"
     rg         = "${local.product}-api-rg"
-    product_id = "gpdrtp"
+    product_id = "gpsrtp"
   }
   apim_hostname = "api.${var.apim_dns_zone_prefix}.${var.external_domain}"
   hostname      = var.env == "prod" ? "weuprod.gps.internal.platform.pagopa.it" : "weu${var.env}.gps.internal.${var.env}.platform.pagopa.it"

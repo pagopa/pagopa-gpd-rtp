@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.2.7"
+    "version": "0.2.7-5-PAGOPA-3155-gp-dx-rtp-sviluppi-test-propedeutici-al-rilascio-in-prod"
   },
   "servers": [
     {
@@ -14,14 +14,17 @@
       "url": "https://{host}{basePath}",
       "variables": {
         "basePath": {
-          "default": ""
+          "default": "/gpd-rtp/v1",
+          "enum": [
+            "/gpd-rtp/v1"
+          ]
         },
         "host": {
-          "default": "",
+          "default": "https://api.platform.pagopa.it",
           "enum": [
-            "dev",
-            "uat",
-            "prod"
+            "https://api.dev.platform.pagopa.it",
+            "https://api.uat.platform.pagopa.it",
+            "https://api.platform.pagopa.it"
           ]
         }
       }

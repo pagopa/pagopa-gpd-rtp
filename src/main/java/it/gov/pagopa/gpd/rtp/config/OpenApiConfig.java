@@ -27,6 +27,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+  public static final String APIM_PATH = "/gpd-rtp/v1";
+
+  public static final String APIM_DEV = "https://api.dev.platform.pagopa.it";
+  public static final String APIM_UAT = "https://api.uat.platform.pagopa.it";
+  public static final String APIM_PROD = "https://api.platform.pagopa.it";
+
   @Bean
   public OpenAPI customOpenAPI(
       @Value("${info.application.artifactId}") String appName,
@@ -43,12 +49,13 @@ public class OpenApiConfig {
                             .addServerVariable(
                                 "host",
                                 new ServerVariable()
-                                    ._enum(List.of("dev", "uat", "prod")) // TODO: set server hosts
-                                    ._default("")) // TODO: set default server host
+                                    ._enum(List.of(APIM_DEV, APIM_UAT, APIM_PROD))
+                                    ._default(APIM_PROD))
                             .addServerVariable(
                                 "basePath",
-                                new ServerVariable()._default("")) // TODO: set app base path
-                        )))
+                                new ServerVariable()
+                                    ._enum(List.of(APIM_PATH))
+                                    ._default(APIM_PATH)))))
         .components(
             new Components()
                 .addSecuritySchemes(
