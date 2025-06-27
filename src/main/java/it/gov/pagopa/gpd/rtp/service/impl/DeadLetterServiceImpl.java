@@ -1,11 +1,15 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
+
+import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -21,6 +25,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
 
   private final BlobStorageClient blobStorageClient;
   private final ProcessingTracker processingTracker;
+  private final TelemetryClient telemetryClient;
 
   @Override
   public void sendToDeadLetter(ErrorMessage errorMessage) {
@@ -28,6 +33,17 @@ public class DeadLetterServiceImpl implements DeadLetterService {
       processingTracker.messageProcessingStarted();
       handleErrorMessage(errorMessage);
       log.error("New Message in DeadLetter", errorMessage.getPayload());
+      Map<String, String> props =
+          Map.of(
+              "type",
+              "DEAD_LETTER",
+              "title",
+              "new message in dead letter",
+              "details",
+              errorMessage.getPayload().toString(),
+              "cause",
+              errorMessage.getPayload().getCause().getMessage());
+      telemetryClient.trackEvent(CUSTOM_EVENT, props, null);
     } finally {
       processingTracker.messageProcessingFinished();
     }

@@ -1,10 +1,12 @@
 package it.gov.pagopa.gpd.rtp.controller;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import it.gov.pagopa.gpd.rtp.model.AppInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ public class HomeController {
 
   @Value("${info.properties.environment}")
   private String environment;
+
+  @Autowired private final TelemetryClient telemetryClient;
 
   @Hidden
   @GetMapping("")
