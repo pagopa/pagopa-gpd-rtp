@@ -42,7 +42,7 @@ locals {
   special_repo_secrets = {
     "CLIENT_ID" : {
       "key" : "${upper(var.env)}_CLIENT_ID",
-      "value" : data.azurerm_user_assigned_identity.identity_cd_01.client_id
+      "value" : data.azurerm_user_assigned_identity.identity_oidc.client_id
     },
     "TENANT_ID" : {
       "key" : "${upper(var.env)}_TENANT_ID",
