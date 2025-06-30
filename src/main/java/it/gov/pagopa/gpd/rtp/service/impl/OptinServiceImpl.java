@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
+
 import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.impl.RtpClientService;
 import it.gov.pagopa.gpd.rtp.events.broadcast.RedisPublisher;
@@ -15,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 
 @Service
 @Slf4j
@@ -46,20 +46,23 @@ public class OptinServiceImpl implements OptinService {
         toCache.addAll(flagOptIns);
         pageNumber++;
       } while (page != null
-              && page.getPageMetadata() != null
-              && pageNumber < page.getPageMetadata().getTotalPages()
-      );
+          && page.getPageMetadata() != null
+          && pageNumber < page.getPageMetadata().getTotalPages());
 
       this.redisCacheRepository.saveAll(toCache);
       this.redisPublisher.publishEvent(Map.of(version, EventEnum.START_CONSUMER));
     } catch (Exception e) {
       log.error("Unexpected error while refreshing optIn flag", e);
       Map<String, String> props =
-              Map.of(
-                      "type", "OPT_INT_REFRESH_ERROR",
-                      "title", "Unexpected error while refreshing optIn flag",
-                      "details", e.getMessage(),
-                      "cause", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+          Map.of(
+              "type",
+              "OPT_IN_REFRESH_ERROR",
+              "title",
+              "Unexpected error while refreshing optIn flag",
+              "details",
+              e.getMessage(),
+              "cause",
+              e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
       this.telemetryClient.trackEvent(CUSTOM_EVENT, props, null);
       throw e;
     }
