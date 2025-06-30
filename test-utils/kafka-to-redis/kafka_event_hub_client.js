@@ -66,9 +66,9 @@ async function writeOnRedis(client, decoder, message, topic) {
 }
 
 function getEventId(event, topic) {
-    if (event.op === "c") {
+    if (event.operation === "CREATE") {
         return event.after.id + `-c`;
-    } else if (event.op === "d") {
+    } else if (event.operation === "DELETE") {
         return event.before.id + `-d`;
     } else {
         return event.after.id + `-u`;
