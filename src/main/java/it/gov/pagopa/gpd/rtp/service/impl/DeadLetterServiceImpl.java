@@ -42,7 +42,9 @@ public class DeadLetterServiceImpl implements DeadLetterService {
               "details",
               errorMessage.getPayload().toString(),
               "cause",
-              errorMessage.getPayload().getCause().getMessage());
+              errorMessage.getPayload().getCause() != null
+                  ? errorMessage.getPayload().getCause().getMessage()
+                  : errorMessage.getPayload().getMessage());
       telemetryClient.trackEvent(CUSTOM_EVENT, props, null);
     } finally {
       processingTracker.messageProcessingFinished();

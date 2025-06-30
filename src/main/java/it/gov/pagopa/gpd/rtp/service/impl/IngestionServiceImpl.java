@@ -16,7 +16,10 @@ import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
-import it.gov.pagopa.gpd.rtp.exception.*;
+import it.gov.pagopa.gpd.rtp.exception.AppError;
+import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
+import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
+import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
@@ -110,7 +113,7 @@ public class IngestionServiceImpl implements IngestionService {
             "type", e.getAppErrorCode().name(),
             "title", e.getAppErrorCode().getTitle(),
             "details", e.getAppErrorCode().getDetails(),
-            "cause", e.getCause().getMessage());
+            "cause", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
     telemetryClient.trackEvent(CUSTOM_EVENT, props, null);
   }
 

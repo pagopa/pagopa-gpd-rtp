@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
@@ -65,6 +66,7 @@ class IngestionServiceImplTest {
   @MockBean private DeadLetterService deadLetterService;
   @MockBean private Acknowledgment acknowledgment;
   @MockBean private RedisCacheRepository redisCacheRepository;
+  @MockBean private TelemetryClient telemetryClient;
   @SpyBean private ObjectMapper objectMapper;
   @Autowired @InjectMocks private IngestionServiceImpl sut;
 

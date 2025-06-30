@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
@@ -40,6 +41,8 @@ class DeadLetterServiceImplTest {
   @MockBean private BlobStorageClient blobStorageClient;
 
   @MockBean private ProcessingTracker processingTracker;
+
+  @MockBean private TelemetryClient telemetryClient;
 
   @Captor private ArgumentCaptor<String> errorMessageCaptor;
 
