@@ -22,7 +22,7 @@ public class EventsController {
   private final RedisPublisher redisPublisher;
 
   @PostMapping("/publish/{event}")
-  public ResponseEntity<String> sendBroadcaseEvent(
+  public ResponseEntity<String> sendBroadcastEvent(
       @PathVariable EventEnum event,
       @RequestParam(value = "version", required = false) String specificVersion) {
     redisPublisher.publishEvent(

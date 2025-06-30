@@ -9,6 +9,7 @@ import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
+import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import java.util.List;
@@ -51,7 +52,7 @@ public class FilterServiceImpl implements FilterService {
     }
 
     // Check flag opt-in
-    var hasRtpEnabled = isPresent(valuesAfter.getFiscalCode());
+    var hasRtpEnabled = isPresent(valuesAfter.getOrganizationFiscalCode());
     if (!hasRtpEnabled) {
       throw new FailAndIgnore(AppError.EC_NOT_ENABLED_FOR_RTP);
     }
@@ -73,7 +74,7 @@ public class FilterServiceImpl implements FilterService {
         transferList.stream()
             .reduce(0L, (subtotal, element) -> subtotal + element.getAmount(), Long::sum);
     if (totalTransfersAmount != paymentOption.getAmount()) {
-      throw new FailAndIgnore(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
+      throw new FailAndPostpone(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
     }
   }
 

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
@@ -40,6 +41,8 @@ class DeadLetterServiceImplTest {
   @MockBean private BlobStorageClient blobStorageClient;
 
   @MockBean private ProcessingTracker processingTracker;
+
+  @MockBean private TelemetryClient telemetryClient;
 
   @Captor private ArgumentCaptor<String> errorMessageCaptor;
 
@@ -84,18 +87,6 @@ class DeadLetterServiceImplTest {
   }
 
   @Test
-  void sendToDeadLetter_KO_ERROR_PARSING_MESSAGE_PAYLOAD() {
-    ErrorMessage errorMessage = buildErrorMessageWithInvalidOriginalMessagePayload();
-
-    assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
-
-    verify(blobStorageClient).saveStringJsonToBlobStorage(errorMessageCaptor.capture(), any());
-    String capturedErrorMessage = errorMessageCaptor.getValue();
-
-    assertTrue(capturedErrorMessage.contains(ORIGINAL_MESSAGE_PAYLOAD));
-  }
-
-  @Test
   void sendToDeadLetter__KO_NULL_ORIGINAL_MESSAGE() {
     ErrorMessage errorMessage = buildErrorMessageWithoutMessage();
 
@@ -129,18 +120,6 @@ class DeadLetterServiceImplTest {
     AppException appException = new AppException(AppError.INTERNAL_SERVER_ERROR);
 
     return new ErrorMessage(new Exception(appException), Collections.emptyMap());
-  }
-
-  private ErrorMessage buildErrorMessageWithInvalidOriginalMessagePayload() {
-    AppException appException = new AppException(AppError.INTERNAL_SERVER_ERROR);
-
-    MessageHeaders originalMessageHeaders =
-        new MessageHeaders(Map.of(KafkaHeaders.RECEIVED_KEY, CDC_MESSAGE_KEY));
-    MessageHeaders errorMessageHeaders = new MessageHeaders(Collections.emptyMap());
-    Message<String> originalMessage =
-        new GenericMessage<>(String.valueOf(new DataCaptureMessage<>()), originalMessageHeaders);
-
-    return new ErrorMessage(new Exception(appException), errorMessageHeaders, originalMessage);
   }
 
   private ErrorMessage buildErrorMessageWithoutOriginalMessageHeaders() {

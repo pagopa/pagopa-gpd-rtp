@@ -5,6 +5,7 @@ import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class RedisCacheRepository {
 
   private final StringRedisTemplate redisTemplate;
+  public static final String SUFFIX_KEY = "rtp_";
   public static final String KEY = "rtp_flag_optin";
   private static final String CREATED_AT_KEY = "rtp_created_at";
   private static final Duration TTL = Duration.ofDays(7);
@@ -26,6 +28,20 @@ public class RedisCacheRepository {
     redisTemplate.opsForValue().set(CREATED_AT_KEY, LocalDateTime.now().toString());
     redisTemplate.expire(KEY, TTL);
     redisTemplate.expire(CREATED_AT_KEY, TTL);
+  }
+
+  public void setRetryCount(String id, int retryCount) {
+    redisTemplate.opsForValue().set(SUFFIX_KEY + id, String.valueOf(retryCount));
+    redisTemplate.expire(SUFFIX_KEY + id, Duration.ofHours(2));
+  }
+
+  public void deleteRetryCount(String id) {
+    redisTemplate.delete(SUFFIX_KEY + id);
+  }
+
+  public int getRetryCount(String id) {
+    return Integer.parseInt(
+        Optional.ofNullable(redisTemplate.opsForValue().get(SUFFIX_KEY + id)).orElse("0"));
   }
 
   @NotNull

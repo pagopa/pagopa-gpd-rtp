@@ -1,12 +1,15 @@
 package it.gov.pagopa.gpd.rtp.repository;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
@@ -52,5 +55,27 @@ class RedisCacheRepositoryTest {
     when(stringRedisTemplate.opsForValue()).thenReturn(mock);
     var res = redisCacheRepository.isCacheUpdated();
     assertTrue(res);
+  }
+
+  @Test
+  void setRetryCount() {
+    ValueOperations mock = Mockito.mock(ValueOperations.class);
+    when(stringRedisTemplate.opsForValue()).thenReturn(mock);
+    redisCacheRepository.setRetryCount(UUID.randomUUID().toString(), 1);
+  }
+
+  @Test
+  void getRetryCount() {
+    ValueOperations mock = Mockito.mock(ValueOperations.class);
+    when(stringRedisTemplate.opsForValue()).thenReturn(mock);
+    var retry = redisCacheRepository.getRetryCount(UUID.randomUUID().toString());
+    assertEquals(0, retry);
+  }
+
+  @Test
+  void deleteRetryCount() {
+    ValueOperations mock = Mockito.mock(ValueOperations.class);
+    when(stringRedisTemplate.opsForValue()).thenReturn(mock);
+    redisCacheRepository.deleteRetryCount(UUID.randomUUID().toString());
   }
 }

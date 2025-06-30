@@ -1,7 +1,7 @@
 <policies>
   <inbound>
     <base />
-    <set-backend-service base-url="https://${hostname}/gpd-rtp" />
+    <set-backend-service base-url="https://${hostname}/gpd-rtp-service" />
   </inbound>
   <outbound>
     <base />

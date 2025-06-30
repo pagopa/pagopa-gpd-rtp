@@ -34,7 +34,7 @@ microservice-chart:
   ingress:
     create: true
     host: "weudev.gps.internal.dev.platform.pagopa.it"
-    path: /gpd-rtp/(.*)
+    path: /gpd-rtp-service/(.*)
     servicePort: 8080
   serviceAccount:
     name: "gps-workload-identity"
@@ -90,6 +90,12 @@ microservice-chart:
     DEAD_LETTER_ENDPOINT: "https://pagopadweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
+    OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=dev"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
+    OTEL_TRACES_SAMPLER: "always_on"
+    OTEL_TRACES_EXPORTER: otlp
+    OTEL_METRICS_EXPORTER: otlp
+    OTEL_LOGS_EXPORTER: none
     RTP_URL_HOST: "https://api-rtp.dev.cstar.pagopa.it/rtp"
     RTP_MIL_HOST: "https://api-mcshared.dev.cstar.pagopa.it"
     RTP_MIL_CLIENT_ID: "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
@@ -105,6 +111,7 @@ microservice-chart:
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
     RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
+    OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
   keyvault:
     name: "pagopa-d-gps-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -136,7 +143,8 @@ microservice-chart:
         repository: ghcr.io/pagopa/pagopa-gpd-rtp
         tag: "0.0.0"
         pullPolicy: Always
-      envConfig: {}
+      envConfig:
+        OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
 refresh-cache-cron:
   namespace: "gps"
