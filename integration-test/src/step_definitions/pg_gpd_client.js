@@ -54,10 +54,6 @@ async function insertTransfer(id, category, remittanceInformation, paymentOption
   await connection.query(`INSERT INTO apd.apd.transfer (id, amount, category, iban, transfer_id, inserted_date, iuv, last_updated_date, organization_fiscal_code, postal_iban, remittance_information, status, payment_option_id, hash_document, stamp_type, provincial_residence, company_name) VALUES('${id}', 10000, '${category}', 'mockIban', '1', '2024-11-12 16:09:43.477', '09455575462301733', '2024-11-12 16:09:43.477', '77777777777', NULL, 'Rata 1 Edit', '${remittanceInformation}', ${paymentOptionId}, NULL, NULL, NULL, 'SkyLab Inc.');`);
 }
 
-async function updateTransfer(id, category) {
-  await connection.query(`UPDATE apd.apd.transfer SET category='${category}' WHERE id='${id}'`);
-}
-
 async function deleteTransfer(id) {
   await connection.query(`DELETE FROM apd.apd.transfer WHERE id='${id}'`);
 }
@@ -65,6 +61,6 @@ async function deleteTransfer(id) {
 module.exports = {
   shutDownPool,
   insertPaymentPosition, updatePaymentPosition, deletePaymentPosition,
-  insertPaymentOption, updatePaymentOption, deletePaymentOption,
-  insertTransfer, updateTransfer, deleteTransfer
+  insertPaymentOption, deletePaymentOption,
+  insertTransfer, deleteTransfer
 }

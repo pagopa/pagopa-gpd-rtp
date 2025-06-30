@@ -2,7 +2,8 @@ const assert = require('assert');
 const { After, Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucumber/cucumber');
 const { sleep } = require("./common");
 const { readFromRedisWithKey, shutDownClient } = require("./redis_client");
-const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, updatePaymentOption, deletePaymentOption, insertTransfer, updateTransfer, deleteTransfer } = require("./pg_gpd_client");
+const { readFromOptInRedisWithKey, writeOnOptInRedisKeyValue, shutDownOptInRedisClient } = require("./opt_in_redis_client");
+const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
 
 // set timeout for Hooks function, it allows to wait for long task
 setDefaultTimeout(360 * 1000);
@@ -34,6 +35,7 @@ this.remittanceInformation = null;
 AfterAll(async function () {
   shutDownPool();
   shutDownClient();
+  shutDownOptInRedisClient();
 });
 
 // After each Scenario
@@ -73,8 +75,11 @@ After(async function () {
 });
 
 Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', function (fiscalCode) {
-  // Write code here that turns the phrase above into concrete actions
-  return 'pending';
+  const flags = readFromOptInRedisWithKey("rtp_flag_optin");
+  if (!flags.contains(fiscalCode)) {
+    flags.put(fiscalCode);
+    writeOnOptInRedisKeyValue("rtp_flag_optin", flags);
+  }
 });
 
 Given('a payment position with id {string} and fiscal code {string} in GPD database', async function (id, fiscalCode) {
