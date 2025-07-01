@@ -38,7 +38,7 @@ jobs:
       - name: setup
         id: setup
         run: |
-          echo "CLIENT_ID=${{secrets.CLIENT_ID}}" >> $GITHUB_ENV 
+          echo "CLIENT_ID=${{secrets.DEV_CLIENT_ID}}" >> $GITHUB_ENV 
           echo "TENANT_ID=${{secrets.DEV_TENANT_ID}}" >> $GITHUB_ENV 
           echo "SUBSCRIPTION_ID=${{secrets.DEV_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
           
@@ -50,6 +50,9 @@ jobs:
           echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.DEV_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
           
           if [[ ${{ inputs.environment }} == "uat" ]]; then
+            echo "CLIENT_ID=${{secrets.UAT_CLIENT_ID}}" >> $GITHUB_ENV 
+            echo "TENANT_ID=${{secrets.UAT_TENANT_ID}}" >> $GITHUB_ENV 
+            echo "SUBSCRIPTION_ID=${{secrets.UAT_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
             echo "ENV_SHORT=u" >> $GITHUB_ENV 
             echo "PG_GPD_PASSWORD=${{ secrets.UAT_PG_GPD_PASSWORD }}" >> $GITHUB_ENV
             echo "PG_GPD_USERNAME=${{ secrets.UAT_PG_GPD_USERNAME }}" >> $GITHUB_ENV
