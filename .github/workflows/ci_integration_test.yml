@@ -30,6 +30,8 @@ jobs:
   integration_test:
     name: Test ${{(github.event.inputs == null && 'dev') || inputs.environment }}
     runs-on: ubuntu-latest
+    environment:
+      name: oidc
     steps:
       - name: Checkout
         id: checkout
@@ -41,7 +43,6 @@ jobs:
           echo "CLIENT_ID=${{secrets.DEV_CLIENT_ID}}" >> $GITHUB_ENV 
           echo "TENANT_ID=${{secrets.DEV_TENANT_ID}}" >> $GITHUB_ENV 
           echo "SUBSCRIPTION_ID=${{secrets.DEV_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
-          
           echo "ENV_SHORT=d" >> $GITHUB_ENV 
           echo "PG_GPD_PASSWORD=${{ secrets.DEV_PG_GPD_PASSWORD }}" >> $GITHUB_ENV
           echo "PG_GPD_USERNAME=${{ secrets.DEV_PG_GPD_USERNAME }}" >> $GITHUB_ENV
