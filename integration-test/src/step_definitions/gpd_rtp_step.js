@@ -74,11 +74,13 @@ After(async function () {
   this.remittanceInformation = null;
 });
 
-Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', function (fiscalCode) {
-  const flags = readFromOptInRedisWithKey("rtp_flag_optin");
-  if (!flags.contains(fiscalCode)) {
-    flags.put(fiscalCode);
-    writeOnOptInRedisKeyValue("rtp_flag_optin", flags);
+Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', async function (fiscalCode) {
+  const flagsString = await readFromOptInRedisWithKey("rtp_flag_optin");
+  let flags = flagsString ? JSON.parse(flagsString) : [];
+
+  if (!flags.includes(fiscalCode)) {
+    flags.push(fiscalCode);
+    await writeOnOptInRedisKeyValue("rtp_flag_optin", JSON.stringify(flags));
   }
 });
 
