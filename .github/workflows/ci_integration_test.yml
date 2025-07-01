@@ -60,10 +60,9 @@ jobs:
             echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.UAT_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
           fi
 
-      - name: Login
+      - name: Azure Login
         id: login
-        # from https://github.com/Azure/login/commits/master
-        uses: azure/login@92a5484dfaf04ca78a94597f4f19fea633851fa2
+        uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
         with:
           client-id: ${{ env.CLIENT_ID }}
           tenant-id: ${{ env.TENANT_ID }}
