@@ -38,6 +38,10 @@ jobs:
       - name: setup
         id: setup
         run: |
+          echo "CLIENT_ID=${{secrets.CLIENT_ID}}" >> $GITHUB_ENV 
+          echo "TENANT_ID=${{secrets.DEV_TENANT_ID}}" >> $GITHUB_ENV 
+          echo "SUBSCRIPTION_ID=${{secrets.DEV_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
+          
           echo "ENV_SHORT=d" >> $GITHUB_ENV 
           echo "PG_GPD_PASSWORD=${{ secrets.DEV_PG_GPD_PASSWORD }}" >> $GITHUB_ENV
           echo "PG_GPD_USERNAME=${{ secrets.DEV_PG_GPD_USERNAME }}" >> $GITHUB_ENV
@@ -58,9 +62,9 @@ jobs:
         id: login
         uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
         with:
-          client-id: ${{ secrets.CLIENT_ID }}
-          tenant-id: ${{ secrets.TENANT_ID }}
-          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+          client-id: ${{ env.CLIENT_ID }}
+          tenant-id: ${{ env.TENANT_ID }}
+          subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
       - name: Run Kafka to Redis utils on Docker
         shell: bash
