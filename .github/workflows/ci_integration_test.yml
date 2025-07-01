@@ -70,13 +70,20 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
+      - name: Install Docker Compose
+        shell: bash
+        id: install_docker_compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose-plugin
+          docker compose version
+
       - name: Run Kafka to Redis utils on Docker
         shell: bash
         id: run_kafka_to_redis_docker
         run: |
           cd ./test-utils
           chmod +x ./run_compose.sh
-          docker compose version
           ./run_compose.sh 'pagopa-${{ env.ENV_SHORT }}-itn-gps-rtp-integration-evh.servicebus.windows.net:9093' "${{ env.RTP_EVENTHUB_CONN_STRING }}" "rtp-events"
 
       - name: Run Integration Tests
