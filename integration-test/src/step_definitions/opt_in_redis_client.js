@@ -8,9 +8,9 @@ const client = createClient({
     socket: {
         port: redisPort,
         host: redisHost,
-        password: redisPassword,
         tls: true
-    }
+    },
+    password: redisPassword
 });
 
 client.on('error', err => console.log('Redis Client Error', err))
