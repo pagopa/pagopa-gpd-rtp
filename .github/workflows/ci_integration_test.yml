@@ -1,26 +1,8 @@
 name: Integration Tests
 
 on:
-  #  schedule:
-  #    - cron: '00 08 * * 1-5'
-
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-        description: Select the Environment
-      canary:
-        description: 'run the tests on canary version'
-        required: false
-        type: boolean
-        default: false
-      notify:
-        description: 'notify result with slack message'
-        required: false
-        type: boolean
-        default: true
-
+  schedule:
+    - cron: '00 08 * * *'
 
   workflow_dispatch:
     inputs:
@@ -29,19 +11,14 @@ on:
         type: choice
         description: Select the Environment
         options:
-          - local
           - dev
           - uat
-      canary:
-        description: 'run the tests on canary version'
-        required: false
-        type: boolean
-        default: false
       notify:
-        description: 'notify result with slack message'
+        description: 'send the slack notification'
         required: false
         type: boolean
-        default: false
+        default: true
+
 
 permissions:
   id-token: write
@@ -50,7 +27,6 @@ permissions:
 
 
 jobs:
-
   integration_test:
     name: Test ${{(github.event.inputs == null && 'dev') || inputs.environment }}
     runs-on: ubuntu-latest
@@ -65,13 +41,23 @@ jobs:
           echo "CLIENT_ID=${{secrets.DEV_CLIENT_ID}}" >> $GITHUB_ENV 
           echo "TENANT_ID=${{secrets.DEV_TENANT_ID}}" >> $GITHUB_ENV 
           echo "SUBSCRIPTION_ID=${{secrets.DEV_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
-          echo "SUBKEY=${{secrets.DEV_SUBKEY}}" >> $GITHUB_ENV 
+          echo "ENV_SHORT=d" >> $GITHUB_ENV 
+          echo "PG_GPD_PASSWORD=${{ secrets.DEV_PG_GPD_PASSWORD }}" >> $GITHUB_ENV
+          echo "PG_GPD_USERNAME=${{ secrets.DEV_PG_GPD_USERNAME }}" >> $GITHUB_ENV
+          echo "OPT_IN_REDIS_PASSWORD=${{ secrets.DEV_OPT_IN_REDIS_PASSWORD }}" >> $GITHUB_ENV
+          echo "OPT_IN_REDIS_HOSTNAME=${{ secrets.DEV_OPT_IN_REDIS_HOSTNAME }}" >> $GITHUB_ENV
+          echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.DEV_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
           
           if [[ ${{ inputs.environment }} == "uat" ]]; then
             echo "CLIENT_ID=${{secrets.UAT_CLIENT_ID}}" >> $GITHUB_ENV 
             echo "TENANT_ID=${{secrets.UAT_TENANT_ID}}" >> $GITHUB_ENV 
             echo "SUBSCRIPTION_ID=${{secrets.UAT_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
-            echo "SUBKEY=${{secrets.UAT_SUBKEY}}" >> $GITHUB_ENV 
+            echo "ENV_SHORT=u" >> $GITHUB_ENV 
+            echo "PG_GPD_PASSWORD=${{ secrets.UAT_PG_GPD_PASSWORD }}" >> $GITHUB_ENV
+            echo "PG_GPD_USERNAME=${{ secrets.UAT_PG_GPD_USERNAME }}" >> $GITHUB_ENV
+            echo "OPT_IN_REDIS_PASSWORD=${{ secrets.UAT_OPT_IN_REDIS_PASSWORD }}" >> $GITHUB_ENV
+            echo "OPT_IN_REDIS_HOSTNAME=${{ secrets.UAT_OPT_IN_REDIS_HOSTNAME }}" >> $GITHUB_ENV
+            echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.UAT_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
           fi
 
       - name: Login
@@ -83,22 +69,22 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
-
-      - name: Run Service on Docker
+      - name: Run Kafka to Redis utils on Docker
         shell: bash
-        id: run_service_docker
+        id: run_kafka_to_redis_docker
         run: |
-          cd ./docker
-          chmod +x ./run_docker.sh
-          ./run_docker.sh ${{ inputs.environment }}
-  
+          cd ./test-utils
+          chmod +x ./run_compose.sh
+          ./run_compose.sh 'pagopa-${{ env.ENV_SHORT }}-itn-gps-rtp-integration-evh.servicebus.windows.net:9093' "${{ env.RTP_EVENTHUB_CONN_STRING }}" "rtp-events"
 
       - name: Run Integration Tests
         shell: bash
         run: |
-          export SUBKEY=${{ env.SUBKEY }}
-          export CANARY=${{ inputs.canary }}
           export CUCUMBER_PUBLISH_TOKEN=${{ secrets.CUCUMBER_PUBLISH_TOKEN }}
+          export PG_GPD_PASSWORD=${{ env.PG_GPD_PASSWORD }}
+          export PG_GPD_USERNAME=${{ env.PG_GPD_USERNAME }}
+          export OPT_IN_REDIS_PASSWORD=${{ env.OPT_IN_REDIS_PASSWORD }}
+          export OPT_IN_REDIS_HOSTNAME=${{ env.OPT_IN_REDIS_HOSTNAME }}
 
           cd ./integration-test
           chmod +x ./run_integration_test.sh
@@ -108,9 +94,10 @@ jobs:
     needs: [ integration_test ]
     runs-on: ubuntu-latest
     name: Notify
-    if: ${{ always() && inputs.notify == 'true' }}
+    if: ${{ always() && (github.event_name == 'schedule' || inputs.notify == true ) }}
     steps:
       - name: Report Status
+        if: ${{ inputs.notify }}
         uses: ravsamhq/notify-slack-action@be814b201e233b2dc673608aa46e5447c8ab13f2 # v2
         with:
           status: ${{ needs.integration_test.result }}
@@ -120,6 +107,4 @@ jobs:
           message_format: '{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}> in ${{ inputs.environment }}'
           footer: 'Linked to <{workflow_url}| workflow file>'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_TEST }}
-
-
+          SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_TEST_SLACK_WEBHOOK_URL }}

@@ -38,6 +38,8 @@ locals {
     "SONAR_TOKEN" : data.azurerm_key_vault_secret.key_vault_sonar.value,
     "BOT_TOKEN_GITHUB" : data.azurerm_key_vault_secret.key_vault_bot_token.value,
     "CUCUMBER_PUBLISH_TOKEN" : data.azurerm_key_vault_secret.key_vault_cucumber_token.value,
+    "DEPLOY_SLACK_WEBHOOK_URL": data.azurerm_key_vault_secret.key_vault_deploy_slack_webhook.value,
+    "INTEGRATION_TEST_SLACK_WEBHOOK_URL": data.azurerm_key_vault_secret.key_vault_integration_test_slack_webhook.value
   }
   special_repo_secrets = {
     "CLIENT_ID" : {
@@ -51,6 +53,26 @@ locals {
     "SUBSCRIPTION_ID" : {
       "key" : "${upper(var.env)}_SUBSCRIPTION_ID",
       "value" : data.azurerm_subscription.current.subscription_id
+    },
+    "PG_GPD_PASSWORD" : {
+      "key" : "${upper(var.env)}_PG_GPD_PASSWORD",
+      "value" : data.azurerm_key_vault_secret.key_vault_db_apd_password.value
+    },
+    "PG_GPD_USERNAME" : {
+      "key" : "${upper(var.env)}_PG_GPD_USERNAME",
+      "value" : data.azurerm_key_vault_secret.key_vault_db_apd_user_name.value
+    },
+    "OPT_IN_REDIS_PASSWORD" : {
+      "key" : "${upper(var.env)}_OPT_IN_REDIS_PASSWORD",
+      "value" : data.azurerm_key_vault_secret.key_vault_redis_password.value
+    },
+    "OPT_IN_REDIS_HOSTNAME" : {
+      "key" : "${upper(var.env)}_OPT_IN_REDIS_HOSTNAME",
+      "value" : data.azurerm_key_vault_secret.key_vault_redis_hostname.value
+    },
+    "RTP_EVENTHUB_CONN_STRING" : {
+      "key" : "${upper(var.env)}_RTP_EVENTHUB_CONN_STRING",
+      "value" : (var.env_short != "p" ? data.azurerm_key_vault_secret.key_vault_ehub_rtp_integration_test_connection_string[0].value : "not-used-only-4-test")
     },
   }
 }
