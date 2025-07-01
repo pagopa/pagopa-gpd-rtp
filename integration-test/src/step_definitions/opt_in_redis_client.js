@@ -20,12 +20,12 @@ client.on('connect', function () {
     console.log('Connected!');
 });
 
-async function readFromOptInRedisWithKey(key) {
-    return await client.get(key);
+async function fiscalCodeIsPresentInOptInRedisCache(fiscalCode) {
+    return await client.sIsMember("rtp_flag_optin", fiscalCode);
 }
 
-async function writeOnOptInRedisKeyValue(key, value) {
-    return await client.set(key, value);
+async function addFiscalCodeInOptInRedisCache(fiscalCode) {
+    return await client.sAdd("rtp_flag_optin", fiscalCode);
 }
 
 async function shutDownOptInRedisClient() {
@@ -33,5 +33,5 @@ async function shutDownOptInRedisClient() {
   }
 
 module.exports = {
-    readFromOptInRedisWithKey, writeOnOptInRedisKeyValue, shutDownOptInRedisClient
+    fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient
   }

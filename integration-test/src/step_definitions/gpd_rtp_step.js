@@ -2,7 +2,7 @@ const assert = require('assert');
 const { After, Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucumber/cucumber');
 const { sleep } = require("./common");
 const { readFromRedisWithKey, shutDownClient } = require("./redis_client");
-const { readFromOptInRedisWithKey, writeOnOptInRedisKeyValue, shutDownOptInRedisClient } = require("./opt_in_redis_client");
+const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
 const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
 
 // set timeout for Hooks function, it allows to wait for long task
@@ -75,12 +75,10 @@ After(async function () {
 });
 
 Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', async function (fiscalCode) {
-  const flagsString = await readFromOptInRedisWithKey("rtp_flag_optin");
-  let flags = flagsString ? JSON.parse(flagsString) : [];
+  const exist = await fiscalCodeIsPresentInOptInRedisCache(fiscalCode);
 
-  if (!flags.includes(fiscalCode)) {
-    flags.push(fiscalCode);
-    await writeOnOptInRedisKeyValue("rtp_flag_optin", JSON.stringify(flags));
+  if (!exist) {
+    await addFiscalCodeInOptInRedisCache(fiscalCode);
   }
 });
 
