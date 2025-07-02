@@ -33,13 +33,6 @@ this.transferCategory = null;
 this.remittanceInformation = null;
 
 AfterAll(async function () {
-  shutDownPool();
-  shutDownClient();
-  shutDownOptInRedisClient();
-});
-
-// After each Scenario
-After(async function () {
   // remove event
   if (this.transferId != null) {
     await deleteTransfer(this.transferId);
@@ -72,7 +65,13 @@ After(async function () {
   this.transferId = null;
   this.transferCategory = null;
   this.remittanceInformation = null;
+
+
+  shutDownPool();
+  shutDownClient();
+  shutDownOptInRedisClient();
 });
+
 
 Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', async function (fiscalCode) {
   const exist = await fiscalCodeIsPresentInOptInRedisCache(fiscalCode);
