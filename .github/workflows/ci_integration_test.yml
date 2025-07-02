@@ -29,7 +29,7 @@ permissions:
 jobs:
   integration_test:
     name: Test ${{(github.event.inputs == null && 'dev') || inputs.environment }}
-    runs-on: [ self-hosted-job, "${{ github.event.inputs == null && 'uat' || github.event.inputs.environment }}" ]
+    runs-on: ubuntu-latest
     environment:
       name: oidc
     steps:
@@ -69,14 +69,6 @@ jobs:
           client-id: ${{ env.CLIENT_ID }}
           tenant-id: ${{ env.TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
-
-      - name: Install Docker Compose
-        shell: bash
-        id: install_docker_compose
-        run: |
-          apt-get update
-          apt-get install docker-compose-plugin
-          docker compose version
 
       - name: Run Kafka to Redis utils on Docker
         shell: bash

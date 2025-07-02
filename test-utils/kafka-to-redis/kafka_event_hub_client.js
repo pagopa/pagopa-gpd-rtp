@@ -45,7 +45,7 @@ async function eventHubToRedisHandler() {
         await consumer.run({
             eachMessage: async ({ topic, partition, message, heartbeat, pause }) => {
                 if(message && message.value){
-                    writeOnRedis(client, decoder, message, topic)
+                    writeOnRedis(client, decoder, message)
                 }
             },
         })
@@ -57,21 +57,21 @@ async function eventHubToRedisHandler() {
     }
 }
 
-async function writeOnRedis(client, decoder, message, topic) {
+async function writeOnRedis(client, decoder, message) {
     let messageBody = decoder.decode(message.value);
     let decodedMessageBody = JSON.parse(messageBody);
-    let id = getEventId(decodedMessageBody, topic);
+    let id = getEventId(decodedMessageBody);
     message.value = decodedMessageBody;
     await client.set(id, JSON.stringify(message));
 }
 
-function getEventId(event, topic) {
+function getEventId(event) {
     if (event.operation === "CREATE") {
-        return event.after.id + `-c`;
+        return event.id + `-c`;
     } else if (event.operation === "DELETE") {
-        return event.before.id + `-d`;
+        return event.id + `-d`;
     } else {
-        return event.after.id + `-u`;
+        return event.id + `-u`;
     }
 }
 
