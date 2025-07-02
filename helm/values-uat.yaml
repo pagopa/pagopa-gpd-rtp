@@ -148,7 +148,7 @@ microservice-chart:
       envSecret: {}
 refresh-cache-cron:
   namespace: "gps"
-  schedule: "0 0 * * *"
+  schedule: "0 9 * * *"
   timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
