@@ -137,8 +137,7 @@ public class IngestionServiceImpl implements IngestionService {
         message.getHeaders().getId());
     String msg = message.getPayload();
 
-    DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
-    return paymentOption;
+    return parseMessage(message, msg);
   }
 
   @NotNull
