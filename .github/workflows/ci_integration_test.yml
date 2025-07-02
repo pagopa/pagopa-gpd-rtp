@@ -54,6 +54,8 @@ jobs:
   integration_test:
     name: Test ${{(github.event.inputs == null && 'dev') || inputs.environment }}
     runs-on: ubuntu-latest
+    environment:
+      name: oidc
     steps:
       - name: Checkout
         id: checkout
