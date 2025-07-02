@@ -110,7 +110,7 @@ microservice-chart:
     REDIS_PASSWORD: "redis-password"
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
-    RTP_MIL_CLIENT_SECRET: "TBD"
+    RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
   keyvault:
     name: "pagopa-p-gps-kv"
