@@ -149,6 +149,7 @@ microservice-chart:
 refresh-cache-cron:
   namespace: "gps"
   schedule: "0 9 * * *"
+  suspend: true
   timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
