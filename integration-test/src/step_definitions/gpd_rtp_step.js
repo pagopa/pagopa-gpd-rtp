@@ -90,7 +90,7 @@ Given('a payment position with id {string} and fiscal code {string} in GPD datab
 
 
 Given('a payment option with id {string} and associated to payment position with id {string} in GPD database', async function (id, paymentPositionId) {
-  await insertPaymentOption(id, paymentPositionId);
+  await insertPaymentOption(id, paymentPositionId, this.paymentPositionFiscalCode);
   this.paymentOptionId = id;
 });
 
