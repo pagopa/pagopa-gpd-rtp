@@ -43,7 +43,7 @@ async function deletePaymentPosition(id) {
 }
 
 async function insertPaymentOption(id, paymentPositionId) {
-  await connection.query(`INSERT INTO apd.apd.payment_option (id, amount, description, due_date, fee, flow_reporting_id, receipt_id, inserted_date, is_partial_payment, iuv, last_updated_date, organization_fiscal_code, payment_date, payment_method, psp_company, reporting_date, retention_date, status, payment_position_id, notification_fee, last_updated_date_notification_fee, nav, fiscal_code, postal_code, province, region, type) VALUES('${id}', 30000, 'Canone Unico Patrimoniale - SkyLab Inc.', '2024-12-12 16:09:43.323', 0, NULL, NULL, '2024-11-12 16:09:43.477', false, '09455575462301733', '2024-11-12 16:09:43.477', '77777777777', NULL, NULL, NULL, NULL, '2025-02-10 16:09:43.323', 'PO_UNPAID', ${paymentPositionId}, 0, NULL, '309455575462301733', 'NA', '89812', 'VV', 'CA', 'F')`);
+  await connection.query(`INSERT INTO apd.apd.payment_option (id, amount, description, due_date, fee, flow_reporting_id, receipt_id, inserted_date, is_partial_payment, iuv, last_updated_date, organization_fiscal_code, payment_date, payment_method, psp_company, reporting_date, retention_date, status, payment_position_id, notification_fee, last_updated_date_notification_fee, nav, fiscal_code, postal_code, province, region, type) VALUES('${id}', 10000, 'Canone Unico Patrimoniale - SkyLab Inc.', '2024-12-12 16:09:43.323', 0, NULL, NULL, '2024-11-12 16:09:43.477', false, '09455575462301733', '2024-11-12 16:09:43.477', '77777777777', NULL, NULL, NULL, NULL, '2025-02-10 16:09:43.323', 'PO_UNPAID', ${paymentPositionId}, 0, NULL, '309455575462301733', 'VNTMHL76M09H501D', '89812', 'VV', 'CA', 'F')`);
 }
 
 async function deletePaymentOption(id) {
@@ -51,7 +51,7 @@ async function deletePaymentOption(id) {
 }
 
 async function insertTransfer(id, category, remittanceInformation, paymentOptionId) {
-  await connection.query(`INSERT INTO apd.apd.transfer (id, amount, category, iban, transfer_id, inserted_date, iuv, last_updated_date, organization_fiscal_code, postal_iban, remittance_information, status, payment_option_id, hash_document, stamp_type, provincial_residence, company_name) VALUES('${id}', 10000, '${category}', 'mockIban', '1', '2024-11-12 16:09:43.477', '09455575462301733', '2024-11-12 16:09:43.477', '77777777777', NULL, 'Rata 1 Edit', '${remittanceInformation}', ${paymentOptionId}, NULL, NULL, NULL, 'SkyLab Inc.');`);
+  await connection.query(`INSERT INTO apd.apd.transfer (id, amount, category, iban, transfer_id, inserted_date, iuv, last_updated_date, organization_fiscal_code, postal_iban, remittance_information, status, payment_option_id, hash_document, stamp_type, provincial_residence, company_name) VALUES('${id}', 10000, '${category}', 'mockIban', '1', '2024-11-12 16:09:43.477', '09455575462301733', '2024-11-12 16:09:43.477', '77777777777', NULL, 'Rata 1 Edit', '${remittanceInformation}', 'T_UNREPORTED', ${paymentOptionId}, NULL, NULL, NULL, 'SkyLab Inc.');`);
 }
 
 async function deleteTransfer(id) {
