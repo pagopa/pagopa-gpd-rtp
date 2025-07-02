@@ -3,7 +3,7 @@ const { After, Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucu
 const { sleep } = require("./common");
 const { readFromRedisWithKey, shutDownClient } = require("./redis_client");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
-const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
+const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, getPaymentOption, insertTransfer, deleteTransfer, getTransfer } = require("./pg_gpd_client");
 
 // set timeout for Hooks function, it allows to wait for long task
 setDefaultTimeout(360 * 1000);
@@ -81,20 +81,20 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
   }
 });
 
-Given('a payment position with id {string} and fiscal code {string} in GPD database', async function (id, fiscalCode) {
+Given('a create payment position with id {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
   await insertPaymentPosition(id, fiscalCode);
   this.paymentPositionId = id;
   this.paymentPositionFiscalCode = fiscalCode;
 });
 
 
-Given('a payment option with id {string} and associated to payment position with id {string} in GPD database', async function (id, paymentPositionId) {
+Given('a create payment option with id {string} and associated to payment position with id {string} on GPD database', async function (id, paymentPositionId) {
   await insertPaymentOption(id, paymentPositionId, this.paymentPositionFiscalCode);
   this.paymentOptionId = id;
 });
 
 
-Given('a create operation on transfer table with id {string}, category {string}, remittance information {string} and associated to payment option with id {string} in GPD database', async function (id, category, remittanceInformation, paymentOptionId) {
+Given('a create transfer with id {string}, category {string}, remittance information {string} and associated to payment option with id {string} on GPD database', async function (id, category, remittanceInformation, paymentOptionId) {
   await insertTransfer(id, category, remittanceInformation, paymentOptionId);
   this.transferId = id;
   this.transferCategory = category;
@@ -105,6 +105,18 @@ Given('a create operation on transfer table with id {string}, category {string},
 Given('an update operation on field status with new value {string} on the same payment position in GPD database', async function (status) {
   await updatePaymentPosition(this.paymentOptionId, status);
   this.paymentPositionUpdatedStatus = status;
+});
+
+Given('a payment option with id {string} in GPD database', async function (id) {
+  const po = await getPaymentOption(id);
+  assert.ok(po)
+  this.paymentOptionId = id;
+});
+
+Given('a transfer with id {string} in GPD database', async function (id) {
+  const t = await getTransfer(id);
+  assert.ok(t)
+  this.transferId = id;
 });
 
 Given('a delete operation on the same transfer in GPD database', async function () {
