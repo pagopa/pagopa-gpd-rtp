@@ -4,6 +4,11 @@ const evhHost = process.env.RTP_EVENTHUB_HOST;
 const evhConnectionString = process.env.RTP_EVENTHUB_CONN_STRING;
 const evhTopics = process.env.RTP_EVENTHUB_TOPICS.split(',');
 
+if (!evhConnectionString || typeof evhConnectionString !== 'string') {
+  throw new Error('Kafka password is invalid');
+}
+
+
 let consumer;
 let decoder = new TextDecoder("utf-8");
 
