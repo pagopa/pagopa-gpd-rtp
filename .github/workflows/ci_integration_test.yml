@@ -26,13 +26,11 @@ permissions:
   contents: read
   deployments: write
 
-env:
-  EXECUTION_ENV: ${{(github.event.inputs == null && 'dev') || inputs.environment }}
 
 jobs:
   integration_test:
-    name: Test ${{ env.EXECUTION_ENV }}
-    runs-on: [ self-hosted-job, "${{ env.EXECUTION_ENV }}" ]
+    name: Test ${{ (github.event.inputs == null && 'dev') || inputs.environment }}
+    runs-on: [ self-hosted-job, "${{ (github.event.inputs == null && 'dev') || inputs.environment }}" ]
     environment:
       name: oidc
     steps:
@@ -53,7 +51,7 @@ jobs:
           echo "OPT_IN_REDIS_HOSTNAME=${{ secrets.DEV_OPT_IN_REDIS_HOSTNAME }}" >> $GITHUB_ENV
           echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.DEV_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
           
-          if [[ ${{ env.EXECUTION_ENV }} == "uat" ]]; then
+          if [[ ${{ (github.event.inputs == null && 'dev') || inputs.environment }} == "uat" ]]; then
             echo "CLIENT_ID=${{secrets.UAT_CLIENT_ID}}" >> $GITHUB_ENV 
             echo "TENANT_ID=${{secrets.UAT_TENANT_ID}}" >> $GITHUB_ENV 
             echo "SUBSCRIPTION_ID=${{secrets.UAT_SUBSCRIPTION_ID}}" >> $GITHUB_ENV 
@@ -92,7 +90,7 @@ jobs:
 
           cd ./integration-test
           chmod +x ./run_integration_test.sh
-          ./run_integration_test.sh ${{ env.EXECUTION_ENV }}
+          ./run_integration_test.sh ${{ (github.event.inputs == null && 'dev') || inputs.environment }}
 
   notify:
     needs: [ integration_test ]
@@ -108,7 +106,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           notify_when: 'failure,skipped'
           notification_title: 'Integration Tests Result'
-          message_format: '{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}> in ${{ env.EXECUTION_ENV }}'
+          message_format: '{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}> in ${{ (github.event.inputs == null && "dev") || inputs.environment }}'
           footer: 'Linked to <{workflow_url}| workflow file>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_TEST_SLACK_WEBHOOK_URL }}
