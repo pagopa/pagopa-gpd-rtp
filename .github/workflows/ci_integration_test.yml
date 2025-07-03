@@ -106,7 +106,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           notify_when: 'failure,skipped'
           notification_title: 'Integration Tests Result'
-          message_format: '{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}> in ${{ (github.event.inputs == null && "dev") || inputs.environment }}'
+          message_format: "{emoji} <{run_url}|{workflow}> {status_message} in <{repo_url}|{repo}> in ${{ (github.event.inputs == null && 'dev') || inputs.environment }}"
           footer: 'Linked to <{workflow_url}| workflow file>'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_TEST_SLACK_WEBHOOK_URL }}
