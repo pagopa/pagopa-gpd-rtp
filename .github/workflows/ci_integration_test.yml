@@ -71,18 +71,6 @@ jobs:
           tenant-id: ${{ env.TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
-      - name: Run Kafka to Redis utils on Docker
-        shell: bash
-        id: run_kafka_to_redis_docker
-        run: |
-          cd ./test-utils
-          chmod +x ./run_compose.sh
-          docker --version
-          docker ps
-          docker-compose --version
-          docker compose --version
-          ./run_compose.sh 'pagopa-${{ env.ENV_SHORT }}-itn-gps-rtp-integration-evh.servicebus.windows.net:9093' "${{ env.RTP_EVENTHUB_CONN_STRING }}" "rtp-events"
-
       - name: Run Integration Tests
         shell: bash
         run: |
@@ -91,6 +79,7 @@ jobs:
           export PG_GPD_USERNAME=${{ env.PG_GPD_USERNAME }}
           export OPT_IN_REDIS_PASSWORD=${{ env.OPT_IN_REDIS_PASSWORD }}
           export OPT_IN_REDIS_HOSTNAME=${{ env.OPT_IN_REDIS_HOSTNAME }}
+          export RTP_EVENTHUB_CONN_STRING=${{ env.RTP_EVENTHUB_CONN_STRING }}
 
           cd ./integration-test
           chmod +x ./run_integration_test.sh

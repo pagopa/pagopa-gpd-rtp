@@ -1,9 +1,9 @@
 const assert = require('assert');
-const { After, Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucumber/cucumber');
+const { After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
 const { sleep, getRandomInt } = require("./common");
-const { readFromRedisWithKey, shutDownClient } = require("./redis_client");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
 const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
+const { eventHubToMemoryHandler, shutDownKafka, getStoredMessage } = require("./kafka_event_hub_client");
 
 // set timeout for Hooks function, it allows to wait for long task
 setDefaultTimeout(360 * 1000);
@@ -32,10 +32,14 @@ this.transferId = null;
 this.transferCategory = null;
 this.remittanceInformation = null;
 
+BeforeAll(async function () {
+  eventHubToMemoryHandler();
+});
+
 AfterAll(async function () {
   shutDownPool();
-  shutDownClient();
   shutDownOptInRedisClient();
+  shutDownKafka();
 });
 
 // After each Scenario
@@ -125,15 +129,14 @@ When('the operations have been properly published on RTP event hub after {int} m
 
 
 Then('the RTP topic returns the {string} operation with id suffix {string}', async function (operation, suffix) {
-  let operationMessage = await readFromRedisWithKey(`${this.paymentOptionId}-${suffix}`);
-  let po = JSON.parse(operationMessage).value;
-  if (operation === "create") {
+  let po = getStoredMessage(`${this.paymentOptionId}-${suffix}`);
+  if (operation === "CREATE") {
     this.rtpCreateOp = po;
     assert.strictEqual(this.rtpCreateOp.operation, "CREATE");
-  } else if (operation === "update") {
+  } else if (operation === "UPDATE") {
     this.rtpUpdateOp = po;
     assert.strictEqual(this.rtpUpdateOp.operation, "UPDATE");
-  } else if (operation === "delete") {
+  } else if (operation === "DELETE") {
     this.rtpDeleteOp = po;
     assert.strictEqual(this.rtpDeleteOp.operation, "DELETE");
   }
