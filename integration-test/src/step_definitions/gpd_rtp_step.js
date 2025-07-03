@@ -130,15 +130,17 @@ When('the operations have been properly published on RTP event hub after {int} m
 
 Then('the RTP topic returns the {string} operation with id suffix {string}', async function (operation, suffix) {
   let po = getStoredMessage(`${this.paymentOptionId}-${suffix}`);
-  if (operation === "CREATE") {
+  if (operation === "create") {
     this.rtpCreateOp = po;
     assert.strictEqual(this.rtpCreateOp.operation, "CREATE");
-  } else if (operation === "UPDATE") {
+  } else if (operation === "update") {
     this.rtpUpdateOp = po;
     assert.strictEqual(this.rtpUpdateOp.operation, "UPDATE");
-  } else if (operation === "DELETE") {
+  } else if (operation === "delete") {
     this.rtpDeleteOp = po;
     assert.strictEqual(this.rtpDeleteOp.operation, "DELETE");
+  } else {
+    assert.fail("Unexpected operation");
   }
 });
 

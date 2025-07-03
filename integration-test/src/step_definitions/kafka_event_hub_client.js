@@ -80,7 +80,6 @@ async function shutDownKafka() {
     }
 }
 
-// Accessor for tests (e.g. from Cucumber steps)
 function getStoredMessage(id) {
     return inMemoryStore.get(id);
 }
