@@ -94,13 +94,11 @@ Given('a create payment position with id prefix {string} and fiscal code {string
   this.paymentPositionFiscalCode = fiscalCode;
 });
 
-
 Given('a create payment option with id prefix {string} and associated to the previous payment position on GPD database', async function (id) {
   this.paymentOptionId = id * 10000 + getRandomInt();
   console.log("id po", this.paymentOptionId);
   await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode);
 });
-
 
 Given('a create transfer with id prefix {string}, category {string}, remittance information {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
   this.transferId = id * 10000 + getRandomInt();
@@ -109,7 +107,6 @@ Given('a create transfer with id prefix {string}, category {string}, remittance 
   this.transferCategory = category;
   this.remittanceInformation = remittanceInformation;
 });
-
 
 Given('an update operation on field description with new value {string} on the same payment option in GPD database', async function (description) {
   await updatePaymentOption(this.paymentOptionId, description);
@@ -124,16 +121,15 @@ Given('a delete operation on the same payment option in GPD database', async fun
   await deletePaymentOption(this.paymentOptionId);
 });
 
-Given('a delete operation on the same payment position in GPD database', async function () {
-  await deletePaymentPosition(this.paymentPositionId);
-});
-
-
-When('the operations have been properly published on RTP event hub after {int} ms', async function (time) {
-  // boundary time spent by azure function to process event
+Given('the create operation has been properly published on RTP event hub after {int} ms', async function (time) {
+  // boundary time spent to process event
   await sleep(time);
 });
 
+When('the operations have been properly published on RTP event hub after {int} ms', async function (time) {
+  // boundary time spent to process event
+  await sleep(time);
+});
 
 Then('the RTP topic returns the {string} operation with id suffix {string}', async function (operation, suffix) {
   let po = getStoredMessage(`${this.paymentOptionId}-${suffix}`);
