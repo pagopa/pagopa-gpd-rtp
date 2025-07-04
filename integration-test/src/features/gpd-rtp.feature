@@ -22,5 +22,6 @@ Feature: All about RTP events
   Scenario: Delete payment option in GPD database is published into RTP event hub
     Given a delete operation on the same transfer in GPD database
     And a delete operation on the same payment option in GPD database
+    And a delete operation on the same payment position in GPD database
     When the operations have been properly published on RTP event hub after 30000 ms
     Then the RTP topic returns the 'delete' operation with id suffix 'd'

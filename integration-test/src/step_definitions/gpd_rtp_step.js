@@ -124,6 +124,10 @@ Given('a delete operation on the same payment option in GPD database', async fun
   await deletePaymentOption(this.paymentOptionId);
 });
 
+Given('a delete operation on the same payment position in GPD database', async function () {
+  await deletePaymentPosition(this.paymentPositionId);
+});
+
 
 When('the operations have been properly published on RTP event hub after {int} ms', async function (time) {
   // boundary time spent by azure function to process event
