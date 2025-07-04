@@ -73,7 +73,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
   }
 
-  private void handleMessage(Message<String> message) {
+  private void handleMessage(Message<?> message) {
     Acknowledgment acknowledgment = null;
     DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
     try {
@@ -124,9 +124,11 @@ public class IngestionServiceImpl implements IngestionService {
         .toString();
   }
 
-  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<String> message) {
+  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<?> message) {
     // Discard null messages
-    if (message.getHeaders().getId() == null || message.getPayload() == null) {
+    if (message.getHeaders().getId() == null
+        || message.getPayload() == null
+        || !(message.getPayload() instanceof String msg)) {
       log.debug("NULL message ignored at {}", LocalDateTime.now());
       throw new FailAndIgnore(AppError.NULL_MESSAGE);
     }
@@ -135,14 +137,12 @@ public class IngestionServiceImpl implements IngestionService {
         "PaymentOption ingestion called at {} for payment options with message id {}",
         LocalDateTime.now(),
         message.getHeaders().getId());
-    String msg = message.getPayload();
 
-    DataCaptureMessage<PaymentOptionEvent> paymentOption = parseMessage(message, msg);
-    return paymentOption;
+    return parseMessage(message, msg);
   }
 
   @NotNull
-  private static Acknowledgment getAck(Message<String> message) {
+  private static Acknowledgment getAck(Message<?> message) {
     Acknowledgment acknowledgment =
         message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
     if (acknowledgment == null) {
@@ -163,7 +163,7 @@ public class IngestionServiceImpl implements IngestionService {
    * @param acknowledgment The acknowledgment object to be used to nack the message.
    */
   private void handleRetry(
-      Message<String> message,
+      Message<?> message,
       String paymentOptionId,
       FailAndPostpone e,
       Acknowledgment acknowledgment) {
@@ -189,7 +189,7 @@ public class IngestionServiceImpl implements IngestionService {
     }
   }
 
-  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<String> message, String msg) {
+  private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<?> message, String msg) {
     try {
       return this.objectMapper.readValue(msg, new TypeReference<>() {});
     } catch (JsonProcessingException e) {

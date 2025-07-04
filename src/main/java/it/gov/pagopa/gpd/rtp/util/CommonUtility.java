@@ -1,7 +1,5 @@
 package it.gov.pagopa.gpd.rtp.util;
 
-import java.util.Calendar;
-import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -31,21 +29,5 @@ public class CommonUtility {
    */
   public static Boolean deNull(Boolean value) {
     return Optional.ofNullable(value).orElse(false);
-  }
-
-  /**
-   * @param headers header of the CSV file
-   * @param rows data of the CSV file
-   * @return byte array of the CSV using commas (;) as separator
-   */
-  public static byte[] createCsv(List<String> headers, List<List<String>> rows) {
-    var csv = new StringBuilder();
-    csv.append(String.join(";", headers));
-    rows.forEach(row -> csv.append(System.lineSeparator()).append(String.join(";", row)));
-    return csv.toString().getBytes();
-  }
-
-  public static long getTimelapse(long startTime) {
-    return Calendar.getInstance().getTimeInMillis() - startTime;
   }
 }
