@@ -49,7 +49,7 @@ jobs:
           echo "PG_GPD_USERNAME=${{ secrets.DEV_PG_GPD_USERNAME }}" >> $GITHUB_ENV
           echo "OPT_IN_REDIS_PASSWORD=${{ secrets.DEV_OPT_IN_REDIS_PASSWORD }}" >> $GITHUB_ENV
           echo "OPT_IN_REDIS_HOSTNAME=${{ secrets.DEV_OPT_IN_REDIS_HOSTNAME }}" >> $GITHUB_ENV
-          echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.DEV_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
+          echo `RTP_EVENTHUB_CONN_STRING=${{ secrets.DEV_RTP_EVENTHUB_CONN_STRING }}` >> $GITHUB_ENV
           
           if [[ ${{ (github.event.inputs == null && 'dev') || inputs.environment }} == "uat" ]]; then
             echo "CLIENT_ID=${{secrets.UAT_CLIENT_ID}}" >> $GITHUB_ENV 
@@ -60,7 +60,7 @@ jobs:
             echo "PG_GPD_USERNAME=${{ secrets.UAT_PG_GPD_USERNAME }}" >> $GITHUB_ENV
             echo "OPT_IN_REDIS_PASSWORD=${{ secrets.UAT_OPT_IN_REDIS_PASSWORD }}" >> $GITHUB_ENV
             echo "OPT_IN_REDIS_HOSTNAME=${{ secrets.UAT_OPT_IN_REDIS_HOSTNAME }}" >> $GITHUB_ENV
-            echo "RTP_EVENTHUB_CONN_STRING=${{ secrets.UAT_RTP_EVENTHUB_CONN_STRING }}" >> $GITHUB_ENV
+            echo `RTP_EVENTHUB_CONN_STRING=${{ secrets.UAT_RTP_EVENTHUB_CONN_STRING }}` >> $GITHUB_ENV
           fi
 
       - name: Azure Login
@@ -79,7 +79,7 @@ jobs:
           export PG_GPD_USERNAME=${{ env.PG_GPD_USERNAME }}
           export OPT_IN_REDIS_PASSWORD=${{ env.OPT_IN_REDIS_PASSWORD }}
           export OPT_IN_REDIS_HOSTNAME=${{ env.OPT_IN_REDIS_HOSTNAME }}
-          export RTP_EVENTHUB_CONN_STRING=${{ env.RTP_EVENTHUB_CONN_STRING }}
+          export RTP_EVENTHUB_CONN_STRING=`${{ env.RTP_EVENTHUB_CONN_STRING }}`
 
           cd ./integration-test
           chmod +x ./run_integration_test.sh
