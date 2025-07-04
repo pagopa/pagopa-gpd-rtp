@@ -37,9 +37,9 @@ BeforeAll(async function () {
 });
 
 AfterAll(async function () {
-  shutDownPool();
-  shutDownOptInRedisClient();
-  shutDownKafka();
+  await shutDownPool();
+  await shutDownOptInRedisClient();
+  await shutDownKafka();
 });
 
 // After each Scenario

@@ -7,7 +7,6 @@ const evhTopics = process.env.RTP_EVENTHUB_TOPICS.split(',');
 if (!evhConnectionString || typeof evhConnectionString !== 'string') {
   throw new Error('Kafka password is invalid');
 }
-console.log(evhConnectionString);
 
 
 let consumer;
