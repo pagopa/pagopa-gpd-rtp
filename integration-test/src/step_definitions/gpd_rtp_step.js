@@ -45,15 +45,15 @@ AfterAll(async function () {
 // After each Scenario
 After(async function () {
   // remove event
-  // if (this.transferId != null) {
-  //   await deleteTransfer(this.transferId);
-  // }
-  // if (this.paymentOptionId != null) {
-  //   await deletePaymentOption(this.paymentOptionId);
-  // }
-  // if (this.paymentPositionId != null) {
-  //   await deletePaymentPosition(this.paymentPositionId);
-  // }
+  if (this.transferId != null) {
+    await deleteTransfer(this.transferId);
+  }
+  if (this.paymentOptionId != null) {
+    await deletePaymentOption(this.paymentOptionId);
+  }
+  if (this.paymentPositionId != null) {
+    await deletePaymentPosition(this.paymentPositionId);
+  }
 
   ////////////////////////////
   // Payment Positions vars //

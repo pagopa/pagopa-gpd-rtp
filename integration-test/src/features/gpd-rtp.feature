@@ -12,14 +12,14 @@ Feature: All about RTP events
     And the create operation has the remittance information anonymized
     And the create operation has the status 'VALID'
 
-  # Scenario: Update payment option in GPD database is published into RTP event hub
-  #   Given an update operation on field status with new value 'PAID' on the same payment position in GPD database
-  #   When the operations have been properly published on RTP event hub after 20000 ms
-  #   And the RTP topic returns the 'update' operation with id suffix 'u'
-  #   And the update operation has the status 'PAID'
+  Scenario: Update payment option in GPD database is published into RTP event hub
+    Given an update operation on field status with new value 'PAID' on the same payment position in GPD database
+    When the operations have been properly published on RTP event hub after 20000 ms
+    And the RTP topic returns the 'update' operation with id suffix 'u'
+    And the update operation has the status 'PAID'
 
-  # Scenario: Delete payment option in GPD database is published into RTP event hub
-  #   Given a delete operation on the same transfer in GPD database
-  #   And a delete operation on the same payment option in GPD database
-  #   When the operations have been properly published on RTP event hub after 20000 ms
-  #   And the RTP topic returns the 'delete' operation with id suffix 'd'
+  Scenario: Delete payment option in GPD database is published into RTP event hub
+    Given a delete operation on the same transfer in GPD database
+    And a delete operation on the same payment option in GPD database
+    When the operations have been properly published on RTP event hub after 20000 ms
+    And the RTP topic returns the 'delete' operation with id suffix 'd'
