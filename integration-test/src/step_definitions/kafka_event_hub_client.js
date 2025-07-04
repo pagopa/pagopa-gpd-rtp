@@ -38,7 +38,6 @@ async function eventHubToMemoryHandler() {
 
         await consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
-                console.log("message", message);
                 if (message?.value) {
                     await writeInMemory(message);
                 }
@@ -56,7 +55,6 @@ async function writeInMemory(message) {
         const messageBody = decoder.decode(message.value);
         const decodedMessageBody = JSON.parse(messageBody);
         const id = getEventId(decodedMessageBody);
-        console.log("id", id);
         inMemoryStore.set(id, decodedMessageBody);
     } catch (err) {
         console.error('❌ Error storing message:', err);

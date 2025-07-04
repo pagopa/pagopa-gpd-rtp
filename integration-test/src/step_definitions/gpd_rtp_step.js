@@ -88,20 +88,20 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
 });
 
 Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
-  this.paymentPositionId = id * 100000 + getRandomInt();
+  this.paymentPositionId = id * 10000 + getRandomInt();
   await insertPaymentPosition(this.paymentPositionId, fiscalCode);
   this.paymentPositionFiscalCode = fiscalCode;
 });
 
 
 Given('a create payment option with id prefix {string} and associated to the previous payment position on GPD database', async function (id) {
-  this.paymentOptionId = id * 100000 + getRandomInt();;
+  this.paymentOptionId = id * 10000 + getRandomInt();;
   await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode);
 });
 
 
 Given('a create transfer with id prefix {string}, category {string}, remittance information {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
-  this.transferId = id * 100000 + getRandomInt();
+  this.transferId = id * 10000 + getRandomInt();
   await insertTransfer(this.transferId, category, remittanceInformation, this.paymentOptionId);
   this.transferCategory = category;
   this.remittanceInformation = remittanceInformation;

@@ -3,7 +3,7 @@ function sleep(ms) {
 }
 
 function getRandomInt() {
-  return Math.floor(10000 + Math.random() * 90000);
+  return Math.floor(1000 + Math.random() * 9000);
 }
 
 module.exports = {

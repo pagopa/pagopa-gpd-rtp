@@ -2,9 +2,9 @@ Feature: All about RTP events
 
   Background:
     Given an EC with fiscal code '77777777777' and flag opt in enabled on Redis cache
-    And a create payment position with id prefix '123123121' and fiscal code '77777777777' on GPD database
-    And a create payment option with id prefix '123123122' and associated to the previous payment position on GPD database
-    And a create transfer with id prefix '123123123', category '9/0201102IM/', remittance information '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+    And a create payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
+    And a create payment option with id prefix '123122' and associated to the previous payment position on GPD database
+    And a create transfer with id prefix '123123', category '9/0201102IM/', remittance information '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
 
   Scenario: New payment option in GPD database is published into RTP event hub
     When the operations have been properly published on RTP event hub after 20000 ms
