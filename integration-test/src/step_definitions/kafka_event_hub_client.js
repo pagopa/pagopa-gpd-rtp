@@ -38,6 +38,7 @@ async function eventHubToMemoryHandler() {
 
         await consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
+                console.log("message", message);
                 if (message?.value) {
                     await writeInMemory(message);
                 }
