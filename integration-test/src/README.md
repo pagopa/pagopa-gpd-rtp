@@ -15,9 +15,9 @@
 if all right you should see something like that :
 
 ```sh
-15 scenarios (15 passed)
-65 steps (65 passed)
-0m09.409s (executing steps: 0m09.349s)
+3 scenarios (3 passed)
+26 steps (26 passed)
+1m25.240s (executing steps: 1m20.434s)
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ View your Cucumber Report at:                                            │
 │ https://reports.cucumber.io/reports/16ebc4c0-cab6-41f6-9355-f894f9a9601d │
