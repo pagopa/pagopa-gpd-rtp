@@ -33,7 +33,7 @@ this.transferCategory = null;
 this.remittanceInformation = null;
 
 BeforeAll(async function () {
-  eventHubToMemoryHandler();
+  await eventHubToMemoryHandler();
 });
 
 AfterAll(async function () {
