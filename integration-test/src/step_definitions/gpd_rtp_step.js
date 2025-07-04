@@ -2,7 +2,7 @@ const assert = require('assert');
 const { After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
 const { sleep, getRandomInt } = require("./common");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
-const { shutDownPool, insertPaymentPosition, updatePaymentPosition, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
+const { shutDownPool, insertPaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
 const { eventHubToMemoryHandler, shutDownKafka, getStoredMessage } = require("./kafka_event_hub_client");
 
 // set timeout for Hooks function, it allows to wait for long task
@@ -15,7 +15,6 @@ setDefaultTimeout(360 * 1000);
 ////////////////////////////
 this.paymentPositionId = null;
 this.paymentPositionFiscalCode = null;
-this.paymentPositionUpdatedStatus = null;
 
 ///////////////////////////
 // Payment Options vars  //
@@ -24,6 +23,7 @@ this.paymentOptionId = null;
 this.rtpCreateOp = null;
 this.rtpUpdateOp = null;
 this.rtpDeleteOp = null;
+this.paymentOptionUpdatedDescription = null;
 
 ////////////////////
 // Transfer vars  //
@@ -60,7 +60,6 @@ After(async function () {
   ////////////////////////////
   this.paymentPositionId = null;
   this.paymentPositionFiscalCode = null;
-  this.paymentPositionUpdatedStatus = null;
 
   ///////////////////////////
   // Payment Options vars  //
@@ -69,6 +68,7 @@ After(async function () {
   this.rtpCreateOp = null;
   this.rtpUpdateOp = null;
   this.rtpDeleteOp = null;
+  this.paymentOptionUpdatedDescription = null;
 
   ////////////////////
   // Transfer vars  //
@@ -89,28 +89,31 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
 
 Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
   this.paymentPositionId = id * 10000 + getRandomInt();
+  console.log("id pp", this.paymentPositionId);
   await insertPaymentPosition(this.paymentPositionId, fiscalCode);
   this.paymentPositionFiscalCode = fiscalCode;
 });
 
 
 Given('a create payment option with id prefix {string} and associated to the previous payment position on GPD database', async function (id) {
-  this.paymentOptionId = id * 10000 + getRandomInt();;
+  this.paymentOptionId = id * 10000 + getRandomInt();
+  console.log("id pp", this.paymentOptionId);
   await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode);
 });
 
 
 Given('a create transfer with id prefix {string}, category {string}, remittance information {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
   this.transferId = id * 10000 + getRandomInt();
+  console.log("id pp", this.transferId);
   await insertTransfer(this.transferId, category, remittanceInformation, this.paymentOptionId);
   this.transferCategory = category;
   this.remittanceInformation = remittanceInformation;
 });
 
 
-Given('an update operation on field status with new value {string} on the same payment position in GPD database', async function (status) {
-  await updatePaymentPosition(this.paymentOptionId, status);
-  this.paymentPositionUpdatedStatus = status;
+Given('an update operation on field description with new value {string} on the same payment option in GPD database', async function (description) {
+  await updatePaymentOption(this.paymentOptionId, description);
+  this.paymentOptionUpdatedDescription = description;
 });
 
 Given('a delete operation on the same transfer in GPD database', async function () {
@@ -144,16 +147,21 @@ Then('the RTP topic returns the {string} operation with id suffix {string}', asy
   }
 });
 
-Then('the create operation has the remittance information anonymized', function () {
-  assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
-  assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
+Then('the {string} operation has the remittance information anonymized', function (operation) {
+  if (operation === "create") {
+    assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
+    assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
+  } else if (operation === "update") {
+    assert.notStrictEqual(this.rtpUpdateOp.subject, undefined);
+    assert.notStrictEqual(this.rtpUpdateOp.subject, this.remittanceInformation);
+  }
 });
 
 Then('the create operation has the status {string}', function (status) {
   assert.strictEqual(this.rtpCreateOp.status, status);
 });
 
-Then('the update operation has the status {string}', function (status) {
-  assert.strictEqual(this.paymentPositionUpdatedStatus, status);
-  assert.strictEqual(this.rtpUpdateOp.status, status);
+Then('the update operation has the description {string}', function (description) {
+  assert.strictEqual(this.paymentOptionUpdatedDescription, description);
+  assert.strictEqual(this.rtpUpdateOp.description, description);
 });
