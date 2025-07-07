@@ -1,4 +1,6 @@
-# Integration Test with Cucumber
+# Integration Tests
+
+👀 Integration tests are in `integration-test/src/` folder. See there for more information.
 
 ## Technology Stack
 
@@ -13,9 +15,9 @@
 if all right you should see something like that :
 
 ```sh
-15 scenarios (15 passed)
-65 steps (65 passed)
-0m09.409s (executing steps: 0m09.349s)
+3 scenarios (3 passed)
+26 steps (26 passed)
+1m25.240s (executing steps: 1m20.434s)
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ View your Cucumber Report at:                                            │
 │ https://reports.cucumber.io/reports/16ebc4c0-cab6-41f6-9355-f894f9a9601d │
@@ -49,3 +51,17 @@ Remember to start the Backend before start the tests.
 
 You can configure the host in `./config/.env.local` file.
 
+## How run on Docker 🐳
+
+To run the integration tests on docker, you can run from this directory the script:
+
+``` shell
+sh ./run_integration_test.sh <local|dev|uat|prod>
+```
+
+---
+💻 If you want to test your local branch,
+
+``` shell
+sh ./run_integration_test.sh local
+```
