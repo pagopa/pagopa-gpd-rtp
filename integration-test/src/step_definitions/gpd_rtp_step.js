@@ -155,7 +155,7 @@ Then('the {string} operation has the remittance information and the description 
   } else if (operation === "update") {
     assert.notStrictEqual(this.rtpUpdateOp.subject, undefined);
     assert.notStrictEqual(this.rtpUpdateOp.subject, this.remittanceInformation);
-    assert.notStrictEqual(this.rtpCreateOp.description, this.description);
+    assert.notStrictEqual(this.rtpUpdateOp.description, this.description);
   }
 });
 
