@@ -101,7 +101,7 @@ Given('a create payment option with id prefix {string}, description {string} and
   await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description);
 });
 
-Given('a create transfer with id prefix {string}, category {string}, remittance information {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
+Given('a create transfer with id prefix {string}, category {string}, remittance information of primary ec {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
   this.transferId = id * 10000 + getRandomInt();
   await insertTransfer(this.transferId, category, remittanceInformation, this.paymentOptionId);
   this.transferCategory = category;
@@ -147,7 +147,7 @@ Then('the RTP topic returns the {string} operation with id suffix {string}', asy
   }
 });
 
-Then('the {string} operation has the remittance information', function (operation) {
+Then("the {string} operation has the first transfer's remittance information", function (operation) {
   if (operation === "create") {
     assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
     assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
