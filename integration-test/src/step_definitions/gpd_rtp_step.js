@@ -147,7 +147,7 @@ Then('the RTP topic returns the {string} operation with id suffix {string}', asy
   }
 });
 
-Then('the {string} operation has the remittance information and the description anonymized', function (operation) {
+Then('the {string} operation has the remittance information', function (operation) {
   if (operation === "create") {
     assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
     assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
@@ -165,5 +165,12 @@ Then('the create operation has the status {string}', function (status) {
 
 Then('the update operation has the description {string}', function (description) {
   assert.strictEqual(this.paymentOptionUpdatedDescription, description);
-  assert.strictEqual(this.rtpUpdateOp.description, description);
+});
+
+Then('the {string} RTP message has the anonymized description {string}', function (operation, description) {
+  if(operation === "create"){
+    assert.strictEqual(this.rtpCreateOp.description, description);
+  } else if(operation === "update"){
+    assert.strictEqual(this.rtpUpdateOp.description, description);
+  }
 });

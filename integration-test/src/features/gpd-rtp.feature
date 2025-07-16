@@ -9,15 +9,17 @@ Feature: All about RTP events
   Scenario: New payment option in GPD database is published into RTP event hub
     When the operations have been properly published on RTP event hub after 20000 ms
     Then the RTP topic returns the 'create' operation with id suffix 'c'
-    And the 'create' operation has the remittance information and the description anonymized
+    And the 'create' operation has the remittance information
+    And the 'create' RTP message has the anonymized description 'description M**** R****'
     And the create operation has the status 'VALID'
 
   Scenario: Update payment option in GPD database is published into RTP event hub
     Given an update operation on field description with new value 'description updated Mario Rossi' on the same payment option in GPD database
     When the operations have been properly published on RTP event hub after 20000 ms
     Then the RTP topic returns the 'update' operation with id suffix 'u'
-    And the 'update' operation has the remittance information and the description anonymized
-    And the update operation has the description 'description updated'
+    And the 'update' operation has the remittance information
+    And the update operation has the description 'description updated Mario Rossi'
+    And the 'update' RTP message has the anonymized description 'description updated M**** R****'
 
   Scenario: Delete payment option in GPD database is published into RTP event hub
     Given the create operation has been properly published on RTP event hub after 20000 ms
