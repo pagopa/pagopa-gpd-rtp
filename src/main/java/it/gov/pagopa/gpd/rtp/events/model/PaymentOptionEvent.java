@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.events.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import jakarta.persistence.Id;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class PaymentOptionEvent {
   @Id private Long id;
 

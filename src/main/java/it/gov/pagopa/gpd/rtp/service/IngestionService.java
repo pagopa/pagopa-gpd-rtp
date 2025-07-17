@@ -14,4 +14,11 @@ public interface IngestionService {
      */
     void ingestPaymentOption(Message<String> message);
 
+    /**
+     * Elaborate a {@link PaymentOption} message
+     *
+     * @param message PaymentOption messages
+     */
+    void handleMessage(Message<?> message);
+
 }
