@@ -221,7 +221,7 @@ public class IngestionServiceImpl implements IngestionService {
                     this.transferRepository.findByPaymentOptionId(valuesAfter.getId());
             // Filter based on Transfer's categories, throws AppException
             this.filterService.hasValidTransferCategoriesOrElseThrow(valuesAfter, transferList);
-            String remittanceInformation = anonymizeRemittanceInformation(valuesAfter, transferList);
+            String remittanceInformation = getRemittanceInformation(valuesAfter, transferList);
 
             return mapRTPMessage(paymentOption, remittanceInformation);
         }
@@ -243,7 +243,7 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    private String anonymizeRemittanceInformation(
+    private String getRemittanceInformation(
             PaymentOptionEvent valuesAfter, List<Transfer> transferList) {
         Transfer primaryTransfer =
                 transferList.stream()
@@ -252,8 +252,11 @@ public class IngestionServiceImpl implements IngestionService {
                                         el.getOrganizationFiscalCode().equals(valuesAfter.getOrganizationFiscalCode()))
                         .findFirst()
                         .orElseThrow(() -> new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
-        AnonymizerModel request =
-                AnonymizerModel.builder().text(primaryTransfer.getRemittanceInformation()).build();
+        return primaryTransfer.getRemittanceInformation();
+  }
+
+  private String anonymizePII(String text){AnonymizerModel request =
+                AnonymizerModel.builder().text(text).build();
         return this.anonymizerClient.anonymize(request).getText();
     }
 
@@ -268,8 +271,8 @@ public class IngestionServiceImpl implements IngestionService {
                                 : RTPOperationCode.UPDATE)
                 .timestamp(paymentOption.getTsMs())
                 .iuv(valuesAfter.getIuv())
-                .subject(remittanceInformation)
-                .description(valuesAfter.getDescription())
+                .subject(anonymizePII(remittanceInformation))
+                .description(anonymizePII(valuesAfter.getDescription()))
                 .ecTaxCode(valuesAfter.getOrganizationFiscalCode())
                 .debtorTaxCode(valuesAfter.getFiscalCode())
                 .nav(valuesAfter.getNav())
