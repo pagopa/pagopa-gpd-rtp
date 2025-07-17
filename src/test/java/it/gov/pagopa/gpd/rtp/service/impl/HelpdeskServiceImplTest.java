@@ -64,7 +64,7 @@ class HelpdeskServiceImplTest {
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
         doNothing().when(ingestionService).handleMessage(any(Message.class));
-        doNothing().when(blobStorageClient).deleteBlob(FILENAME);
+        when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         assertDoesNotThrow(() -> sut.retryMessage(FILENAME));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
