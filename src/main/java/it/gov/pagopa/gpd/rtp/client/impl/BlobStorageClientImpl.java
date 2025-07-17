@@ -75,7 +75,7 @@ public class BlobStorageClientImpl implements BlobStorageClient {
     }
 
     @Override
-    public byte[] getJsonFromBlobStorage(String fileName) {
+    public byte[] getJSONFromBlobStorage(String fileName) {
         BlobContainerClient blobContainerClient = this.blobServiceClient.getBlobContainerClient(containerName);
 
         BlobClient blobClient = blobContainerClient.getBlobClient(fileName);

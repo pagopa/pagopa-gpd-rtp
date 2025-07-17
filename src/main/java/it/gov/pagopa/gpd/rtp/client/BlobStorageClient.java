@@ -27,7 +27,7 @@ public interface BlobStorageClient {
      *
      * @param fileName Filename to retrieve the JSON with
      */
-    byte[] getJsonFromBlobStorage(String fileName);
+    byte[] getJSONFromBlobStorage(String fileName);
 
     /**
      * Handles deleting a file from the blob storage

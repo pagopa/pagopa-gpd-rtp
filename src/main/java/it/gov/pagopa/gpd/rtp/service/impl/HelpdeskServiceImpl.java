@@ -32,12 +32,12 @@ public class HelpdeskServiceImpl implements HelpdeskService {
 
     @Override
     public String getJSONFromBlobStorage(String fileName) {
-        return new String(blobStorageClient.getJsonFromBlobStorage(fileName));
+        return new String(blobStorageClient.getJSONFromBlobStorage(fileName));
     }
 
     @Override
     public void retryMessage(String fileName) throws JsonProcessingException {
-        DeadLetterMessage deadLetterMessage = objectMapper.readValue(new String(blobStorageClient.getJsonFromBlobStorage(fileName)), DeadLetterMessage.class);
+        DeadLetterMessage deadLetterMessage = objectMapper.readValue(new String(blobStorageClient.getJSONFromBlobStorage(fileName)), DeadLetterMessage.class);
 
         Map<String, Object> headers = Map.of("id", deadLetterMessage.getId(), KafkaHeaders.RECEIVED_KEY, deadLetterMessage.getId());
         Message<String> genericMessage = new GenericMessage<>(objectMapper.writeValueAsString(deadLetterMessage.getOriginalMessage()), headers);

@@ -33,13 +33,13 @@ public class HelpdeskController {
     }
 
     @GetMapping(value = "/json", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getJSONFromBlobStorage(@QueryParam(value = "fileName") String fileName) {
-        return ResponseEntity.ok(helpdeskService.getJSONFromBlobStorage(fileName));
+    public ResponseEntity<String> getJSONFromBlobStorage(@QueryParam(value = "filename") String filename) {
+        return ResponseEntity.ok(helpdeskService.getJSONFromBlobStorage(filename));
     }
 
     @PostMapping(value = "/retry", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> retryMessage(@QueryParam(value = "fileName") String fileName) throws JsonProcessingException {
-        helpdeskService.retryMessage(fileName);
+    public ResponseEntity<String> retryMessage(@QueryParam(value = "filename") String filename) throws JsonProcessingException {
+        helpdeskService.retryMessage(filename);
         return ResponseEntity.ok("Message retried");
     }
 }
