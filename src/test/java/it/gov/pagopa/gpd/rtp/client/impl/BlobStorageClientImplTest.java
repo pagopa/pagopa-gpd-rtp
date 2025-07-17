@@ -178,4 +178,17 @@ class BlobStorageClientImplTest {
 
         assertThrows(AppException.class, () -> sut.getJSONFromBlobStorage(FILENAME));
     }
+
+    @Test
+    void deleteBlob_OK() {
+        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
+        BlobClient blobClient = mock(BlobClient.class);
+
+        when(blobContainerClient.getBlobClient(FILENAME)).thenReturn(blobClient);
+        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
+        when(blobClient.deleteIfExists()).thenReturn(true);
+
+        assertDoesNotThrow(() -> sut.deleteBlob(FILENAME));
+        verify(blobClient).deleteIfExists();
+    }
 }

@@ -34,5 +34,5 @@ public interface BlobStorageClient {
      *
      * @param fileName Name of the file to delete
      */
-    void deleteBlob(String fileName);
+    boolean deleteBlob(String fileName);
 }

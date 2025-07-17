@@ -98,11 +98,11 @@ public class BlobStorageClientImpl implements BlobStorageClient {
     }
 
     @Override
-    public void deleteBlob(String fileName) {
+    public boolean deleteBlob(String fileName) {
         BlobContainerClient blobContainerClient = this.blobServiceClient.getBlobContainerClient(containerName); //TODO clean repeat blob container client
 
         BlobClient blobClient = blobContainerClient.getBlobClient(fileName);
 
-        blobClient.delete();
+        return blobClient.deleteIfExists();
     }
 }
