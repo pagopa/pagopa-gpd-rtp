@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.2.15</version>
+  <version>0.2.15-2-PAGOPA-3197-anonymize-description</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 

@@ -31,6 +31,7 @@ this.paymentOptionUpdatedDescription = null;
 this.transferId = null;
 this.transferCategory = null;
 this.remittanceInformation = null;
+this.description = null;
 
 BeforeAll(async function () {
   await eventHubToMemoryHandler();
@@ -76,6 +77,7 @@ After(async function () {
   this.transferId = null;
   this.transferCategory = null;
   this.remittanceInformation = null;
+  this.description = null;
 });
 
 
@@ -93,12 +95,13 @@ Given('a create payment position with id prefix {string} and fiscal code {string
   this.paymentPositionFiscalCode = fiscalCode;
 });
 
-Given('a create payment option with id prefix {string} and associated to the previous payment position on GPD database', async function (id) {
+Given('a create payment option with id prefix {string}, description {string} and associated to the previous payment position on GPD database', async function (id, descriptionString) {
   this.paymentOptionId = id * 10000 + getRandomInt();
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode);
+  this.description = descriptionString;
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description);
 });
 
-Given('a create transfer with id prefix {string}, category {string}, remittance information {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
+Given('a create transfer with id prefix {string}, category {string}, remittance information of primary ec {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
   this.transferId = id * 10000 + getRandomInt();
   await insertTransfer(this.transferId, category, remittanceInformation, this.paymentOptionId);
   this.transferCategory = category;
@@ -144,13 +147,15 @@ Then('the RTP topic returns the {string} operation with id suffix {string}', asy
   }
 });
 
-Then('the {string} operation has the remittance information anonymized', function (operation) {
+Then("the {string} operation has the first transfer's remittance information", function (operation) {
   if (operation === "create") {
     assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
     assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
+    assert.notStrictEqual(this.rtpCreateOp.description, this.description);
   } else if (operation === "update") {
     assert.notStrictEqual(this.rtpUpdateOp.subject, undefined);
     assert.notStrictEqual(this.rtpUpdateOp.subject, this.remittanceInformation);
+    assert.notStrictEqual(this.rtpUpdateOp.description, this.description);
   }
 });
 
@@ -160,5 +165,12 @@ Then('the create operation has the status {string}', function (status) {
 
 Then('the update operation has the description {string}', function (description) {
   assert.strictEqual(this.paymentOptionUpdatedDescription, description);
-  assert.strictEqual(this.rtpUpdateOp.description, description);
+});
+
+Then('the {string} RTP message has the anonymized description {string}', function (operation, description) {
+  if(operation === "create"){
+    assert.strictEqual(this.rtpCreateOp.description, description);
+  } else if(operation === "update"){
+    assert.strictEqual(this.rtpUpdateOp.description, description);
+  }
 });
