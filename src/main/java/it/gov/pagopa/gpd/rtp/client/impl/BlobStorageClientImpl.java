@@ -21,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.sanitizeLogInput;
+
 @Service
 @Slf4j
 public class BlobStorageClientImpl implements BlobStorageClient {
@@ -85,12 +87,13 @@ public class BlobStorageClientImpl implements BlobStorageClient {
             log.error("I/O error downloading the JSON from Blob Storage");
             throw new AppException(AppError.BLOB_STORAGE_IO_EXCEPTION);
         } catch (BlobStorageException e) {
+            String sanitizedLog = sanitizeLogInput(fileName);
             if (e.getStatusCode() == 404) {
-                log.error("JSON with name: {} not found in Blob Storage: {}", fileName, blobClient.getAccountName());
+                log.error("JSON with name: {} not found in Blob Storage: {}", sanitizedLog, blobClient.getAccountName());
                 throw new AppException(AppError.BLOB_STORAGE_ATTACHMENT_NOT_FOUND);
             }
             log.error("Unable to download the JSON with name: {} from Blob Storage: {}. Error message from server: {}",
-                    fileName,
+                    sanitizedLog,
                     blobClient.getAccountName(),
                     e.getServiceMessage());
             throw new AppException(AppError.BLOB_STORAGE_HTTP_ERROR);
