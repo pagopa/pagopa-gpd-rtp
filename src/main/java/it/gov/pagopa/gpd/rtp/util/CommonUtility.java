@@ -39,6 +39,6 @@ public class CommonUtility {
     if (input == null) {
       return null;
     }
-    return input.replaceAll("[\\r\\n]", "_");
+    return input.replaceAll("[^A-Za-z0-9./:_-]", "_");
   }
 }
