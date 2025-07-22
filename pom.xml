@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.2.16</version>
+  <version>0.2.16-1-PAGOPA-3125-improve-log-for-monitoring-dashboard</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 
