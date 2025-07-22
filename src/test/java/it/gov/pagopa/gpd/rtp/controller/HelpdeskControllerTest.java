@@ -30,7 +30,7 @@ class HelpdeskControllerTest {
     void getBlobList_OK() throws Exception {
         when(helpdeskService.getBlobList(YEAR, MONTH, DAY, HOUR)).thenReturn(List.of("test"));
         mockMvc
-                .perform(get(String.format("/error_messages?year=%s&month=%s&day=%s&hour=%s", YEAR, MONTH, DAY, HOUR)))
+                .perform(get(String.format("/error-messages?year=%s&month=%s&day=%s&hour=%s", YEAR, MONTH, DAY, HOUR)))
                 .andExpect(status().isOk());
         verify(helpdeskService).getBlobList(YEAR, MONTH, DAY, HOUR);
     }
@@ -39,7 +39,7 @@ class HelpdeskControllerTest {
     void getJSONFromBlobStorage_OK() throws Exception {
         when(helpdeskService.getJSONFromBlobStorage(FILENAME)).thenReturn("{\"id\": 1}");
         mockMvc
-                .perform(get(String.format("/error_messages/json?filename=%s", FILENAME)))
+                .perform(get(String.format("/error-messages/detail?filename=%s", FILENAME)))
                 .andExpect(status().isOk());
         verify(helpdeskService).getJSONFromBlobStorage(FILENAME);
     }
@@ -48,7 +48,7 @@ class HelpdeskControllerTest {
     void retryMessage_OK() throws Exception {
         doNothing().when(helpdeskService).retryMessage(FILENAME);
         mockMvc
-                .perform(post(String.format("/error_messages/retry?filename=%s", FILENAME)))
+                .perform(post(String.format("/error-messages/retry?filename=%s", FILENAME)))
                 .andExpect(status().isOk());
         verify(helpdeskService).retryMessage(FILENAME);
     }

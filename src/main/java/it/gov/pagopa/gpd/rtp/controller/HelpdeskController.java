@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/error_messages")
+@RequestMapping("/error-messages")
 @RequiredArgsConstructor
 @Tag(name = "API Helpdesk", description = "APIs to retry failed RTP messages")
 public class HelpdeskController {
@@ -28,7 +28,7 @@ public class HelpdeskController {
         return ResponseEntity.ok(helpdeskService.getBlobList(year, month, day, hour));
     }
 
-    @GetMapping(value = "/json", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/detail", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getJSONFromBlobStorage(@RequestParam(value = "filename") String filename) {
         return ResponseEntity.ok(helpdeskService.getJSONFromBlobStorage(filename));
     }

@@ -35,7 +35,7 @@
     "name" : "API Helpdesk"
   } ],
   "paths" : {
-    "/error_messages" : {
+    "/error-messages" : {
       "get" : {
         "operationId" : "getBlobList",
         "parameters" : [ {
@@ -101,7 +101,7 @@
         }
       } ]
     },
-    "/error_messages/json" : {
+    "/error-messages/detail" : {
       "get" : {
         "operationId" : "getJSONFromBlobStorage",
         "parameters" : [ {
@@ -143,7 +143,7 @@
         }
       } ]
     },
-    "/error_messages/retry" : {
+    "/error-messages/retry" : {
       "parameters" : [ {
         "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
         "in" : "header",
