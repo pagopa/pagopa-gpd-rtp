@@ -16,12 +16,6 @@ public interface IngestionService {
      */
     void ingestPaymentOption(Message<String> message);
     /**
-     * Elaborate a {@link PaymentOption} message
-     *
-     * @param message PaymentOption messages
-     */
-    void handleMessage(Message<?> message);
-    /**
      * Elaborate a {@link PaymentOption} message from the dead letter storage
      *
      * @param paymentOption PaymentOption message

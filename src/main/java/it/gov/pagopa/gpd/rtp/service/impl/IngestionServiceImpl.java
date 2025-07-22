@@ -74,7 +74,7 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    public void handleMessage(Message<?> message) {
+    private void handleMessage(Message<?> message) {
         Acknowledgment acknowledgment = null;
         DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
         try {

@@ -86,7 +86,7 @@ class HelpdeskServiceImplTest {
         DeadLetterMessage deadLetterMessage = DeadLetterMessage.builder().id("id").originalMessage(DataCaptureMessage.<PaymentOptionEvent>builder().build()).build();
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
-        doThrow(new AppException(AppError.RTP_MESSAGE_NOT_SENT)).when(ingestionService).handleMessage(any(Message.class));
+        doThrow(new AppException(AppError.RTP_MESSAGE_NOT_SENT)).when(ingestionService).retryDeadLetterMessage(any(DataCaptureMessage.class));
         assertThrows(AppException.class, () -> sut.retryMessage(FILENAME));
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(ingestionService).retryDeadLetterMessage(any(DataCaptureMessage.class));
