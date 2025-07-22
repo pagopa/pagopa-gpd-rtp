@@ -63,12 +63,12 @@ class HelpdeskServiceImplTest {
         DeadLetterMessage deadLetterMessage = DeadLetterMessage.builder().id("id").originalMessage(DataCaptureMessage.<PaymentOptionEvent>builder().build()).build();
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
-        doNothing().when(ingestionService).handleMessage(any(Message.class));
+        when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         assertDoesNotThrow(() -> sut.retryMessage(FILENAME));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
-        verify(ingestionService).handleMessage(any(Message.class));
+        verify(ingestionService).retryDeadLetterMessage(any(DataCaptureMessage.class));
         verify(blobStorageClient).deleteBlob(FILENAME);
     }
 
@@ -77,7 +77,7 @@ class HelpdeskServiceImplTest {
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenThrow(new AppException(AppError.BLOB_STORAGE_ATTACHMENT_NOT_FOUND));
         assertThrows(AppException.class, () -> sut.retryMessage(FILENAME));
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
-        verify(ingestionService, never()).handleMessage(any());
+        verify(ingestionService, never()).retryDeadLetterMessage(any());
         verify(blobStorageClient, never()).deleteBlob(any());
     }
 
@@ -89,7 +89,7 @@ class HelpdeskServiceImplTest {
         doThrow(new AppException(AppError.RTP_MESSAGE_NOT_SENT)).when(ingestionService).handleMessage(any(Message.class));
         assertThrows(AppException.class, () -> sut.retryMessage(FILENAME));
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
-        verify(ingestionService).handleMessage(any(Message.class));
+        verify(ingestionService).retryDeadLetterMessage(any(DataCaptureMessage.class));
         verify(blobStorageClient, never()).deleteBlob(any());
     }
 }

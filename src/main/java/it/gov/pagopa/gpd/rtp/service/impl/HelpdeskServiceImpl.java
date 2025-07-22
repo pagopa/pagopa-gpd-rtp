@@ -4,17 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.events.model.DeadLetterMessage;
+import it.gov.pagopa.gpd.rtp.exception.AppError;
+import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -36,13 +34,15 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     }
 
     @Override
-    public void retryMessage(String fileName) throws JsonProcessingException {
-        DeadLetterMessage deadLetterMessage = objectMapper.readValue(new String(blobStorageClient.getJSONFromBlobStorage(fileName)), DeadLetterMessage.class);
+    public String retryMessage(String fileName) throws JsonProcessingException {
+        DeadLetterMessage deadLetterMessage = this.objectMapper.readValue(new String(blobStorageClient.getJSONFromBlobStorage(fileName)), DeadLetterMessage.class);
+        boolean response = this.ingestionService.retryDeadLetterMessage(deadLetterMessage.getOriginalMessage());
 
-        Map<String, Object> headers = Map.of("id", deadLetterMessage.getId(), KafkaHeaders.RECEIVED_KEY, deadLetterMessage.getId());
-        Message<String> genericMessage = new GenericMessage<>(objectMapper.writeValueAsString(deadLetterMessage.getOriginalMessage()), headers);
-        ingestionService.handleMessage(genericMessage);
+        if (response) {
+            this.blobStorageClient.deleteBlob(fileName);
+            return "Retry successful, message sent to RTP eventhub";
+        }
 
-        blobStorageClient.deleteBlob(fileName);
+        throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
     }
 }

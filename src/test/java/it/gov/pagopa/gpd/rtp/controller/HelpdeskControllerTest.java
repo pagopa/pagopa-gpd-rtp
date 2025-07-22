@@ -46,7 +46,7 @@ class HelpdeskControllerTest {
 
     @Test
     void retryMessage_OK() throws Exception {
-        doNothing().when(helpdeskService).retryMessage(FILENAME);
+        when(helpdeskService.retryMessage(FILENAME)).thenReturn("OK");
         mockMvc
                 .perform(post(String.format("/error-messages/retry?filename=%s", FILENAME)))
                 .andExpect(status().isOk());

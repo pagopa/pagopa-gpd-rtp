@@ -28,5 +28,5 @@ public interface HelpdeskService {
      *
      * @param fileName Blob filename
      */
-    void retryMessage(String fileName) throws JsonProcessingException;
+    String retryMessage(String fileName) throws JsonProcessingException;
 }

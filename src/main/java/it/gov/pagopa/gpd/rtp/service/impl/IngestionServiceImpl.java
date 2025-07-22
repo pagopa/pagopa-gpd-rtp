@@ -25,6 +25,7 @@ import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +78,7 @@ public class IngestionServiceImpl implements IngestionService {
         Acknowledgment acknowledgment = null;
         DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
         try {
-            acknowledgment = message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+            acknowledgment = getAck(message);
 
             paymentOption = parseMessage(message);
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
@@ -86,18 +87,14 @@ public class IngestionServiceImpl implements IngestionService {
             checkResponse(response);
 
             log.debug("RTP Message sent to eventhub at {}", LocalDateTime.now());
-            if (acknowledgment != null) {
-                acknowledgment.acknowledge();
-            }
-
+            acknowledgment.acknowledge();
         } catch (FailAndPostpone e) {
             assert paymentOption != null : "paymentOption cannot be null";
             handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
         } catch (FailAndIgnore e) {
             log.info("Message ignored {}", e.getMessage());
-            if (acknowledgment != null) {
-                acknowledgment.acknowledge();
-            }
+            assert acknowledgment != null : "acknowledgment cannot be null";
+            acknowledgment.acknowledge();
         } catch (FailAndNotify e) {
             log.error("Unexpected error raised", e);
             sendCustomEvent(e);
@@ -108,6 +105,21 @@ public class IngestionServiceImpl implements IngestionService {
             sendCustomEvent(failAndNotify);
             throw failAndNotify;
         }
+    }
+
+    public boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
+        return this.rtpMessageProducer.sendRTPMessage(rtpMessage);
+    }
+
+    @NotNull
+    private static Acknowledgment getAck(Message<?> message) {
+        Acknowledgment acknowledgment =
+                message.getHeaders().get(KafkaHeaders.ACKNOWLEDGMENT, Acknowledgment.class);
+        if (acknowledgment == null) {
+            throw new FailAndNotify(AppError.ACKNOWLEDGMENT_NOT_PRESENT);
+        }
+        return acknowledgment;
     }
 
     private void sendCustomEvent(FailAndNotify e) {
