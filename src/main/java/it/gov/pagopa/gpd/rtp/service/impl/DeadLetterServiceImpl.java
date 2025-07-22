@@ -13,7 +13,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.slf4j.MDC;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.ErrorMessage;
@@ -33,7 +32,6 @@ public class DeadLetterServiceImpl implements DeadLetterService {
     try {
       processingTracker.messageProcessingStarted();
       handleErrorMessage(errorMessage);
-      log.error("New Message in DeadLetter", errorMessage.getPayload());
       Map<String, String> props =
           Map.of(
               "type",
@@ -78,8 +76,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
             appException.getAppErrorCode(),
             originalMessagePayload);
 
-    MDC.put("deadLetterFileName", filePath);
     this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
+    log.error("New Message in DeadLetter {}", filePath);
   }
 
   private String getOriginalMessagePayload(ErrorMessage errorMessage) {
