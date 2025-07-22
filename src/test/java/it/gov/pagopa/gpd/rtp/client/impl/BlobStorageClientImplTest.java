@@ -4,7 +4,6 @@ import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
@@ -44,7 +43,7 @@ class BlobStorageClientImplTest {
     public static final String HOUR = "12";
     public static final String FILENAME = "testFilename.json";
     @MockBean
-    private BlobServiceClient blobServiceClient;
+    private BlobContainerClient blobContainerClient;
     @SpyBean
     private ObjectMapper objectMapper;
     @Autowired
@@ -55,11 +54,9 @@ class BlobStorageClientImplTest {
 
     @Test
     void saveStringJsonToBlobStorage_OK() {
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
 
         sut.saveStringJsonToBlobStorage("stringJSON", "filename");
         verify(blobClient).upload(any(InputStream.class));
@@ -73,8 +70,7 @@ class BlobStorageClientImplTest {
 
         when(pagedIterable.stream()).thenReturn(Stream.of(blob));
 
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
+
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
         List<String> response = sut.getBlobList(null, null, null, null);
@@ -92,8 +88,7 @@ class BlobStorageClientImplTest {
 
         when(pagedIterable.stream()).thenReturn(Stream.of(blob));
 
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
+
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
         List<String> response = sut.getBlobList(YEAR, MONTH, DAY, HOUR);
@@ -111,8 +106,7 @@ class BlobStorageClientImplTest {
 
         when(pagedIterable.stream()).thenReturn(Stream.of(blob));
 
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
+
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
         List<String> response = sut.getBlobList(null, null, null, HOUR);
@@ -127,11 +121,10 @@ class BlobStorageClientImplTest {
         DeadLetterMessage deadLetterMessage = DeadLetterMessage.builder().id("id").originalMessage(DataCaptureMessage.<PaymentOptionEvent>builder().build()).build();
         String json = objectMapper.writeValueAsString(deadLetterMessage);
 
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
+
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
         when(blobClient.downloadContent()).thenReturn(BinaryData.fromString(json));
 
         byte[] response = assertDoesNotThrow(() -> sut.getJSONFromBlobStorage(FILENAME));
@@ -141,11 +134,10 @@ class BlobStorageClientImplTest {
 
     @Test
     void getJSONFromBlobStorage_KO_IO_error() {
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
+
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
         when(blobClient.downloadContent()).thenThrow(new UncheckedIOException(new IOException()));
 
         assertThrows(AppException.class, () -> sut.getJSONFromBlobStorage(FILENAME));
@@ -153,11 +145,9 @@ class BlobStorageClientImplTest {
 
     @Test
     void getJSONFromBlobStorage_KO_blob_storage_exception_404() {
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
         BlobStorageException blobStorageException = mock(BlobStorageException.class);
         when(blobStorageException.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND.value());
         when(blobClient.downloadContent()).thenThrow(blobStorageException);
@@ -167,11 +157,9 @@ class BlobStorageClientImplTest {
 
     @Test
     void getJSONFromBlobStorage_KO_blob_storage_exception_generic() {
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
         BlobStorageException blobStorageException = mock(BlobStorageException.class);
         when(blobStorageException.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR.value());
         when(blobClient.downloadContent()).thenThrow(blobStorageException);
@@ -181,11 +169,9 @@ class BlobStorageClientImplTest {
 
     @Test
     void deleteBlob_OK() {
-        BlobContainerClient blobContainerClient = mock(BlobContainerClient.class);
         BlobClient blobClient = mock(BlobClient.class);
 
         when(blobContainerClient.getBlobClient(FILENAME)).thenReturn(blobClient);
-        when(blobServiceClient.getBlobContainerClient(anyString())).thenReturn(blobContainerClient);
         when(blobClient.deleteIfExists()).thenReturn(true);
 
         assertDoesNotThrow(() -> sut.deleteBlob(FILENAME));
