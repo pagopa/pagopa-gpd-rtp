@@ -17,6 +17,7 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
+import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
 import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
@@ -37,6 +38,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -49,6 +51,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class IngestionServiceImpl implements IngestionService {
+
+  private static final String FAULT_CODE = "faultCode";
+  private static final String PAYMENT_OPTION_ID = "paymentOptionId";
+  private static final String RTP_SENT_STATUS = "rtpSentStatus";
+  public static final String FAULT_DETAIL = "faultDetail";
+  private static final String MESSAGE_ID = "messageId";
+  private static final String RETRY_COUNT = "retryCount";
 
   private final ObjectMapper objectMapper;
   private final RTPMessageProducer rtpMessageProducer;
@@ -70,6 +79,7 @@ public class IngestionServiceImpl implements IngestionService {
       handleMessage(message);
     } finally {
       processingTracker.messageProcessingFinished();
+      MDC.clear();
     }
   }
 
@@ -78,33 +88,43 @@ public class IngestionServiceImpl implements IngestionService {
     DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
     try {
       acknowledgment = getAck(message);
-
       paymentOption = parseMessage(message);
+
+      MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
       checkResponse(response);
+      MDC.put(RTP_SENT_STATUS, "OK");
 
-      log.debug("RTP Message sent to eventhub at {}", LocalDateTime.now());
+      log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
       acknowledgment.acknowledge();
 
     } catch (FailAndPostpone e) {
       assert paymentOption != null : "paymentOption cannot be null";
+      setMDCErrorField(e);
       handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
     } catch (FailAndIgnore e) {
+      setMDCErrorField(e);
       log.info("Message ignored {}", e.getMessage());
       assert acknowledgment != null : "acknowledgment cannot be null";
       acknowledgment.acknowledge();
-    } catch (FailAndNotify e) {
-      log.error("Unexpected error raised", e);
-      sendCustomEvent(e);
-      throw e;
     } catch (Exception e) {
-      log.error("Unexpected error raised", e);
       FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+      if (e instanceof FailAndNotify failAndNotifyEx) {
+        failAndNotify = failAndNotifyEx;
+      }
+      setMDCErrorField(failAndNotify);
+      log.error("Unexpected error raised", e);
       sendCustomEvent(failAndNotify);
-      throw failAndNotify;
+      throw e;
     }
+  }
+
+  private void setMDCErrorField(AppException e) {
+    MDC.put(FAULT_CODE, e.getAppErrorCode().name());
+    MDC.put(FAULT_DETAIL, e.getMessage());
+    MDC.put(RTP_SENT_STATUS, "KO");
   }
 
   private void sendCustomEvent(FailAndNotify e) {
@@ -133,7 +153,8 @@ public class IngestionServiceImpl implements IngestionService {
       throw new FailAndIgnore(AppError.NULL_MESSAGE);
     }
 
-    log.debug(
+    MDC.put(MESSAGE_ID, String.valueOf(message.getHeaders().getId()));
+    log.info(
         "PaymentOption ingestion called at {} for payment options with message id {}",
         LocalDateTime.now(),
         message.getHeaders().getId());
@@ -170,9 +191,10 @@ public class IngestionServiceImpl implements IngestionService {
 
     // get retry count
     int retryCount = redisCacheRepository.getRetryCount(paymentOptionId);
+    MDC.put(RETRY_COUNT, String.valueOf(retryCount));
     if (retryCount < maxRetryDbReplica) {
       // if retry count < n then postpone the message and add 1 to the retry count
-      log.warn("Retry reading message after", e);
+      log.warn("Retry reading message after 1 sec", e);
       redisCacheRepository.setRetryCount(paymentOptionId, retryCount + 1);
       acknowledgment.nack(Duration.ofSeconds(1));
     } else {
@@ -193,12 +215,14 @@ public class IngestionServiceImpl implements IngestionService {
     try {
       return this.objectMapper.readValue(msg, new TypeReference<>() {});
     } catch (JsonProcessingException e) {
+      FailAndIgnore failAndIgnore = new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(
               new MessageHandlingException(
-                  message, new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE)),
+                  message, failAndIgnore),
               message));
-      throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+      setMDCErrorField(failAndIgnore);
+      throw failAndIgnore;
     }
   }
 
@@ -298,5 +322,12 @@ public class IngestionServiceImpl implements IngestionService {
         .operation(RTPOperationCode.DELETE)
         .timestamp(paymentOption.getTsMs())
         .build();
+  }
+
+  private String getPaymentOptionId(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    if (paymentOption.getAfter() != null) {
+      return String.valueOf(paymentOption.getAfter().getId());
+    }
+    return String.valueOf(paymentOption.getBefore().getId());
   }
 }
