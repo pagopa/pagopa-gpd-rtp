@@ -58,7 +58,7 @@ public class IngestionServiceImpl implements IngestionService {
   public static final String FAULT_DETAIL = "faultDetail";
   private static final String MESSAGE_ID = "messageId";
   private static final String RETRY_COUNT = "retryCount";
-  public static final String IUV = "iuv";
+  public static final String NAV = "nav";
   public static final String ORGANIZATION_FISCAL_CODE = "organizationFiscalCode";
 
   private final ObjectMapper objectMapper;
@@ -93,7 +93,7 @@ public class IngestionServiceImpl implements IngestionService {
       paymentOption = parseMessage(message);
 
       MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
-      MDC.put(IUV, getIuv(paymentOption));
+      MDC.put(NAV, getNav(paymentOption));
       MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
@@ -336,11 +336,11 @@ public class IngestionServiceImpl implements IngestionService {
     return String.valueOf(paymentOption.getBefore().getId());
   }
 
-  private String getIuv(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+  private String getNav(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
     if (paymentOption.getAfter() != null) {
-      return String.valueOf(paymentOption.getAfter().getIuv());
+      return String.valueOf(paymentOption.getAfter().getNav());
     }
-    return String.valueOf(paymentOption.getBefore().getIuv());
+    return String.valueOf(paymentOption.getBefore().getNav());
   }
 
   private String getOrganizationFiscalCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
