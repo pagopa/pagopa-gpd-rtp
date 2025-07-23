@@ -206,7 +206,7 @@ public class IngestionServiceImpl implements IngestionService {
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
       redisCacheRepository.deleteRetryCount(paymentOptionId);
-      log.error("Failed last try to syncronize DB Replica");
+      log.error("Message sent to deadletter after too much errors syncronizing DB Replica");
     }
   }
 
