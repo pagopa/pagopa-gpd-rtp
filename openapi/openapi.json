@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.2.16"
+    "version": "0.2.16-1-PAGOPA-3125-improve-log-for-monitoring-dashboard"
   },
   "servers": [
     {

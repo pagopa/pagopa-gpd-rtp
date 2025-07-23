@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.2.16"
+    tag: "0.2.16-1-PAGOPA-3125-improve-log-for-monitoring-dashboard"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -73,7 +73,7 @@ microservice-chart:
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "dev"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
-    APP_LOGGING_LEVEL: 'DEBUG'
+    APP_LOGGING_LEVEL: 'INFO'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     KAFKA_LOGGING_LEVEL: 'WARN'
     KAFKA_START_OFFSET: 'earliest'
@@ -100,6 +100,7 @@ microservice-chart:
     RTP_MIL_HOST: "https://api-mcshared.dev.cstar.pagopa.it"
     RTP_MIL_CLIENT_ID: "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
+    MAX_RETRY_DB_REPLICAS: "1"
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-d-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-d-tx-rtp-connection-string"
