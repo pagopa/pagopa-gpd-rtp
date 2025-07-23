@@ -69,7 +69,7 @@ public class FilterServiceImpl implements FilterService {
     @Override
     public void hasValidTransferCategoriesOrElseThrow(
             PaymentOptionEvent paymentOption, List<Transfer> transferList) {
-        List<String> transferCategories = transferList.stream().map(Transfer::getRemittanceInformation).toList();
+        List<String> transferCategories = transferList.stream().map(Transfer::getCategory).toList();
         MDC.put(TRANSFER_CATEGORIES, String.join(",", transferCategories));
         if (!transferCategories.parallelStream()
                 .allMatch(this.validTransferCategories::contains)) {
