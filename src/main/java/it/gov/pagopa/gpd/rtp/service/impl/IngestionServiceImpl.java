@@ -58,6 +58,8 @@ public class IngestionServiceImpl implements IngestionService {
   public static final String FAULT_DETAIL = "faultDetail";
   private static final String MESSAGE_ID = "messageId";
   private static final String RETRY_COUNT = "retryCount";
+  public static final String IUV = "iuv";
+  public static final String ORGANIZATION_FISCAL_CODE = "organizationFiscalCode";
 
   private final ObjectMapper objectMapper;
   private final RTPMessageProducer rtpMessageProducer;
@@ -91,13 +93,15 @@ public class IngestionServiceImpl implements IngestionService {
       paymentOption = parseMessage(message);
 
       MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
+      MDC.put(IUV, getIuv(paymentOption));
+      MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
       RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
       boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
       checkResponse(response);
       MDC.put(RTP_SENT_STATUS, "OK");
 
-      log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
+      log.info("RTP Message sent to eventhub at      {}", LocalDateTime.now());
       acknowledgment.acknowledge();
 
     } catch (FailAndPostpone e) {
@@ -202,6 +206,7 @@ public class IngestionServiceImpl implements IngestionService {
       this.deadLetterService.sendToDeadLetter(
           new ErrorMessage(new MessageHandlingException(message, e), message));
       redisCacheRepository.deleteRetryCount(paymentOptionId);
+      log.error("Message sent to deadletter after too much errors syncronizing DB Replica");
     }
   }
 
@@ -329,5 +334,19 @@ public class IngestionServiceImpl implements IngestionService {
       return String.valueOf(paymentOption.getAfter().getId());
     }
     return String.valueOf(paymentOption.getBefore().getId());
+  }
+
+  private String getIuv(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    if (paymentOption.getAfter() != null) {
+      return String.valueOf(paymentOption.getAfter().getIuv());
+    }
+    return String.valueOf(paymentOption.getBefore().getIuv());
+  }
+
+  private String getOrganizationFiscalCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    if (paymentOption.getAfter() != null) {
+      return String.valueOf(paymentOption.getAfter().getOrganizationFiscalCode());
+    }
+    return String.valueOf(paymentOption.getBefore().getOrganizationFiscalCode());
   }
 }
