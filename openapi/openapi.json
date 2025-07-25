@@ -40,6 +40,7 @@
         "operationId" : "getBlobList",
         "parameters" : [ {
           "description" : "Filter by year",
+          "example" : 2025,
           "in" : "query",
           "name" : "year",
           "required" : false,
@@ -48,6 +49,7 @@
           }
         }, {
           "description" : "Filter by month, requires year otherwise gets ignored",
+          "example" : 5,
           "in" : "query",
           "name" : "month",
           "required" : false,
@@ -56,6 +58,7 @@
           }
         }, {
           "description" : "Filter by day, requires month otherwise gets ignored",
+          "example" : 7,
           "in" : "query",
           "name" : "day",
           "required" : false,
@@ -64,6 +67,7 @@
           }
         }, {
           "description" : "Filter by hours, requires day otherwise gets ignored",
+          "example" : 1,
           "in" : "query",
           "name" : "hour",
           "required" : false,
