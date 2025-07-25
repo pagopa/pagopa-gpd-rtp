@@ -141,9 +141,9 @@ public class IngestionServiceImpl implements IngestionService {
 
     private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<?> message) {
         // Discard null messages
-    if (message.getHeaders().getId() == null
-        || message.getPayload() == null
-        || !(message.getPayload() instanceof String msg)) {
+        if (message.getHeaders().getId() == null
+                || message.getPayload() == null
+                || !(message.getPayload() instanceof String msg)) {
             log.debug("NULL message ignored at {}", LocalDateTime.now());
             throw new FailAndIgnore(AppError.NULL_MESSAGE);
         }
@@ -175,7 +175,7 @@ public class IngestionServiceImpl implements IngestionService {
 
         // get retry count
         int retryCount = redisCacheRepository.getRetryCount(paymentOptionId);
-        if (retryCount < maxRetryDbReplica && acknowledgment != null) {
+        if (retryCount < maxRetryDbReplica) {
             // if retry count < n then postpone the message and add 1 to the retry count
             log.warn("Retry reading message after", e);
             redisCacheRepository.setRetryCount(paymentOptionId, retryCount + 1);
@@ -265,9 +265,10 @@ public class IngestionServiceImpl implements IngestionService {
                         .findFirst()
                         .orElseThrow(() -> new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP));
         return primaryTransfer.getRemittanceInformation();
-  }
+    }
 
-  private String anonymizePII(String text){AnonymizerModel request =
+    private String anonymizePII(String text) {
+        AnonymizerModel request =
                 AnonymizerModel.builder().text(text).build();
         return this.anonymizerClient.anonymize(request).getText();
     }
