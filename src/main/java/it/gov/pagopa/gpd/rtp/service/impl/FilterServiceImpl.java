@@ -25,8 +25,9 @@ import static it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository.KEY;
 @Slf4j
 public class FilterServiceImpl implements FilterService {
 
-  public static final String TRANSFER_CATEGORIES = "transferCategories";
-  private final List<String> validTransferCategories;
+    public static final String TRANSFER_CATEGORIES = "transferCategories";
+    public static final String ALL_TRANSFER_CATEGORIES = "*";
+    private final List<String> validTransferCategories;
 
     private final RedisCacheRepository redisCacheRepository;
 
@@ -71,7 +72,7 @@ public class FilterServiceImpl implements FilterService {
             PaymentOptionEvent paymentOption, List<Transfer> transferList) {
         List<String> transferCategories = transferList.stream().map(Transfer::getCategory).toList();
         MDC.put(TRANSFER_CATEGORIES, String.join(",", transferCategories));
-        if (!transferCategories.parallelStream()
+        if (!this.validTransferCategories.contains(ALL_TRANSFER_CATEGORIES) && !transferCategories.parallelStream()
                 .allMatch(this.validTransferCategories::contains)) {
             throw new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP);
         }
