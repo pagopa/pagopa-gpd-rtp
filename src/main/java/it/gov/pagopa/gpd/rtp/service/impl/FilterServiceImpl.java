@@ -66,8 +66,9 @@ public class FilterServiceImpl implements FilterService {
   @Override
   public void hasValidTransferCategoriesOrElseThrow(
       PaymentOptionEvent paymentOption, List<Transfer> transferList) {
-    if (!transferList.parallelStream()
-        .allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
+    if (!this.validTransferCategories.contains("*")
+        && !transferList.parallelStream()
+            .allMatch(transfer -> this.validTransferCategories.contains(transfer.getCategory()))) {
       throw new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP);
     }
     long totalTransfersAmount =
