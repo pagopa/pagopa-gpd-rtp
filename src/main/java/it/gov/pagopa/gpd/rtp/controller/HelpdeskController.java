@@ -37,10 +37,10 @@ public class HelpdeskController {
     })
     @Operation(summary = "Get list of failed messages saved on blob storage as JSON files", security = {@SecurityRequirement(name = "JWT")})
     public List<String> getBlobList(
-            @Parameter(description = "Filter by year") @RequestParam(value = "year", required = false) String year,
-            @Parameter(description = "Filter by month, requires year otherwise gets ignored") @RequestParam(value = "month", required = false) String month,
-            @Parameter(description = "Filter by day, requires month otherwise gets ignored") @RequestParam(value = "day", required = false) String day,
-            @Parameter(description = "Filter by hours, requires day otherwise gets ignored") @RequestParam(value = "hour", required = false) String hour
+            @Parameter(description = "Filter by year", example = "2025") @RequestParam(value = "year", required = false) String year,
+            @Parameter(description = "Filter by month, requires year otherwise gets ignored", example = "5") @RequestParam(value = "month", required = false) String month,
+            @Parameter(description = "Filter by day, requires month otherwise gets ignored", example = "7") @RequestParam(value = "day", required = false) String day,
+            @Parameter(description = "Filter by hours, requires day otherwise gets ignored", example = "1") @RequestParam(value = "hour", required = false) String hour
     ) {
         return helpdeskService.getBlobList(year, month, day, hour);
     }
