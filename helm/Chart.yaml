@@ -2,13 +2,13 @@ apiVersion: v2
 name: pagopa-gpd-rtp
 description: Microservice that handles the forwarding of the debt positions to RTP
 type: application
-version: 0.38.0
-appVersion: 0.2.16
+version: 0.43.0
+appVersion: 0.2.16-5-PAGOPA-3125-improve-log-for-monitoring-dashboard
 dependencies:
   - name: microservice-chart
     version: 7.5.0
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
-#  - name: cron-chart
-#    version: 3.0.0
-#    repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
-#    alias: refresh-cache-cron
+  - name: cron-chart
+    version: 3.0.0
+    repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
+    alias: refresh-cache-cron

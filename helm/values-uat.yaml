@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.2.16"
+    tag: "0.2.16-5-PAGOPA-3125-improve-log-for-monitoring-dashboard"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -100,6 +100,7 @@ microservice-chart:
     RTP_MIL_CLIENT_ID: "fe594504-4e5f-4611-9151-afbcd0da3df5"
     RTP_MIL_HOST: "https://api-mcshared.uat.cstar.pagopa.it"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
+    MAX_RETRY_DB_REPLICAS: "1"
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-u-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-u-tx-rtp-connection-string"
