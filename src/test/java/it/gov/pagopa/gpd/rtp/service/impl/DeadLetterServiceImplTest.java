@@ -34,7 +34,7 @@ class DeadLetterServiceImplTest {
   private static final byte[] CDC_MESSAGE_KEY = ("{\"id\":\"" + CDC_MESSAGE_ID + "\"}").getBytes();
   private static final String ORIGINAL_MESSAGE_PAYLOAD =
       "\"originalMessage\":\"[ERROR] Retrieving original message payload\"";
-  private static final String DEAD_LETTER_ID_FIELD = "\"id\":";
+  private static final String DEAD_LETTER_ID_FIELD = "\"id\":\"";
   private static final String DEAD_LETTER_CAUSE_FIELD = "\"cause\":\"";
   private static final String DEAD_LETTER_ERROR_CODE_FIELD = "\"errorCode\":\"";
 
