@@ -33,7 +33,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         try {
             processingTracker.messageProcessingStarted();
             handleErrorMessage(errorMessage);
-            log.error("New Message in DeadLetter", errorMessage.getPayload());
+
             Map<String, String> props =
                     Map.of(
                             "type",
@@ -79,7 +79,8 @@ public class DeadLetterServiceImpl implements DeadLetterService {
             originalMessagePayload);
 
         this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
-    }
+    log.error("New Message in DeadLetter {}", filePath);
+  }
 
   private String getOriginalMessagePayload(ErrorMessage errorMessage) {
         String originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
