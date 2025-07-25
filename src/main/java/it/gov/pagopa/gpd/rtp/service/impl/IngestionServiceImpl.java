@@ -14,11 +14,7 @@ import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
-import it.gov.pagopa.gpd.rtp.exception.AppError;
-import it.gov.pagopa.gpd.rtp.exception.AppException;
-import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
-import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
-import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
+import it.gov.pagopa.gpd.rtp.exception.*;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
@@ -54,13 +50,14 @@ import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 public class IngestionServiceImpl implements IngestionService {
 
     private static final String FAULT_CODE = "faultCode";
-  private static final String PAYMENT_OPTION_ID = "paymentOptionId";
-  private static final String RTP_SENT_STATUS = "rtpSentStatus";
-  public static final String FAULT_DETAIL = "faultDetail";
-  private static final String MESSAGE_ID = "messageId";
-  private static final String RETRY_COUNT = "retryCount";
-  public static final String NAV = "nav";
-  public static final String ORGANIZATION_FISCAL_CODE = "organizationFiscalCode";private final ObjectMapper objectMapper;
+    private static final String PAYMENT_OPTION_ID = "paymentOptionId";
+    private static final String RTP_SENT_STATUS = "rtpSentStatus";
+    public static final String FAULT_DETAIL = "faultDetail";
+    private static final String MESSAGE_ID = "messageId";
+    private static final String RETRY_COUNT = "retryCount";
+    public static final String NAV = "nav";
+    public static final String ORGANIZATION_FISCAL_CODE = "organizationFiscalCode";
+    private final ObjectMapper objectMapper;
     private final RTPMessageProducer rtpMessageProducer;
     private final FilterService filterService;
     private final TransferRepository transferRepository;
@@ -80,7 +77,8 @@ public class IngestionServiceImpl implements IngestionService {
             handleMessage(message);
         } finally {
             processingTracker.messageProcessingFinished();
-        MDC.clear();}
+            MDC.clear();
+        }
     }
 
     private void handleMessage(Message<?> message) {
@@ -89,40 +87,43 @@ public class IngestionServiceImpl implements IngestionService {
         try {
             acknowledgment = getAck(message);
 
-            paymentOption = parseMessage(message);MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
-      MDC.put(NAV, getNav(paymentOption));
-      MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
+            paymentOption = parseMessage(message);
+            MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
+            MDC.put(NAV, getNav(paymentOption));
+            MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
             checkResponse(response);
-      MDC.put(RTP_SENT_STATUS, "OK");
+            MDC.put(RTP_SENT_STATUS, "OK");
 
             log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
             acknowledgment.acknowledge();
         } catch (FailAndPostpone e) {
-            assert paymentOption != null : "paymentOption cannot be null";setMDCErrorField(e);
+            assert paymentOption != null : "paymentOption cannot be null";
+            setMDCErrorField(e);
             handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
         } catch (FailAndIgnore e) {
-      setMDCErrorField(e);
+            setMDCErrorField(e);
             log.info("Message ignored {}", e.getMessage());
             assert acknowledgment != null : "acknowledgment cannot be null";
             acknowledgment.acknowledge();
         } catch (Exception e) {
-      FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
-      if (e instanceof FailAndNotify failAndNotifyEx) {
-        failAndNotify = failAndNotifyEx;
-      }
-      setMDCErrorField(failAndNotify);
+            FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+            if (e instanceof FailAndNotify failAndNotifyEx) {
+                failAndNotify = failAndNotifyEx;
+            }
+            setMDCErrorField(failAndNotify);
             log.error("Unexpected error raised", e);
             sendCustomEvent(failAndNotify);
             throw e;
-        } }
+        }
+    }
 
-  private void setMDCErrorField(AppException e) {
-            MDC.put(FAULT_CODE, e.getAppErrorCode().name());
-            MDC.put(FAULT_DETAIL, e.getMessage());
-            MDC.put(RTP_SENT_STATUS, "KO");
+    private void setMDCErrorField(AppException e) {
+        MDC.put(FAULT_CODE, e.getAppErrorCode().name());
+        MDC.put(FAULT_DETAIL, e.getMessage());
+        MDC.put(RTP_SENT_STATUS, "KO");
     }
 
     public boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
@@ -167,7 +168,7 @@ public class IngestionServiceImpl implements IngestionService {
         }
 
         MDC.put(MESSAGE_ID, String.valueOf(message.getHeaders().getId()));
-    log.info(
+        log.info(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
                 LocalDateTime.now(),
                 message.getHeaders().getId());
@@ -194,7 +195,8 @@ public class IngestionServiceImpl implements IngestionService {
 
         // get retry count
         int retryCount = redisCacheRepository.getRetryCount(paymentOptionId);
-        MDC.put(RETRY_COUNT, String.valueOf(retryCount));if (retryCount < maxRetryDbReplica) {
+        MDC.put(RETRY_COUNT, String.valueOf(retryCount));
+        if (retryCount < maxRetryDbReplica) {
             // if retry count < n then postpone the message and add 1 to the retry count
             log.warn("Retry reading message after1 sec", e);
             redisCacheRepository.setRetryCount(paymentOptionId, retryCount + 1);
@@ -203,7 +205,8 @@ public class IngestionServiceImpl implements IngestionService {
             // if retry count >= n then save the message to dead letter
             this.deadLetterService.sendToDeadLetter(
                     new ErrorMessage(new MessageHandlingException(message, e), message));
-            redisCacheRepository.deleteRetryCount(paymentOptionId);log.error("Message sent to deadletter after too much errors syncronizing DB Replica");
+            redisCacheRepository.deleteRetryCount(paymentOptionId);
+            log.error("Message sent to deadletter after too much errors syncronizing DB Replica");
         }
     }
 
@@ -218,11 +221,13 @@ public class IngestionServiceImpl implements IngestionService {
             return this.objectMapper.readValue(msg, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
-            FailAndIgnore failAndIgnore = new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);this.deadLetterService.sendToDeadLetter(
+            FailAndIgnore failAndIgnore = new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+            this.deadLetterService.sendToDeadLetter(
                     new ErrorMessage(
                             new MessageHandlingException(
                                     message, failAndIgnore),
-                            message));setMDCErrorField(failAndIgnore);
+                            message));
+            setMDCErrorField(failAndIgnore);
             throw failAndIgnore;
         }
     }
@@ -325,24 +330,24 @@ public class IngestionServiceImpl implements IngestionService {
                 .build();
     }
 
-  private String getPaymentOptionId(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    if (paymentOption.getAfter() != null) {
-      return String.valueOf(paymentOption.getAfter().getId());
+    private String getPaymentOptionId(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        if (paymentOption.getAfter() != null) {
+            return String.valueOf(paymentOption.getAfter().getId());
+        }
+        return String.valueOf(paymentOption.getBefore().getId());
     }
-    return String.valueOf(paymentOption.getBefore().getId());
-  }
 
-  private String getNav(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    if (paymentOption.getAfter() != null) {
-      return String.valueOf(paymentOption.getAfter().getNav());
+    private String getNav(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        if (paymentOption.getAfter() != null) {
+            return String.valueOf(paymentOption.getAfter().getNav());
+        }
+        return String.valueOf(paymentOption.getBefore().getNav());
     }
-    return String.valueOf(paymentOption.getBefore().getNav());
-  }
 
-  private String getOrganizationFiscalCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    if (paymentOption.getAfter() != null) {
-      return String.valueOf(paymentOption.getAfter().getOrganizationFiscalCode());
+    private String getOrganizationFiscalCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        if (paymentOption.getAfter() != null) {
+            return String.valueOf(paymentOption.getAfter().getOrganizationFiscalCode());
+        }
+        return String.valueOf(paymentOption.getBefore().getOrganizationFiscalCode());
     }
-    return String.valueOf(paymentOption.getBefore().getOrganizationFiscalCode());
-  }
 }
