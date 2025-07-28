@@ -65,7 +65,7 @@
           },
           {
             "description": "Filter by month, requires year otherwise gets ignored",
-            "example": "5",
+            "example": 5,
             "in": "query",
             "name": "month",
             "required": false,
@@ -75,7 +75,7 @@
           },
           {
             "description": "Filter by day, requires month otherwise gets ignored",
-            "example": "7",
+            "example": 7,
             "in": "query",
             "name": "day",
             "required": false,
@@ -85,7 +85,7 @@
           },
           {
             "description": "Filter by hours, requires day otherwise gets ignored",
-            "example": "1",
+            "example": 1,
             "in": "query",
             "name": "hour",
             "required": false,
