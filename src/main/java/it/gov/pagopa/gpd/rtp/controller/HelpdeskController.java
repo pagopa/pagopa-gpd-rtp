@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.rtp.model.ProblemJson;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
@@ -35,7 +34,7 @@ public class HelpdeskController {
             @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemJson.class)))
     })
-    @Operation(summary = "Get list of failed messages saved on blob storage as JSON files", security = {@SecurityRequirement(name = "JWT")})
+    @Operation(summary = "Get list of failed messages saved on blob storage as JSON files")
     public List<String> getBlobList(
             @Parameter(description = "Filter by year", example = "2025") @RequestParam(value = "year", required = false) String year,
             @Parameter(description = "Filter by month, requires year otherwise gets ignored", example = "5") @RequestParam(value = "month", required = false) String month,
@@ -55,7 +54,7 @@ public class HelpdeskController {
             @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemJson.class)))
     })
-    @Operation(summary = "Retrieve the specified error message JSON by its filename", security = {@SecurityRequirement(name = "JWT")})
+    @Operation(summary = "Retrieve the specified error message JSON by its filename")
     public String getJSONFromBlobStorage(
             @Parameter(description = "Filename of the failed message's JSON to retrieve") @RequestParam(value = "filename") String filename) {
         return helpdeskService.getJSONFromBlobStorage(filename);
@@ -71,7 +70,7 @@ public class HelpdeskController {
             @ApiResponse(responseCode = "429", description = "Too many requests", content = @Content(schema = @Schema())),
             @ApiResponse(responseCode = "500", description = "Service unavailable", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProblemJson.class)))
     })
-    @Operation(summary = "Retry the specified error message JSON by its filename", security = {@SecurityRequirement(name = "JWT")})
+    @Operation(summary = "Retry the specified error message JSON by its filename")
     public String retryMessage(
             @Parameter(description = "Filename of the failed message's JSON to retry") @RequestParam(value = "filename") String filename) throws JsonProcessingException {
         return helpdeskService.retryMessage(filename);
