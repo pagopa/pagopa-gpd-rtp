@@ -30,4 +30,15 @@ public class CommonUtility {
   public static Boolean deNull(Boolean value) {
     return Optional.ofNullable(value).orElse(false);
   }
+
+  /**
+   * @param input input to sanitize.
+   * @return input string without harmful characters
+   */
+  public static String sanitizeLogInput(String input) {
+    if (input == null) {
+      return null;
+    }
+    return input.replaceAll("[^A-Za-z0-9./:_-]", "_");
+  }
 }
