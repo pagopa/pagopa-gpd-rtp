@@ -168,11 +168,6 @@
             }
           }
         },
-        "security": [
-          {
-            "JWT": []
-          }
-        ],
         "summary": "Get list of failed messages saved on blob storage as JSON files",
         "tags": [
           "API Helpdesk"
@@ -295,11 +290,6 @@
             }
           }
         },
-        "security": [
-          {
-            "JWT": []
-          }
-        ],
         "summary": "Retrieve the specified error message JSON by its filename",
         "tags": [
           "API Helpdesk"
@@ -432,11 +422,6 @@
             }
           }
         },
-        "security": [
-          {
-            "JWT": []
-          }
-        ],
         "summary": "Retry the specified error message JSON by its filename",
         "tags": [
           "API Helpdesk"
