@@ -163,7 +163,7 @@ jobs:
           fi
 
       - name: Call START_CONSUMER event
-        if: ${{ inputs.start_consumer }}
+        if: ${{ inputs.start_consumer != false }}
         run: |
           curl --location --request POST 'https://${{ env.HOST }}/gpd-rtp/v1/events/publish/START_CONSUMER' \
             --header "Ocp-Apim-Subscription-Key: ${{ secrets.SUBKEY }}" \
