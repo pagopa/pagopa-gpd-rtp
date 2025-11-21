@@ -29,7 +29,12 @@ public class RTPMessage {
   private Long dueDate;
 
   private long amount;
+
   private PaymentPositionStatus status;
+
+  private String paymentOptionStatus;
+
+  private String paymentPlanId;
 
   @JsonProperty("psp_code")
   private String pspCode;

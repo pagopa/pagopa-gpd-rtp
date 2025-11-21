@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
@@ -28,7 +29,7 @@ class FilterServiceImplTest {
   private static final String INVALID_TRANSFER_CATEGORY = "invalidTransferCategory";
   private static final String VALID_FISCAL_CODE = "AAAAAA98L12B157A";
   private static final String VALID_PIVA = "01234567890";
-  private static final String INVALID_FISCAL_CODE = "invalidFiscalCode";
+  private static final String FOREIGN_FISCAL_CODE = "invalidFiscalCode";
   private static final long VALID_PAYMENT_OPTION_AMOUNT = 10L;
 
   @MockBean private RedisCacheRepository redisCacheRepository;
@@ -323,17 +324,19 @@ class FilterServiceImplTest {
   }
 
   @Test
-  void isValidPaymentOptionForRTP_OK_INVALID_FISCAL_CODE() {
-    try {
-      sut.isValidPaymentOptionForRTPOrElseThrow(
-          getDataCaptureMessagePaymentOption(
-              PaymentPositionStatus.VALID,
-              VALID_PIVA,
-              INVALID_FISCAL_CODE,
-              DebeziumOperationCode.c));
-    } catch (AppException e) {
-      assertEquals(AppError.TAX_CODE_NOT_VALID_FOR_RTP, e.getAppErrorCode());
-    }
+  void isValidPaymentOptionForRTP_OK_FOREIGN_FISCAL_CODE() {
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
+    assertDoesNotThrow(
+        () ->
+            sut.isValidPaymentOptionForRTPOrElseThrow(
+                getDataCaptureMessagePaymentOption(
+                    PaymentPositionStatus.VALID,
+                    VALID_PIVA,
+                    FOREIGN_FISCAL_CODE,
+                    DebeziumOperationCode.c)));
   }
 
   // Verify Transfers
@@ -419,6 +422,7 @@ class FilterServiceImplTest {
                 .paymentPositionStatus(paymentPositionStatus)
                 .organizationFiscalCode(orgFiscalCode)
                 .fiscalCode(fiscalCode)
+                .serviceType(ServiceType.GPD)
                 .build())
         .op(debeziumOperationCode)
         .build();

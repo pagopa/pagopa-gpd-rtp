@@ -3,6 +3,7 @@ package it.gov.pagopa.gpd.rtp.events.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOptionEvent {
   @Id private Long id;
 
@@ -35,6 +36,12 @@ public class PaymentOptionEvent {
   private String organizationFiscalCode;
 
   private String status;
+
+  @JsonProperty("service_type")
+  private ServiceType serviceType;
+
+  @JsonProperty("payment_plan_id")
+  private String paymentPlanId;
 
   private String nav;
 
