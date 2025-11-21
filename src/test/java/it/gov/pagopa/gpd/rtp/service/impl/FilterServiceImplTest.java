@@ -361,6 +361,17 @@ class FilterServiceImplTest {
   }
 
   @Test
+  void hasValidTransferCategoriesOrElseThrow_KO_OPTOUT_CATEGORY() {
+    try {
+      sut.hasValidTransferCategoriesOrElseThrow(
+          getPaymentOption(VALID_PAYMENT_OPTION_AMOUNT / 2),
+          getTransferList("7/0201102IM/", VALID_TRANSFER_CATEGORY));
+    } catch (AppException e) {
+      assertEquals(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP, e.getAppErrorCode());
+    }
+  }
+
+  @Test
   void hasValidTransferCategoriesOrElseThrow_KO_INVALID_ONE_TRANSFER_CATEGORY() {
     try {
       sut.hasValidTransferCategoriesOrElseThrow(
