@@ -452,4 +452,24 @@ class FilterServiceImplTest {
     transfer2.setCategory(transferCategory2);
     return List.of(transfer1, transfer2);
   }
+
+  @Test
+  void isValidPaymentOptionForRTP_INVALID_SERVICE_TYPE() {
+    when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
+    SetOperations mock = Mockito.mock(SetOperations.class);
+    when(mock.isMember(anyString(), anyString())).thenReturn(true);
+    when(redisCacheRepository.getFlags()).thenReturn(mock);
+    try {
+      DataCaptureMessage<PaymentOptionEvent> dataCaptureMessagePaymentOption =
+          getDataCaptureMessagePaymentOption(
+              PaymentPositionStatus.PARTIALLY_PAID,
+              VALID_PIVA,
+              VALID_FISCAL_CODE,
+              DebeziumOperationCode.c);
+      dataCaptureMessagePaymentOption.getAfter().setServiceType(ServiceType.ACA);
+      sut.isValidPaymentOptionForRTPOrElseThrow(dataCaptureMessagePaymentOption);
+    } catch (AppException e) {
+      assertEquals(AppError.PAYMENT_POSITION_TYPE_NOT_VALID_FOR_RTP, e.getAppErrorCode());
+    }
+  }
 }

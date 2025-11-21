@@ -5,12 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
