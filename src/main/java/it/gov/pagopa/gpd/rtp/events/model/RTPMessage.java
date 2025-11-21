@@ -32,8 +32,10 @@ public class RTPMessage {
 
   private PaymentPositionStatus status;
 
+  @JsonProperty("payment_option_status")
   private String paymentOptionStatus;
 
+  @JsonProperty("payment_plan_id")
   private String paymentPlanId;
 
   @JsonProperty("psp_code")
