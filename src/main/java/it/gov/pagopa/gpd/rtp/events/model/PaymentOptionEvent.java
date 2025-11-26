@@ -35,9 +35,6 @@ public class PaymentOptionEvent {
 
   private String status;
 
-  @JsonProperty("service_type")
-  private ServiceType serviceType;
-
   @JsonProperty("payment_plan_id")
   private String paymentPlanId;
 
@@ -51,9 +48,6 @@ public class PaymentOptionEvent {
 
   @JsonProperty("psp_tax_code")
   private String pspTaxCode;
-
-  @JsonProperty("payment_position_status")
-  private PaymentPositionStatus paymentPositionStatus;
 
   @JsonProperty("is_partial_payment")
   private Boolean isPartialPayment;

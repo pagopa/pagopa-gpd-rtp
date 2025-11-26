@@ -57,7 +57,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
         AppException appException = (AppException) errorMessage.getPayload().getCause();
 
         String messageId = getMessageId(errorMessage);
-    String originalMessagePayload = getOriginalMessagePayload(errorMessage);
+        String originalMessagePayload = getOriginalMessagePayload(errorMessage);
 
         String filePath =
                 String.format(
@@ -70,19 +70,19 @@ public class DeadLetterServiceImpl implements DeadLetterService {
                         appException.getAppErrorCode(),
                         Instant.now());
 
-    String stringJSON =
-        String.format(
-            "{\"id\":\"%s\", \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":%s}",
-            messageId,
-            appException.getMessage(),
-            appException.getAppErrorCode(),
-            originalMessagePayload);
+        String stringJSON =
+                String.format(
+                        "{\"id\":\"%s\", \"cause\":\"%s\", \"errorCode\":\"%s\", \"originalMessage\":%s}",
+                        messageId,
+                        appException.getMessage(),
+                        appException.getAppErrorCode(),
+                        originalMessagePayload);
 
         this.blobStorageClient.saveStringJsonToBlobStorage(stringJSON, filePath);
-    log.error("New Message in DeadLetter {}", filePath);
-  }
+        log.error("New Message in DeadLetter {}", filePath);
+    }
 
-  private String getOriginalMessagePayload(ErrorMessage errorMessage) {
+    private String getOriginalMessagePayload(ErrorMessage errorMessage) {
         String originalMessagePayload = "\"[ERROR] Retrieving original message payload\"";
         Message<?> originalMessage = errorMessage.getOriginalMessage();
         if (originalMessage != null) {

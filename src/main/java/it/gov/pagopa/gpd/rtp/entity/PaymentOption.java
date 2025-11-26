@@ -51,11 +51,6 @@ public class PaymentOption {
     @Column(name = "psp_tax_code")
     private String pspTaxCode;
 
-    @Enumerated(EnumType.STRING)
-    @JsonProperty("payment_position_status")
-    @Column(name = "payment_position_status")
-    private PaymentPositionStatus paymentPositionStatus;
-
     @Column(name = "is_partial_payment")
     private Boolean isPartialPayment;
 

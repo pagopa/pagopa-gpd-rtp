@@ -64,6 +64,10 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Payment option not found",
       "The payment option is not present on the DB"),
+    PAYMENT_POSITION_NOT_FOUND(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      "Payment position not found",
+      "The payment position is not present on the DB"),
   ACKNOWLEDGMENT_NOT_PRESENT(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Unexpected error",

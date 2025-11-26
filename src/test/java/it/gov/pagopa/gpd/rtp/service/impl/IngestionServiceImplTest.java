@@ -10,8 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import it.gov.pagopa.gpd.rtp.client.AnonymizerClient;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
+import it.gov.pagopa.gpd.rtp.entity.PaymentPosition;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
+import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
@@ -23,6 +25,7 @@ import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
+import it.gov.pagopa.gpd.rtp.repository.DebtPositionRepository;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
@@ -62,6 +65,7 @@ class IngestionServiceImplTest {
   @MockBean private FilterService filterService;
   @MockBean private TransferRepository transferRepository;
   @MockBean private PaymentOptionRepository paymentOptionRepository;
+  @MockBean private DebtPositionRepository debtPositionRepository;
   @MockBean private AnonymizerClient anonymizerClient;
   @MockBean private DeadLetterService deadLetterService;
   @MockBean private Acknowledgment acknowledgment;
@@ -85,8 +89,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(acknowledgment, never()).nack(any());
@@ -121,6 +125,12 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     Transfer transfer = new Transfer();
     transfer.setRemittanceInformation(REMITTANCE_INFORMATION);
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
@@ -133,8 +143,8 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
     verify(acknowledgment).acknowledge();
@@ -153,7 +163,7 @@ class IngestionServiceImplTest {
     assertEquals(po.getAfter().getNav(), captured.getNav());
     assertEquals(po.getAfter().getDueDate(), captured.getDueDate());
     assertEquals(po.getAfter().getAmount(), captured.getAmount());
-    assertEquals(po.getAfter().getPaymentPositionStatus(), captured.getStatus());
+    assertEquals(debtPosition.getStatus(), captured.getStatus());
     assertEquals(po.getAfter().getPspCode(), captured.getPspCode());
     assertEquals(po.getAfter().getPspTaxCode(), captured.getPspTaxCode());
   }
@@ -178,11 +188,17 @@ class IngestionServiceImplTest {
 
     when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
     verify(acknowledgment).acknowledge();
@@ -201,7 +217,7 @@ class IngestionServiceImplTest {
     assertEquals(po.getAfter().getNav(), captured.getNav());
     assertEquals(po.getAfter().getDueDate(), captured.getDueDate());
     assertEquals(po.getAfter().getAmount(), captured.getAmount());
-    assertEquals(po.getAfter().getPaymentPositionStatus(), captured.getStatus());
+    assertEquals(debtPosition.getStatus(), captured.getStatus());
     assertEquals(po.getAfter().getPspCode(), captured.getPspCode());
     assertEquals(po.getAfter().getPspTaxCode(), captured.getPspTaxCode());
   }
@@ -222,8 +238,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(deadLetterService).sendToDeadLetter(any());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -243,8 +259,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -264,8 +280,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -285,8 +301,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -306,8 +322,8 @@ class IngestionServiceImplTest {
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxCode(any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -325,15 +341,15 @@ class IngestionServiceImplTest {
 
     doThrow(new FailAndIgnore(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP))
         .when(filterService)
-        .isValidPaymentOptionForRTPOrElseThrow(any());
+        .filterByTaxCode(any());
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
+    verify(filterService).filterByTaxCode(any());
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -350,15 +366,15 @@ class IngestionServiceImplTest {
 
     doThrow(new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP))
         .when(filterService)
-        .isValidPaymentOptionForRTPOrElseThrow(any());
+        .filterByTaxCode(any());
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
+    verify(filterService).filterByTaxCode(any());
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -378,7 +394,7 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
+    verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
   }
 
@@ -396,10 +412,10 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
+    verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(acknowledgment).nack(any());
-    verify(filterService, never()).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
@@ -418,17 +434,23 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
     doThrow(new FailAndIgnore(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP))
         .when(filterService)
-        .hasValidTransferCategoriesOrElseThrow(any(), any());
+        .filterByTaxonomy(any(), any());
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
     verify(acknowledgment).acknowledge();
@@ -449,17 +471,23 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
     doThrow(new FailAndIgnore(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING))
         .when(filterService)
-        .hasValidTransferCategoriesOrElseThrow(any(), any());
+        .filterByTaxonomy(any(), any());
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -480,6 +508,12 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     Transfer transfer = new Transfer();
     transfer.setOrganizationFiscalCode("differentOrgFiscalCode");
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
@@ -487,8 +521,8 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
     verify(acknowledgment).acknowledge();
@@ -514,6 +548,12 @@ class IngestionServiceImplTest {
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
     when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(false);
@@ -525,8 +565,8 @@ class IngestionServiceImplTest {
       assertEquals(AppError.RTP_MESSAGE_NOT_SENT, e.getAppErrorCode());
     }
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
@@ -552,6 +592,12 @@ class IngestionServiceImplTest {
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
+      PaymentPosition debtPosition = new PaymentPosition();
+      debtPosition.setIupd("123456");
+      debtPosition.setStatus(PaymentPositionStatus.VALID);
+      debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+
     when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
     doThrow(RuntimeException.class).when(rtpMessageProducer).sendRTPMessage(any(RTPMessage.class));
@@ -563,8 +609,8 @@ class IngestionServiceImplTest {
       assertTrue(true);
     }
 
-    verify(filterService).isValidPaymentOptionForRTPOrElseThrow(any());
-    verify(filterService).hasValidTransferCategoriesOrElseThrow(any(), any());
+    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
@@ -621,7 +667,6 @@ class IngestionServiceImplTest {
             .fiscalCode(null)
             .pspCode("pspCode")
             .pspTaxCode("pspTaxCode")
-            .paymentPositionStatus(PaymentPositionStatus.VALID)
             .isPartialPayment(false)
             .build();
     return DataCaptureMessage.<PaymentOptionEvent>builder()
