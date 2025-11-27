@@ -33,41 +33,6 @@ public class FilterServiceImpl implements FilterService {
     this.redisCacheRepository = redisCacheRepository;
   }
 
-  private static boolean taxonomyStartsWithOptOut(String elem) {
-    return elem.startsWith("6/") || elem.startsWith("7/") || elem.startsWith("8/");
-  }
-
-  private static boolean taxonomyIsValid(String elem) {
-    var taxonomy = getTaxonomyValue(elem);
-    return taxonomy.matches("\\d{2}\\d{2}\\d{3}\\w{2}");
-  }
-
-  /**
-   * Extracts and returns the taxonomy value from the given element string. examples: 9/9182ABC/ ->
-   * 9182ABC 9182ABC -> 9182ABC
-   *
-   * @param elem the input string containing taxonomy information, expected to be in the format
-   *     "category/taxonomy".
-   * @return the taxonomy part of the input string if available, otherwise returns the original
-   *     string.
-   */
-  private static String getTaxonomyValue(String elem) {
-    if (elem == null) {
-      return null;
-    }
-
-    String[] split = elem.split("/");
-
-    // 12324    split[0]
-    // 9/23423  split[1]
-    // /12324   split[1]
-    // /23423/  split[1]
-    // 1212/    split[0]
-    // 9/23423/ split[1]
-
-    return split.length > 1 ? split[1] : split[0];
-  }
-
   @Override
   public void filterByTaxCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
     PaymentOptionEvent valuesAfter = paymentOption.getAfter();
@@ -127,6 +92,41 @@ public class FilterServiceImpl implements FilterService {
     if (totalTransfersAmount != paymentOption.getAmount()) {
       throw new FailAndPostpone(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
     }
+  }
+
+  private static boolean taxonomyStartsWithOptOut(String elem) {
+    return elem.startsWith("6/") || elem.startsWith("7/") || elem.startsWith("8/");
+  }
+
+  private static boolean taxonomyIsValid(String elem) {
+    var taxonomy = getTaxonomyValue(elem);
+    return taxonomy.matches("\\d{2}\\d{2}\\d{3}\\w{2}");
+  }
+
+  /**
+   * Extracts and returns the taxonomy value from the given element string. examples: 9/9182ABC/ ->
+   * 9182ABC 9182ABC -> 9182ABC
+   *
+   * @param elem the input string containing taxonomy information, expected to be in the format
+   *     "category/taxonomy".
+   * @return the taxonomy part of the input string if available, otherwise returns the original
+   *     string.
+   */
+  private static String getTaxonomyValue(String elem) {
+    if (elem == null) {
+      return null;
+    }
+
+    String[] split = elem.split("/");
+
+    // 12324    split[0]
+    // 9/23423  split[1]
+    // /12324   split[1]
+    // /23423/  split[1]
+    // 1212/    split[0]
+    // 9/23423/ split[1]
+
+    return split.length > 1 ? split[1] : split[0];
   }
 
   /**
