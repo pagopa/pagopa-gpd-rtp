@@ -99,8 +99,8 @@ public class FilterServiceImpl implements FilterService {
   }
 
   private static boolean taxonomyIsValid(String elem) {
-    var taxonomy = getTaxonomyValue(elem);
-    return taxonomy.matches("\\d{2}\\d{2}\\d{3}\\w{2}");
+    String taxonomy = getTaxonomyValue(elem);
+    return taxonomy != null && taxonomy.matches("\\d{2}\\d{2}\\d{3}\\w{2}");
   }
 
   /**
