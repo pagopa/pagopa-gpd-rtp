@@ -2,18 +2,15 @@ package it.gov.pagopa.gpd.rtp.events.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentOptionEvent {
   @Id private Long id;
 
@@ -36,6 +33,9 @@ public class PaymentOptionEvent {
 
   private String status;
 
+  @JsonProperty("payment_plan_id")
+  private String paymentPlanId;
+
   private String nav;
 
   @JsonProperty("fiscal_code")
@@ -46,9 +46,6 @@ public class PaymentOptionEvent {
 
   @JsonProperty("psp_tax_code")
   private String pspTaxCode;
-
-  @JsonProperty("payment_position_status")
-  private PaymentPositionStatus paymentPositionStatus;
 
   @JsonProperty("is_partial_payment")
   private Boolean isPartialPayment;

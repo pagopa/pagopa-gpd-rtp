@@ -7,18 +7,17 @@ import org.springframework.messaging.Message;
 
 public interface IngestionService {
 
+  /**
+   * Ingest a {@link PaymentOption} message from GPD eventhub
+   *
+   * @param message PaymentOption messages
+   */
+  void ingestPaymentOption(Message<String> message);
 
-    /**
-     * Ingest a {@link PaymentOption} message
-     * from GPD eventhub
-     *
-     * @param message PaymentOption messages
-     */
-    void ingestPaymentOption(Message<String> message);
-    /**
-     * Elaborate a {@link PaymentOption} message from the dead letter storage
-     *
-     * @param paymentOption PaymentOption message
-     */
-    boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  /**
+   * Elaborate a {@link PaymentOption} message from the dead letter storage
+   *
+   * @param paymentOption PaymentOption message
+   */
+  boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption);
 }

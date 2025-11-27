@@ -1,10 +1,8 @@
 package it.gov.pagopa.gpd.rtp.config;
 
-import static it.gov.pagopa.gpd.rtp.util.CommonUtility.deNull;
-
+import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.model.ProblemJson;
 import it.gov.pagopa.gpd.rtp.util.CommonUtility;
-import it.gov.pagopa.gpd.rtp.exception.AppError;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -17,6 +17,9 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class RtpMilClientService {
 
+  public static final String PATH = "/auth/token";
+  private final RestTemplate restTemplate;
+
   @Value("${service.rtp-mil.host}")
   private String host;
 
@@ -25,10 +28,6 @@ public class RtpMilClientService {
 
   @Value("${service.rtp-mil.clientSecret}")
   private String clientSecret;
-
-  private final RestTemplate restTemplate;
-
-  public static final String PATH = "/auth/token";
 
   @Cacheable(value = "getToken")
   public String getToken() {

@@ -17,11 +17,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class RtpClientService {
 
-  @Value("${service.rtp.host}")
-  private String host;
-
   private final RtpMilClientService rtpMilClientService;
   private final RestOperations restTemplate;
+
+  @Value("${service.rtp.host}")
+  private String host;
 
   @Autowired
   public RtpClientService(RtpMilClientService rtpMilClientService, RestTemplate restTemplate) {
