@@ -17,11 +17,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RedisCacheRepository {
 
-  private final StringRedisTemplate redisTemplate;
   public static final String SUFFIX_KEY = "rtp_";
   public static final String KEY = "rtp_flag_optin";
   private static final String CREATED_AT_KEY = "rtp_created_at";
   private static final Duration TTL = Duration.ofDays(7);
+  private final StringRedisTemplate redisTemplate;
 
   public void saveAll(Collection<String> ids) {
     redisTemplate.opsForSet().add(KEY, ids.toArray(new String[0]));

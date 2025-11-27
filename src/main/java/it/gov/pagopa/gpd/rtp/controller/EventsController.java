@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Broadcast Events", description = "APIs to send events to all PODs")
 public class EventsController {
 
+  private final RedisPublisher redisPublisher;
+
   @Value("${info.application.version}")
   private String version;
-
-  private final RedisPublisher redisPublisher;
 
   @PostMapping("/publish/{event}")
   public ResponseEntity<String> sendBroadcastEvent(

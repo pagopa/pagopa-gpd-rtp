@@ -21,12 +21,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RedisSubscriber {
 
-  @Value("${info.application.version}")
-  private String version;
-
   private final RedisTemplate<String, Object> redisTemplate;
   private final KafkaConsumerService kafkaConsumerService;
   private final GracefulShutdownHandler gracefulShutdownHandler;
+
+  @Value("${info.application.version}")
+  private String version;
 
   @PostConstruct
   private void startListening() {

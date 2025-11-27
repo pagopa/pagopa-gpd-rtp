@@ -15,11 +15,10 @@ import org.springframework.stereotype.Component;
 @Setter
 public class GracefulShutdownHandler implements SmartLifecycle {
 
+  public final AtomicBoolean forceKill = new AtomicBoolean(false);
   private final KafkaConsumerService kafkaConsumerService;
   private final ProcessingTracker processingTracker;
-
   private final AtomicBoolean running = new AtomicBoolean(false);
-  public final AtomicBoolean forceKill = new AtomicBoolean(false);
 
   @Override
   public void start() {

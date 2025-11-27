@@ -6,11 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import it.gov.pagopa.gpd.rtp.exception.ErrorHandler;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * Object returned as response in case of an error.

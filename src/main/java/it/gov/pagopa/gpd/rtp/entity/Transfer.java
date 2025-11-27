@@ -4,26 +4,26 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "transfer")
 public class Transfer {
-    @Id
-    private Long id;
+  @Id private Long id;
 
-    @Column(name = "remittance_information")
-    private String remittanceInformation;
+  @Column(name = "remittance_information")
+  private String remittanceInformation;
 
-    private String category;
+  private String category;
 
-    @Column(name = "payment_option_id")
-    private int paymentOptionId;
+  @Column(name = "payment_option_id")
+  private int paymentOptionId;
 
-    @Column(name = "organization_fiscal_code")
-    private String organizationFiscalCode;
+  @Column(name = "organization_fiscal_code")
+  private String organizationFiscalCode;
 
-    private long amount;
+  private long amount;
 }

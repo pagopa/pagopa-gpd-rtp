@@ -23,10 +23,9 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
   }
 
   private static Message<RTPMessage> buildMessage(RTPMessage rtpMessage) {
-    return MessageBuilder
-            .withPayload(rtpMessage)
-            .setHeader(KafkaHeaders.KEY, rtpMessage.getId().toString())
-            .build();
+    return MessageBuilder.withPayload(rtpMessage)
+        .setHeader(KafkaHeaders.KEY, rtpMessage.getId().toString())
+        .build();
   }
 
   @Override

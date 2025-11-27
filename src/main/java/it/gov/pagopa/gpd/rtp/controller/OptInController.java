@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OptInController {
   private final OptinService optinService;
 
-  OptInController(OptinService optinService){
+  OptInController(OptinService optinService) {
     this.optinService = optinService;
   }
 
