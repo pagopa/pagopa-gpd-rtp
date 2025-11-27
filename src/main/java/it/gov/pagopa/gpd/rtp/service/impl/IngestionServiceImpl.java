@@ -270,6 +270,13 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
 
+    /**
+     * This method retrieves the PaymentPosition associated with the given PaymentOptionEvent.
+     * If the PaymentPosition is not found, it throws a FailAndPostpone exception.
+     *
+     * @param paymentOption The DataCaptureMessage containing the PaymentOptionEvent.
+     * @return The found PaymentPosition.
+     */
     private PaymentPosition findPaymentPosition(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         Optional<PaymentPosition> debtPosition = this.debtPositionRepository.findById(paymentOption.getAfter().getId());
         return debtPosition.orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_POSITION_NOT_FOUND));
