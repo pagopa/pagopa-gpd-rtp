@@ -100,7 +100,7 @@ public class FilterServiceImpl implements FilterService {
 
   private static boolean taxonomyIsValid(String elem) {
     String taxonomy = getTaxonomyValue(elem);
-    return taxonomy != null && taxonomy.matches("\\d{2}\\d{2}\\d{3}\\w{2}");
+    return taxonomy != null && taxonomy.matches("\\d{2}\\d{2}\\d{3}(IM|TS|SP|SA|AP)");
   }
 
   /**
