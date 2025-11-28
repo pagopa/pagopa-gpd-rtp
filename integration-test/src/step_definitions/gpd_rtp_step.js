@@ -2,7 +2,9 @@ const assert = require('assert');
 const { After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
 const { sleep, getRandomInt } = require("./common");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
-const { shutDownPool, insertPaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer } = require("./pg_gpd_client");
+const { shutDownPool, insertPaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer,
+  deletePaymentPositionByIUPD
+} = require("./pg_gpd_client");
 const { eventHubToMemoryHandler, shutDownKafka, getStoredMessage } = require("./kafka_event_hub_client");
 
 // set timeout for Hooks function, it allows to wait for long task
@@ -37,9 +39,16 @@ BeforeAll(async function () {
   await eventHubToMemoryHandler();
 });
 
+BeforeAll({tags: '@clean-up-required'}, async function () {
+  await deletePaymentPositionByIUPD('IUPD_INTEGRATION_TEST_GPD_RTP')
+})
+
 AfterAll(async function () {
+  console.log("Shutdown pool")
   await shutDownPool();
+  console.log("Shutdown redis client")
   await shutDownOptInRedisClient();
+  console.log("Shutdown kafka client")
   await shutDownKafka();
 });
 
@@ -91,6 +100,7 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
 
 Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
   this.paymentPositionId = id * 10000 + getRandomInt();
+  console.log("Creating payment position with id prefix {string}", this.paymentPositionId);
   await insertPaymentPosition(this.paymentPositionId, fiscalCode);
   this.paymentPositionFiscalCode = fiscalCode;
 });
@@ -128,6 +138,7 @@ Given('the create operation has been properly published on RTP event hub after {
 
 When('the operations have been properly published on RTP event hub after {int} ms', async function (time) {
   // boundary time spent to process event
+  console.log("Sleeping for ", time);
   await sleep(time);
 });
 

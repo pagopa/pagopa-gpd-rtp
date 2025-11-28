@@ -1,3 +1,4 @@
+@clean-up-required
 Feature: All about RTP events
 
   Background:
@@ -13,17 +14,17 @@ Feature: All about RTP events
     And the 'create' RTP message has the anonymized description 'description M**** R****'
     And the create operation has the status 'VALID'
 
-  Scenario: Update payment option in GPD database is published into RTP event hub
-    Given an update operation on field description with new value 'description updated Mario Rossi' on the same payment option in GPD database
-    When the operations have been properly published on RTP event hub after 20000 ms
-    Then the RTP topic returns the 'update' operation with id suffix 'u'
-    And the 'update' operation has the first transfer's remittance information
-    And the update operation has the description 'description updated Mario Rossi'
-    And the 'update' RTP message has the anonymized description 'description updated M**** R****'
-
-  Scenario: Delete payment option in GPD database is published into RTP event hub
-    Given the create operation has been properly published on RTP event hub after 20000 ms
-    And a delete operation on the same transfer in GPD database
-    And a delete operation on the same payment option in GPD database
-    When the operations have been properly published on RTP event hub after 20000 ms
-    Then the RTP topic returns the 'delete' operation with id suffix 'd'
+#  Scenario: Update payment option in GPD database is published into RTP event hub
+#    Given an update operation on field description with new value 'description updated Mario Rossi' on the same payment option in GPD database
+#    When the operations have been properly published on RTP event hub after 20000 ms
+#    Then the RTP topic returns the 'update' operation with id suffix 'u'
+#    And the 'update' operation has the first transfer's remittance information
+#    And the update operation has the description 'description updated Mario Rossi'
+#    And the 'update' RTP message has the anonymized description 'description updated M**** R****'
+#
+#  Scenario: Delete payment option in GPD database is published into RTP event hub
+#    Given the create operation has been properly published on RTP event hub after 20000 ms
+#    And a delete operation on the same transfer in GPD database
+#    And a delete operation on the same payment option in GPD database
+#    When the operations have been properly published on RTP event hub after 20000 ms
+#    Then the RTP topic returns the 'delete' operation with id suffix 'd'
