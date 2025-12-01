@@ -280,7 +280,7 @@ public class IngestionServiceImpl implements IngestionService {
   private PaymentPosition findPaymentPosition(
       DataCaptureMessage<PaymentOptionEvent> paymentOption) {
     Optional<PaymentPosition> debtPosition =
-        this.debtPositionRepository.findById(paymentOption.getAfter().getId());
+        this.debtPositionRepository.findById(paymentOption.getAfter().getPaymentPositionId());
     return debtPosition.orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_POSITION_NOT_FOUND));
   }
 

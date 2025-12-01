@@ -15,7 +15,7 @@ public class PaymentOptionEvent {
   @Id private Long id;
 
   @JsonProperty("payment_position_id")
-  private int paymentPositionId;
+  private Long paymentPositionId;
 
   private long amount;
   private String description;

@@ -5,9 +5,11 @@ import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 @Builder
 @Getter
+@ToString
 public class RTPMessage {
 
   private Long id;
