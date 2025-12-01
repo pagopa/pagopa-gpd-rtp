@@ -1,6 +1,6 @@
 const assert = require('assert');
-const { After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
-const { sleep, getRandomInt } = require("./common");
+const { Before,    After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
+const { sleep, getRandomInt, getPaymentOptionInTime, createPaymentPosition} = require("./common");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
 const { shutDownPool, insertPaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer,
   deletePaymentPositionByIUPD
@@ -52,8 +52,25 @@ AfterAll(async function () {
   await shutDownKafka();
 });
 
+Before({tags: '@create-payment-position-required'}, async function () {
+  // create payment position
+  const id = 123121;
+  this.paymentPositionFiscalCode = '77777777777';
+  this.paymentPositionId = await createPaymentPosition(id, this.paymentPositionFiscalCode);
+
+  // create payment option
+  this.paymentOptionId = id * 10000 + getRandomInt();
+  this.description = "before scenario";
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description);
+
+  // create transfer
+  this.transferId = id * 10000 + getRandomInt();
+  this.remittanceInformation = '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D';
+  await insertTransfer(this.transferId, '9/0101100IM/', this.remittanceInformation, this.paymentOptionId);
+})
+
 // After each Scenario
-After(async function () {
+After({tags: '@clean-up-required'}, async function () {
   // remove event
   if (this.transferId != null) {
     await deleteTransfer(this.transferId);
@@ -99,10 +116,11 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
 });
 
 Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
-  this.paymentPositionId = id * 10000 + getRandomInt();
-  console.log("Creating payment position with id prefix {string}", this.paymentPositionId);
-  await insertPaymentPosition(this.paymentPositionId, fiscalCode);
+  // this.paymentPositionId = id * 10000 + getRandomInt();
+  // console.log("Creating payment position with id prefix {string}", this.paymentPositionId);
+  // await insertPaymentPosition(this.paymentPositionId, fiscalCode);
   this.paymentPositionFiscalCode = fiscalCode;
+  this.paymentPositionId = await createPaymentPosition(fiscalCode);
 });
 
 Given('a create payment option with id prefix {string}, description {string} and associated to the previous payment position on GPD database', async function (id, descriptionString) {
@@ -142,6 +160,35 @@ When('the operations have been properly published on RTP event hub after {int} m
   await sleep(time);
 });
 
+When('in the RTP topic does not exist a {string} operation with id suffix {string} in {int} ms', async function (operation, suffix, timeout) {
+  [foundOperation, po] = await getPaymentOptionInTime(this.paymentOptionId, suffix, timeout);
+  assert.strictEqual(foundOperation, false)
+});
+
+When('in the RTP topic exists a {string} operation with id suffix {string} in {int} ms', async function (operation, suffix, timeout) {
+  [foundOperation, po] = await getPaymentOptionInTime(this.paymentOptionId, suffix, timeout);
+  if (foundOperation) {
+    if (operation === "create") {
+      this.rtpCreateOp = po;
+      assert.strictEqual(this.rtpCreateOp.operation, "CREATE");
+    } else if (operation === "update") {
+      this.rtpUpdateOp = po;
+      assert.strictEqual(this.rtpUpdateOp.operation, "UPDATE");
+    } else if (operation === "delete") {
+      this.rtpDeleteOp = po;
+      assert.strictEqual(this.rtpDeleteOp.operation, "DELETE");
+    } else {
+      console.log(`♠️ Event not found for ${this.paymentOptionId}-${suffix} after ${timeout}ms.`);
+      assert.fail("Unexpected operation");
+    }
+
+  }
+  else {
+    console.log(`♠️ Event not found for ${this.paymentOptionId}-${suffix} after ${timeout}ms.`);
+    assert.fail("Unexpected operation");
+  }
+});
+
 Then('the RTP topic returns the {string} operation with id suffix {string}', async function (operation, suffix) {
   let po = getStoredMessage(`${this.paymentOptionId}-${suffix}`);
   if (operation === "create") {
@@ -156,6 +203,10 @@ Then('the RTP topic returns the {string} operation with id suffix {string}', asy
   } else {
     assert.fail("Unexpected operation");
   }
+});
+
+Then("the {string} RTP message has not been sent through event hub", function (operation) {
+  assert.strictEqual(this.rtpCreateOp, undefined);
 });
 
 Then("the {string} operation has the first transfer's remittance information", function (operation) {
