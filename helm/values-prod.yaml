@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.0-1-fix-taxonomy"
+    tag: "0.7.0-2-fix-taxonomy"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
