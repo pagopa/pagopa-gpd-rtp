@@ -125,11 +125,11 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     Transfer transfer = new Transfer();
     transfer.setRemittanceInformation(REMITTANCE_INFORMATION);
@@ -188,11 +188,11 @@ class IngestionServiceImplTest {
 
     when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
@@ -434,11 +434,11 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
@@ -471,11 +471,11 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of());
 
@@ -508,11 +508,11 @@ class IngestionServiceImplTest {
     repoPO.setLastUpdatedDate(DATE_NOW);
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     Transfer transfer = new Transfer();
     transfer.setOrganizationFiscalCode("differentOrgFiscalCode");
@@ -548,11 +548,11 @@ class IngestionServiceImplTest {
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
-      when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
@@ -592,10 +592,10 @@ class IngestionServiceImplTest {
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-      PaymentPosition debtPosition = new PaymentPosition();
-      debtPosition.setIupd("123456");
-      debtPosition.setStatus(PaymentPositionStatus.VALID);
-      debtPosition.setServiceType(ServiceType.GPD);
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setIupd("123456");
+    debtPosition.setStatus(PaymentPositionStatus.VALID);
+    debtPosition.setServiceType(ServiceType.GPD);
     when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
@@ -655,7 +655,7 @@ class IngestionServiceImplTest {
     PaymentOptionEvent pp =
         PaymentOptionEvent.builder()
             .id(10L)
-            .paymentPositionId(0)
+            .paymentPositionId(1L)
             .amount(0)
             .description("description")
             .dueDate(new Date().getTime())
