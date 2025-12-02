@@ -1,704 +1,779 @@
 {
-  "openapi" : "3.0.1",
-  "info" : {
-    "description" : "GPD service to forward debt positions to RTP",
-    "termsOfService" : "https://www.pagopa.gov.it/",
-    "title" : "pagopa-gpd-rtp",
-    "version" : "0.7.0-1-fix-taxonomy"
+  "openapi": "3.0.1",
+  "info": {
+    "description": "GPD service to forward debt positions to RTP",
+    "termsOfService": "https://www.pagopa.gov.it/",
+    "title": "pagopa-gpd-rtp",
+    "version": "0.7.0-2-fix-taxonomy"
   },
-  "servers" : [ {
-    "url" : "http://localhost:8080"
-  }, {
-    "url" : "https://{host}{basePath}",
-    "variables" : {
-      "basePath" : {
-        "default" : "/gpd-rtp/v1",
-        "enum" : [ "/gpd-rtp/v1" ]
-      },
-      "host" : {
-        "default" : "https://api.platform.pagopa.it",
-        "enum" : [ "https://api.dev.platform.pagopa.it", "https://api.uat.platform.pagopa.it", "https://api.platform.pagopa.it" ]
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    },
+    {
+      "url": "https://{host}{basePath}",
+      "variables": {
+        "basePath": {
+          "default": "/gpd-rtp/v1",
+          "enum": [
+            "/gpd-rtp/v1"
+          ]
+        },
+        "host": {
+          "default": "https://api.platform.pagopa.it",
+          "enum": [
+            "https://api.dev.platform.pagopa.it",
+            "https://api.uat.platform.pagopa.it",
+            "https://api.platform.pagopa.it"
+          ]
+        }
       }
     }
-  } ],
-  "tags" : [ {
-    "description" : "Utility endpoints",
-    "name" : "Utils"
-  }, {
-    "description" : "APIs to send events to all PODs",
-    "name" : "Broadcast Events"
-  }, {
-    "description" : "APIs to manage Kafka consumers manually of the single POD",
-    "name" : "Kafka Consumer"
-  }, {
-    "description" : "APIs to retry failed RTP messages",
-    "name" : "API Helpdesk"
-  } ],
-  "paths" : {
-    "/error-messages" : {
-      "get" : {
-        "operationId" : "getBlobList",
-        "parameters" : [ {
-          "description" : "Filter by year",
-          "example" : 2025,
-          "in" : "query",
-          "name" : "year",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "description" : "Filter by month, requires year otherwise gets ignored",
-          "example" : 5,
-          "in" : "query",
-          "name" : "month",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "description" : "Filter by day, requires month otherwise gets ignored",
-          "example" : 7,
-          "in" : "query",
-          "name" : "day",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "description" : "Filter by hours, requires day otherwise gets ignored",
-          "example" : 1,
-          "in" : "query",
-          "name" : "hour",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : { }
-            },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Bad Request",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too many requests",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "500" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Service unavailable",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        },
-        "summary" : "Get list of failed messages saved on blob storage as JSON files",
-        "tags" : [ "API Helpdesk" ]
-      },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
-        }
-      } ]
+  ],
+  "tags": [
+    {
+      "description": "Utility endpoints",
+      "name": "Utils"
     },
-    "/error-messages/detail" : {
-      "get" : {
-        "operationId" : "getJSONFromBlobStorage",
-        "parameters" : [ {
-          "description" : "Filename of the failed message's JSON to retrieve",
-          "in" : "query",
-          "name" : "filename",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : { }
-            },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Bad Request",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Not found",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too many requests",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "500" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Service unavailable",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        },
-        "summary" : "Retrieve the specified error message JSON by its filename",
-        "tags" : [ "API Helpdesk" ]
-      },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
-        }
-      } ]
+    {
+      "description": "APIs to send events to all PODs",
+      "name": "Broadcast Events"
     },
-    "/error-messages/retry" : {
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
-        }
-      } ],
-      "post" : {
-        "operationId" : "retryMessage",
-        "parameters" : [ {
-          "description" : "Filename of the failed message's JSON to retry",
-          "in" : "query",
-          "name" : "filename",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
+    {
+      "description": "APIs to manage Kafka consumers manually of the single POD",
+      "name": "Kafka Consumer"
+    },
+    {
+      "description": "APIs to retry failed RTP messages",
+      "name": "API Helpdesk"
+    }
+  ],
+  "paths": {
+    "/error-messages": {
+      "get": {
+        "operationId": "getBlobList",
+        "parameters": [
+          {
+            "description": "Filter by year",
+            "example": 2025,
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by month, requires year otherwise gets ignored",
+            "example": 5,
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by day, requires month otherwise gets ignored",
+            "example": 7,
+            "in": "query",
+            "name": "day",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by hours, requires day otherwise gets ignored",
+            "example": 1,
+            "in": "query",
+            "name": "hour",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : { }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
-          "400" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
-                }
-              }
-            },
-            "description" : "Bad Request",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "404" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
                 }
               }
             },
-            "description" : "Not found",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
-          "429" : {
-            "description" : "Too many requests",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
-          "500" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProblemJson"
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
                 }
               }
             },
-            "description" : "Service unavailable",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "Service unavailable",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "summary" : "Retry the specified error message JSON by its filename",
-        "tags" : [ "API Helpdesk" ]
+        "summary": "Get list of failed messages saved on blob storage as JSON files",
+        "tags": [
+          "API Helpdesk"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/error-messages/detail": {
+      "get": {
+        "operationId": "getJSONFromBlobStorage",
+        "parameters": [
+          {
+            "description": "Filename of the failed message's JSON to retrieve",
+            "in": "query",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Not found",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Service unavailable",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retrieve the specified error message JSON by its filename",
+        "tags": [
+          "API Helpdesk"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/error-messages/retry": {
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "retryMessage",
+        "parameters": [
+          {
+            "description": "Filename of the failed message's JSON to retry",
+            "in": "query",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Not found",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Service unavailable",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retry the specified error message JSON by its filename",
+        "tags": [
+          "API Helpdesk"
+        ]
       }
     },
-    "/events/publish/{event}" : {
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+    "/events/publish/{event}": {
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ],
-      "post" : {
-        "operationId" : "sendBroadcastEvent",
-        "parameters" : [ {
-          "in" : "path",
-          "name" : "event",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "START_CONSUMER", "STOP_CONSUMER", "ENABLE_FORCE_KILL", "DISABLE_FORCE_KILL" ]
+      ],
+      "post": {
+        "operationId": "sendBroadcastEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "START_CONSUMER",
+                "STOP_CONSUMER",
+                "ENABLE_FORCE_KILL",
+                "DISABLE_FORCE_KILL"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
-        }, {
-          "in" : "query",
-          "name" : "version",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "tags" : [ "Broadcast Events" ]
+        "tags": [
+          "Broadcast Events"
+        ]
       }
     },
-    "/info" : {
-      "get" : {
-        "description" : "Return OK if application is started",
-        "operationId" : "healthCheck",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AppInfo"
+    "/info": {
+      "get": {
+        "description": "Return OK if application is started",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppInfo"
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "security" : [ {
-          "ApiKey" : [ ]
-        } ],
-        "summary" : "health check",
-        "tags" : [ "Home" ]
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "health check",
+        "tags": [
+          "Home"
+        ]
       },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ]
+      ]
     },
-    "/kafka/consumers/" : {
-      "get" : {
-        "operationId" : "getConsumersDetails",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object"
+    "/kafka/consumers/": {
+      "get": {
+        "operationId": "getConsumersDetails",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "tags" : [ "Kafka Consumer" ]
+        "tags": [
+          "Kafka Consumer"
+        ]
       },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ]
+      ]
     },
-    "/kafka/consumers/start" : {
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+    "/kafka/consumers/start": {
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ],
-      "post" : {
-        "operationId" : "startAllConsumers",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
+      ],
+      "post": {
+        "operationId": "startAllConsumers",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "tags" : [ "Kafka Consumer" ]
+        "tags": [
+          "Kafka Consumer"
+        ]
       }
     },
-    "/kafka/consumers/status" : {
-      "get" : {
-        "operationId" : "getStatus",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "object",
-                  "additionalProperties" : {
-                    "type" : "object"
+    "/kafka/consumers/status": {
+      "get": {
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object"
                   }
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "tags" : [ "Kafka Consumer" ]
+        "tags": [
+          "Kafka Consumer"
+        ]
       },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ]
+      ]
     },
-    "/kafka/consumers/stop" : {
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+    "/kafka/consumers/stop": {
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ],
-      "post" : {
-        "operationId" : "stopAllConsumers",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
+      ],
+      "post": {
+        "operationId": "stopAllConsumers",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "tags" : [ "Kafka Consumer" ]
+        "tags": [
+          "Kafka Consumer"
+        ]
       }
     },
-    "/opt-in/refresh" : {
-      "get" : {
-        "description" : "Return OK if Redis Cache is refreshed with opt-in flags",
-        "operationId" : "optInRefresh",
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "headers" : {
-              "X-Request-Id" : {
-                "description" : "This header identifies the call",
-                "schema" : {
-                  "type" : "string"
+    "/opt-in/refresh": {
+      "get": {
+        "description": "Return OK if Redis Cache is refreshed with opt-in flags",
+        "operationId": "optInRefresh",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           }
         },
-        "security" : [ {
-          "ApiKey" : [ ]
-        } ],
-        "summary" : "Refresh the OPT-IN flags",
-        "tags" : [ "Utils" ]
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Refresh the OPT-IN flags",
+        "tags": [
+          "Utils"
+        ]
       },
-      "parameters" : [ {
-        "description" : "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
-        "in" : "header",
-        "name" : "X-Request-Id",
-        "schema" : {
-          "type" : "string"
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
         }
-      } ]
+      ]
     }
   },
-  "components" : {
-    "schemas" : {
-      "AppInfo" : {
-        "type" : "object",
-        "properties" : {
-          "environment" : {
-            "type" : "string"
+  "components": {
+    "schemas": {
+      "AppInfo": {
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": "string"
           },
-          "name" : {
-            "type" : "string"
+          "name": {
+            "type": "string"
           },
-          "version" : {
-            "type" : "string"
+          "version": {
+            "type": "string"
           }
         }
       },
-      "ProblemJson" : {
-        "type" : "object",
-        "properties" : {
-          "detail" : {
-            "type" : "string",
-            "description" : "A human readable explanation specific to this occurrence of the problem.",
-            "example" : "There was an error processing the request"
+      "ProblemJson": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "A human readable explanation specific to this occurrence of the problem.",
+            "example": "There was an error processing the request"
           },
-          "status" : {
-            "maximum" : 600,
-            "minimum" : 100,
-            "type" : "integer",
-            "description" : "The HTTP status code generated by the origin server for this occurrence of the problem.",
-            "format" : "int32",
-            "example" : 200
+          "status": {
+            "maximum": 600,
+            "minimum": 100,
+            "type": "integer",
+            "description": "The HTTP status code generated by the origin server for this occurrence of the problem.",
+            "format": "int32",
+            "example": 200
           },
-          "title" : {
-            "type" : "string",
-            "description" : "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
+          "title": {
+            "type": "string",
+            "description": "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
           }
         }
       }
     },
-    "securitySchemes" : {
-      "ApiKey" : {
-        "description" : "The API key to access this function app.",
-        "in" : "header",
-        "name" : "Ocp-Apim-Subscription-Key",
-        "type" : "apiKey"
+    "securitySchemes": {
+      "ApiKey": {
+        "description": "The API key to access this function app.",
+        "in": "header",
+        "name": "Ocp-Apim-Subscription-Key",
+        "type": "apiKey"
       }
     }
   }
