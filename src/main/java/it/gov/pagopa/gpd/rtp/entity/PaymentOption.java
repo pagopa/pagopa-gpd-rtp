@@ -18,7 +18,7 @@ public class PaymentOption {
 
   @JsonProperty("payment_position_id")
   @Column(name = "payment_position_id")
-  private int paymentPositionId;
+  private Long paymentPositionId;
 
   private long amount;
   private String description;
