@@ -116,9 +116,6 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
 });
 
 Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
-  // this.paymentPositionId = id * 10000 + getRandomInt();
-  // console.log("Creating payment position with id prefix {string}", this.paymentPositionId);
-  // await insertPaymentPosition(this.paymentPositionId, fiscalCode);
   this.paymentPositionFiscalCode = fiscalCode;
   this.paymentPositionId = await createPaymentPosition(fiscalCode);
 });
