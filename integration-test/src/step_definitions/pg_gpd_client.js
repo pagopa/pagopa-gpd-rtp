@@ -29,8 +29,8 @@ async function shutDownPool() {
   await pool.end();
 }
 
-async function insertPaymentPosition(id, fiscalCode) {
-  await connection.query(`INSERT INTO apd.apd.payment_position (id, city, civic_number, company_name, country, email, fiscal_code, full_name, inserted_date, iupd, last_updated_date, max_due_date, min_due_date, office_name, organization_fiscal_code, phone, postal_code, province, publish_date, region, status, street_name, "type", "version", payment_date, pull, pay_stand_in, service_type) VALUES('${id}', 'Pizzo Calabro', '11', 'SkyLab Inc.', 'IT', 'micheleventimiglia@skilabmail.com', 'VNTMHL76M09H501D', 'Michele Ventimiglia', now(), 'IUPD_INTEGRATION_TEST_GPD_RTP', now(), '2024-12-12 16:09:43.323', '2024-12-12 16:09:43.323', 'SkyLab - Sede via Washington - Edit', '${fiscalCode}', '333-123456789', '89812', 'VV', '2024-11-12 16:09:43.479', 'CA', 'VALID', 'via Washington', 'F', 0, NULL, true, false, 'GPD');`);
+async function insertPaymentPosition(id, fiscalCode, status) {
+  await connection.query(`INSERT INTO apd.apd.payment_position (id, city, civic_number, company_name, country, email, fiscal_code, full_name, inserted_date, iupd, last_updated_date, max_due_date, min_due_date, office_name, organization_fiscal_code, phone, postal_code, province, publish_date, region, status, street_name, "type", "version", payment_date, pull, pay_stand_in, service_type) VALUES('${id}', 'Pizzo Calabro', '11', 'SkyLab Inc.', 'IT', 'micheleventimiglia@skilabmail.com', 'VNTMHL76M09H501D', 'Michele Ventimiglia', now(), 'IUPD_INTEGRATION_TEST_GPD_RTP', now(), '2024-12-12 16:09:43.323', '2024-12-12 16:09:43.323', 'SkyLab - Sede via Washington - Edit', '${fiscalCode}', '333-123456789', '89812', 'VV', '2024-11-12 16:09:43.479', 'CA', '${status}', 'via Washington', 'F', 0, NULL, true, false, 'GPD');`);
 }
 
 async function deletePaymentPositionByIUPD(iupd) {
@@ -68,10 +68,14 @@ async function deletePaymentPosition(id) {
   await connection.query(`DELETE FROM apd.apd.payment_position WHERE id='${id}'`);
 }
 
-async function insertPaymentOption(id, paymentPositionId, ecFiscalCode, description) {
+async function insertPaymentOption(id, paymentPositionId, ecFiscalCode, description, debtorFiscalCode) {
   const currentDate = new Date();
   const formattedDate = formatDate(currentDate);
-  await connection.query(`INSERT INTO apd.apd.payment_option (id, amount, description, due_date, fee, flow_reporting_id, receipt_id, inserted_date, is_partial_payment, iuv, last_updated_date, organization_fiscal_code, payment_date, payment_method, psp_company, reporting_date, retention_date, status, payment_position_id, notification_fee, last_updated_date_notification_fee, nav, fiscal_code, postal_code, province, region, type, validity_date, switch_to_expired) VALUES('${id}', 10000, '${description}', '2024-12-12 16:09:43.323', 0, NULL, NULL, '2024-11-12 16:09:43.477', false, '09455575462301733', '${formattedDate}', '${ecFiscalCode}', NULL, NULL, NULL, NULL, '2025-02-10 16:09:43.323', 'PO_UNPAID', ${paymentPositionId}, 0, NULL, '309455575462301733', 'VNTMHL76M09H501D', '89812', 'VV', 'CA', 'F', '2024-11-12 16:09:43.479', false)`);
+  await connection.query(`INSERT INTO apd.apd.payment_option (id, amount, description, due_date, fee, flow_reporting_id, receipt_id, inserted_date, is_partial_payment, iuv, last_updated_date, organization_fiscal_code, payment_date, payment_method, psp_company, reporting_date, retention_date, status, payment_position_id, notification_fee, last_updated_date_notification_fee, nav, fiscal_code, postal_code, province, region, type, validity_date, switch_to_expired) VALUES('${id}', 10000, '${description}', '2024-12-12 16:09:43.323', 0, NULL, NULL, '2024-11-12 16:09:43.477', false, '09455575462301733', '${formattedDate}', '${ecFiscalCode}', NULL, NULL, NULL, NULL, '2025-02-10 16:09:43.323', 'PO_UNPAID', ${paymentPositionId}, 0, NULL, '309455575462301733', '${debtorFiscalCode}', '89812', 'VV', 'CA', 'F', '2024-11-12 16:09:43.479', false)`);
+}
+
+async function updatePaymentPosition(id, pdStatus) {
+    await connection.query(`UPDATE apd.apd.payment_position SET status='${pdStatus}' WHERE id='${id}'`);
 }
 
 async function updatePaymentOption(id, description) {
@@ -103,7 +107,7 @@ function formatDate(date) {
 
 module.exports = {
   shutDownPool,
-  insertPaymentPosition, deletePaymentPosition, deletePaymentPositionByIUPD,
+  insertPaymentPosition, deletePaymentPosition, deletePaymentPositionByIUPD, updatePaymentPosition,
   insertPaymentOption, updatePaymentOption, deletePaymentOption,
   insertTransfer, deleteTransfer
 }

@@ -2,7 +2,7 @@ const assert = require('assert');
 const { Before,    After, Given, When, Then, setDefaultTimeout, AfterAll, BeforeAll } = require('@cucumber/cucumber');
 const { sleep, getRandomInt, getPaymentOptionInTime, createPaymentPosition} = require("./common");
 const { fiscalCodeIsPresentInOptInRedisCache, addFiscalCodeInOptInRedisCache, shutDownOptInRedisClient } = require("./opt_in_redis_client");
-const { shutDownPool, insertPaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer,
+const { shutDownPool, insertPaymentPosition, updatePaymentPosition, updatePaymentOption, deletePaymentPosition, insertPaymentOption, deletePaymentOption, insertTransfer, deleteTransfer,
   deletePaymentPositionByIUPD
 } = require("./pg_gpd_client");
 const { eventHubToMemoryHandler, shutDownKafka, getStoredMessage } = require("./kafka_event_hub_client");
@@ -56,12 +56,12 @@ Before({tags: '@create-payment-position-required'}, async function () {
   // create payment position
   const id = 123121;
   this.paymentPositionFiscalCode = '77777777777';
-  this.paymentPositionId = await createPaymentPosition(id, this.paymentPositionFiscalCode);
+  this.paymentPositionId = await createPaymentPosition(id, this.paymentPositionFiscalCode, 'VALID');
 
   // create payment option
   this.paymentOptionId = id * 10000 + getRandomInt();
   this.description = "before scenario";
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description);
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
 
   // create transfer
   this.transferId = id * 10000 + getRandomInt();
@@ -115,15 +115,21 @@ Given('an EC with fiscal code {string} and flag opt in enabled on Redis cache', 
   }
 });
 
-Given('a create payment position with id prefix {string} and fiscal code {string} on GPD database', async function (id, fiscalCode) {
+Given('a create a {string} payment position with id prefix {string} and fiscal code {string} on GPD database', async function (debtPositionStatus, id, fiscalCode) {
   this.paymentPositionFiscalCode = fiscalCode;
-  this.paymentPositionId = await createPaymentPosition(fiscalCode);
+  this.paymentPositionId = await createPaymentPosition(id, fiscalCode, debtPositionStatus);
 });
 
 Given('a create payment option with id prefix {string}, description {string} and associated to the previous payment position on GPD database', async function (id, descriptionString) {
   this.paymentOptionId = id * 10000 + getRandomInt();
   this.description = descriptionString;
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description);
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
+});
+
+Given('a create payment option with id prefix {string}, fiscal code {string}, description {string} and associated to the previous payment position on GPD database', async function (id, debtorFiscalCode, descriptionString) {
+  this.paymentOptionId = id * 10000 + getRandomInt();
+  this.description = descriptionString;
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
 });
 
 Given('a create transfer with id prefix {string}, category {string}, remittance information of primary ec {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {
@@ -131,6 +137,10 @@ Given('a create transfer with id prefix {string}, category {string}, remittance 
   await insertTransfer(this.transferId, category, remittanceInformation, this.paymentOptionId);
   this.transferCategory = category;
   this.remittanceInformation = remittanceInformation;
+});
+
+Given('an update operation on field status with new value {string} on the same payment position in GPD database', async function (debtPositionStatus) {
+  await updatePaymentPosition(this.paymentPositionId, debtPositionStatus);
 });
 
 Given('an update operation on field description with new value {string} on the same payment option in GPD database', async function (description) {
@@ -210,11 +220,9 @@ Then("the {string} operation has the first transfer's remittance information", f
   if (operation === "create") {
     assert.notStrictEqual(this.rtpCreateOp.subject, undefined);
     assert.notStrictEqual(this.rtpCreateOp.subject, this.remittanceInformation);
-    assert.notStrictEqual(this.rtpCreateOp.description, this.description);
   } else if (operation === "update") {
     assert.notStrictEqual(this.rtpUpdateOp.subject, undefined);
     assert.notStrictEqual(this.rtpUpdateOp.subject, this.remittanceInformation);
-    assert.notStrictEqual(this.rtpUpdateOp.description, this.description);
   }
 });
 
@@ -231,5 +239,13 @@ Then('the {string} RTP message has the anonymized description {string}', functio
     assert.strictEqual(this.rtpCreateOp.description, description);
   } else if(operation === "update"){
     assert.strictEqual(this.rtpUpdateOp.description, description);
+  }
+});
+
+Then("the first transfer's remittance information of {string} operation does not contain {string}", function (debtorFiscalCode, operation) {
+  if(operation === "create"){
+    assert.strictEqual(this.rtpCreateOp.subject.indexOf(debtorFiscalCode), -1);
+  } else if(operation === "update"){
+    assert.strictEqual(this.rtpUpdateOp.subject.indexOf(debtorFiscalCode), -1);
   }
 });

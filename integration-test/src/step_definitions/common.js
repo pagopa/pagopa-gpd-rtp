@@ -31,10 +31,10 @@ async function getPaymentOptionInTime(paymentOptionId, suffix, timeout) {
     return [foundOperation, po];
 }
 
-async function createPaymentPosition(id, fiscalCode) {
+async function createPaymentPosition(id, fiscalCode, debtPositionStatus) {
     let paymentPositionId = id * 10000 + getRandomInt();
     console.log("Creating payment position with id prefix ", paymentPositionId);
-    await insertPaymentPosition(paymentPositionId, fiscalCode);
+    await insertPaymentPosition(paymentPositionId, fiscalCode, debtPositionStatus);
     return paymentPositionId;
 }
 
