@@ -152,7 +152,8 @@ microservice-chart:
       envConfig:
         OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
-#refresh-cache-cron:
+refresh-cache-cron:
+  enabled: false
 #  namespace: "gps"
 #  schedule: "0 9 * * *"
 #  timeZone: "Europe/Rome"
