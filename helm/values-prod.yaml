@@ -1,7 +1,6 @@
-microservice-chart:
+microservice-chart: &microservice-chart
   namespace: "gps"
   nameOverride: ""
-  fullnameOverride: "pagopa-gpd-rtp"
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
     tag: "0.7.1"
@@ -12,7 +11,7 @@ microservice-chart:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
-    initialDelaySeconds: 120
+    initialDelaySeconds: 90
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
@@ -20,12 +19,12 @@ microservice-chart:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    initialDelaySeconds: 120
+    initialDelaySeconds: 90
     failureThreshold: 6
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 3 # same as HPA minReplica
+    replicas: 2 # same as HPA minReplica
     strategy:
       type: RollingUpdate
       rollingUpdate:
@@ -36,11 +35,8 @@ microservice-chart:
     type: ClusterIP
     ports:
       - 8080
-  ingress:
-    create: true
-    host: "weuprod.gps.internal.platform.pagopa.it"
-    path: /gpd-rtp-service/(.*)
-    servicePort: 8080
+  ingress: &ingress
+    create: false
   serviceAccount:
     name: "gps-workload-identity"
   azure:
@@ -55,16 +51,10 @@ microservice-chart:
     capabilities:
       drop:
         - all
-  resources:
-    requests:
-      memory: "512Mi"
-      cpu: "0.25"
-    limits:
-      memory: "768Mi"
-      cpu: "0.50"
+  resources: &resources
   autoscaling:
     enable: true
-    minReplica: 3
+    minReplica: 2
     maxReplica: 10
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
@@ -74,27 +64,17 @@ microservice-chart:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "75"
-  envConfig:
+      - type: memory
+        metadata:
+          type: Utilization
+          value: "90"
+  envConfig: &envConfig
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "prod"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
     APP_LOGGING_LEVEL: 'INFO'
     DEFAULT_LOGGING_LEVEL: 'INFO'
     KAFKA_LOGGING_LEVEL: 'WARN'
-    KAFKA_START_OFFSET: 'latest'
-    KAFKA_AUTO_STARTUP: 'false'
-    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
-    RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
-    PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
-    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
-    SPRING_DATASOURCE_URL: "jdbc:postgresql://pagopa-p-weu-gpd-pgflex-ve.reader.postgres.database.azure.com:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
-    SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
-    SCHEMA_NAME: "apd"
-    REDIS_PORT: "6380"
-    ANONYMIZER_URL_HOST: "https://api.platform.pagopa.it/anonymizer/v1"
-    ANONYMIZER_URL_PATH: "/anonymize"
-    DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
-    DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     OTEL_SERVICE_NAME: "pagopa-gpd-rtp"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
     OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
@@ -102,21 +82,8 @@ microservice-chart:
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: none
-    RTP_URL_HOST: "https://api-rtp.cstar.pagopa.it/rtp"
-    RTP_MIL_CLIENT_ID: "TBD"
-    RTP_MIL_HOST: "https://api-mcshared.cstar.pagopa.it"
-    REST_CLIENT_LOGGER_LEVEL: "NONE"
-  envSecret:
+  envSecret: &envSecret
     APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
-    RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
-    PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
-    SPRING_DATASOURCE_USERNAME: "db-apd-user-name"
-    SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
-    REDIS_HOSTNAME: "redis-hostname"
-    REDIS_PASSWORD: "redis-password"
-    SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
-    DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
-    RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
     OTEL_EXPORTER_OTLP_HEADERS: elastic-apm-secret-token
   keyvault:
     name: "pagopa-p-gps-kv"
@@ -152,49 +119,80 @@ microservice-chart:
       envConfig:
         OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
+pagopa-gpd-rtp:
+  !!merge <<: *microservice-chart
+  ingress:
+    !!merge <<: *ingress
+    create: true
+    host: "weuprod.gps.internal.platform.pagopa.it"
+    path: /gpd-rtp-service/(.*)
+    servicePort: 8080
+  envConfig:
+    !!merge <<: *envConfig
+    KAFKA_START_OFFSET: 'latest'
+    KAFKA_AUTO_STARTUP: 'false'
+    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
+    RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
+    PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
+    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://pagopa-p-weu-gpd-pgflex-ve.reader.postgres.database.azure.com:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
+    SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
+    SCHEMA_NAME: "apd"
+    REDIS_PORT: "6380"
+    ANONYMIZER_URL_HOST: "https://api.platform.pagopa.it/anonymizer/v1"
+    ANONYMIZER_URL_PATH: "/anonymize"
+    DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
+    DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
+    RTP_URL_HOST: "https://api-rtp.cstar.pagopa.it/rtp"
+    RTP_MIL_CLIENT_ID: "TBD"
+    RTP_MIL_HOST: "https://api-mcshared.cstar.pagopa.it"
+    REST_CLIENT_LOGGER_LEVEL: "NONE"
+    MAX_RETRY_DB_REPLICAS: "1"
+  envSecret:
+    !!merge <<: *envSecret
+    RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
+    PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
+    SPRING_DATASOURCE_USERNAME: "db-apd-user-name"
+    SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
+    REDIS_HOSTNAME: "redis-hostname"
+    REDIS_PASSWORD: "redis-password"
+    SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
+    DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
+    RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "0.25"
+    limits:
+      memory: "768Mi"
+      cpu: "0.50"
 refresh-cache-cron:
+  !!merge <<: *microservice-chart
   enabled: false
-#  namespace: "gps"
-#  schedule: "0 9 * * *"
-#  timeZone: "Europe/Rome"
-#  successfulJobsHistoryLimit: "1"
-#  image:
-#    repository: "curlimages/curl"
-#    tag: "latest"
-#    pullPolicy: "Always"
-#  command:
-#    - "curl"
-#    - "-k"
-#    - "-m"
-#    - "\"300\""
-#    - "https://weuprod.gps.internal.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
-#  resources:
-#    requests:
-#      memory: "256Mi"
-#      cpu: "100m"
-#    limits:
-#      memory: "512Mi"
-#      cpu: "150m"
-#  envSecrets:
-#    APPLICATIONINSIGHTS_CONNECTION_STRING: 'ai-p-connection-string'
-#  keyvault:
-#    name: "pagopa-p-gps-kv"
-#    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
-#  serviceAccount:
-#    name: "gps-workload-identity"
-#  azure:
-#    workloadIdentityClientId: "28793c44-d0fe-4c90-8c81-832a10ff86e2"
-#  tolerations:
-#    - key: dedicated
-#      operator: Equal
-#      value: "gps"
-#      effect: NoSchedule
-#  affinity:
-#    nodeAffinity:
-#      requiredDuringSchedulingIgnoredDuringExecution:
-#        nodeSelectorTerms:
-#          - matchExpressions:
-#              - key: node_type
-#                operator: In
-#                values:
-#                  - user
+  schedule: "0 9 * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - "curl"
+    - "-k"
+    - "-m"
+    - "\"300\""
+    - "https://weuprod.gps.internal.platform.pagopa.it/gpd-rtp-service/opt-in/refresh"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecrets:
+    !!merge <<: *envSecret
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
