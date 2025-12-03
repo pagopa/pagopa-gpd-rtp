@@ -63,7 +63,7 @@ jobs:
           resource_group: ${{ vars.CLUSTER_RESOURCE_GROUP }}
           app_name: ${{ env.APP_NAME }}${{inputs.suffix_name}}
           helm_upgrade_options: "--debug ${{inputs.helm_options}}"
-          timeout: '15m0s'
+          timeout: '5m0s'
 
       - name: Remove deployment
         if: ${{ inputs.uninstall == 'true' ||  inputs.uninstall  == true}}
