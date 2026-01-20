@@ -61,11 +61,11 @@ Before({tags: '@create-payment-position-required'}, async function () {
   // create payment option
   this.paymentOptionId = id * 10000 + getRandomInt();
   this.description = "before scenario";
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'CLMGVN37M58X000I');
 
   // create transfer
   this.transferId = id * 10000 + getRandomInt();
-  this.remittanceInformation = '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D';
+  this.remittanceInformation = '/RFB/091814449948492/547.24/TXT/DEBITORE/CLMGVN37M58X000I';
   await insertTransfer(this.transferId, '9/0101100IM/', this.remittanceInformation, this.paymentOptionId);
 })
 
@@ -123,13 +123,13 @@ Given('a create a {string} payment position with id prefix {string} and fiscal c
 Given('a create payment option with id prefix {string}, description {string} and associated to the previous payment position on GPD database', async function (id, descriptionString) {
   this.paymentOptionId = id * 10000 + getRandomInt();
   this.description = descriptionString;
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'CLMGVN37M58X000I');
 });
 
 Given('a create payment option with id prefix {string}, fiscal code {string}, description {string} and associated to the previous payment position on GPD database', async function (id, debtorFiscalCode, descriptionString) {
   this.paymentOptionId = id * 10000 + getRandomInt();
   this.description = descriptionString;
-  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'VNTMHL76M09H501D');
+  await insertPaymentOption(this.paymentOptionId, this.paymentPositionId, this.paymentPositionFiscalCode, this.description, 'CLMGVN37M58X000I');
 });
 
 Given('a create transfer with id prefix {string}, category {string}, remittance information of primary ec {string} and associated to the previous payment option on GPD database', async function (id, category, remittanceInformation) {

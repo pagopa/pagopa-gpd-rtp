@@ -8,7 +8,7 @@ Feature: All about RTP events
 #  Scenario Outline: Checking for excluded debt position not sent to RTP
 #    Given a create a 'VALID' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
 #    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
-#    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+#    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/CLMGVN37M58X000I' and associated to the previous payment option on GPD database
 #    When in the RTP topic does not exist a 'create' operation with id suffix 'c' in 10000 ms
 #    Then the 'create' RTP message has not been sent through event hub
 #    Examples:
@@ -21,7 +21,7 @@ Feature: All about RTP events
 #  Scenario Outline: Checking for excluded debt position not sent to RTP with wrong payment position status
 #    Given a create a '<debtPositionStatus>' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
 #    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
-#    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+#    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/CLMGVN37M58X000I' and associated to the previous payment option on GPD database
 #    When in the RTP topic does not exist a 'create' operation with id suffix 'c' in 10000 ms
 #    Then the 'create' RTP message has not been sent through event hub
 #    Examples:
@@ -34,10 +34,10 @@ Feature: All about RTP events
   Scenario Outline: Checking for the taxonomy formally not correct and sent to RTP
     Given a create a 'VALID' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
     And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
-    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/CLMGVN37M58X000I' and associated to the previous payment option on GPD database
     When in the RTP topic exists a 'create' operation with id suffix 'c' in 20000 ms
     Then the 'create' operation has the first transfer's remittance information
-    And the first transfer's remittance information of 'create' operation does not contain 'VNTMHL76M09H501D'
+    And the first transfer's remittance information of 'create' operation does not contain 'CLMGVN37M58X000I'
     And the 'create' RTP message has the anonymized description 'description M**** R****'
     And the create operation has the status 'VALID'
     Examples:
@@ -52,7 +52,7 @@ Feature: All about RTP events
 #  Scenario: Checking for the taxonomy formally correct and sent to RTP
 #    Given a create a 'VALID' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
 #    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
-#    And a create transfer with id prefix '123123', category '9/0101100IM/', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+#    And a create transfer with id prefix '123123', category '9/0101100IM/', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/CLMGVN37M58X000I' and associated to the previous payment option on GPD database
 #    When in the RTP topic exists a 'create' operation with id suffix 'c' in 20000 ms
 #    Then the 'create' operation has the first transfer's remittance information
 #    And the 'create' RTP message has the anonymized description 'description M**** R****'
