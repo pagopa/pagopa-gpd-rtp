@@ -4,31 +4,31 @@ Feature: All about RTP events
   Background:
     Given an EC with fiscal code '77777777777' and flag opt in enabled on Redis cache
 
-  @clean-up-required
-  Scenario Outline: Checking for excluded debt position not sent to RTP
-    Given a create a 'VALID' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
-    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
-    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
-    When in the RTP topic does not exist a 'create' operation with id suffix 'c' in 10000 ms
-    Then the 'create' RTP message has not been sent through event hub
-    Examples:
-      | taxonomy |
-      | 6/0101100IM/ |
-      | 7/0101100IM/ |
-      | 8/0101100IM/ |
-#
 #  @clean-up-required
-#  Scenario Outline: Checking for excluded debt position not sent to RTP with wrong payment position status
-#    Given a create a '<debtPositionStatus>' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
+#  Scenario Outline: Checking for excluded debt position not sent to RTP
+#    Given a create a 'VALID' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
 #    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
 #    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
 #    When in the RTP topic does not exist a 'create' operation with id suffix 'c' in 10000 ms
 #    Then the 'create' RTP message has not been sent through event hub
 #    Examples:
-#      | debtPositionStatus |
-#      | DRAFT |
-#      | PUBLISHED |
-#      | REPORTED |
+#      | taxonomy |
+#      | 6/0101100IM/ |
+#      | 7/0101100IM/ |
+#      | 8/0101100IM/ |
+
+  @clean-up-required
+  Scenario Outline: Checking for excluded debt position not sent to RTP with wrong payment position status
+    Given a create a '<debtPositionStatus>' payment position with id prefix '123121' and fiscal code '77777777777' on GPD database
+    And a create payment option with id prefix '123122', description 'description Mario Rossi' and associated to the previous payment position on GPD database
+    And a create transfer with id prefix '123123', category '<taxonomy>', remittance information of primary ec '/RFB/091814449948492/547.24/TXT/DEBITORE/VNTMHL76M09H501D' and associated to the previous payment option on GPD database
+    When in the RTP topic does not exist a 'create' operation with id suffix 'c' in 10000 ms
+    Then the 'create' RTP message has not been sent through event hub
+    Examples:
+      | debtPositionStatus |
+      | DRAFT |
+      | PUBLISHED |
+      | REPORTED |
 #
 #  @clean-up-required
 #  Scenario Outline: Checking for the taxonomy formally not correct and sent to RTP
