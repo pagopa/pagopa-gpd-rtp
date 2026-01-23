@@ -144,7 +144,7 @@ pagopa-gpd-rtp:
     DEAD_LETTER_ENDPOINT: "https://pagopapweugpsrtpsa.blob.core.windows.net/"
     DEAD_LETTER_CONTAINER_NAME: "rtp-dead-letter"
     RTP_URL_HOST: "https://api-rtp.cstar.pagopa.it/rtp"
-    RTP_MIL_CLIENT_ID: "TBD"
+    RTP_MIL_CLIENT_ID: "8c94a46f-8d74-4117-b522-4aaee3dd2d81"
     RTP_MIL_HOST: "https://api-mcshared.cstar.pagopa.it"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
     MAX_RETRY_DB_REPLICAS: "1"
