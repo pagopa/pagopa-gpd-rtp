@@ -233,7 +233,11 @@ public class IngestionServiceImpl implements IngestionService {
 
   private RTPMessage createRTPMessageOrElseThrow(
       DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    MDC.put("operation", paymentOption.getOp().name());
+    MDC.put(
+        "operation",
+        paymentOption != null && paymentOption.getOp() != null
+            ? paymentOption.getOp().name()
+            : "-");
     MDC.put(
         "po_status", paymentOption.getAfter() != null ? paymentOption.getAfter().getStatus() : "-");
 
@@ -257,7 +261,8 @@ public class IngestionServiceImpl implements IngestionService {
       verifyDBReplicaSync(valuesAfter);
 
       PaymentPosition debtPosition = findPaymentPosition(paymentOption);
-      MDC.put("pd_status", debtPosition.getStatus().name());
+      MDC.put(
+          "pd_status", debtPosition.getStatus() != null ? debtPosition.getStatus().name() : "-");
 
       this.filterService.filterByServiceType(debtPosition);
       this.filterService.filterByStatus(debtPosition, paymentOption.getOp());
