@@ -39,7 +39,7 @@ public enum AppError {
   EC_NOT_ENABLED_FOR_RTP(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Creditor Institution not enabled for RTP",
-      "Payment option filtered because flag opt-in for Creditor Institution is not enabled"),
+      "Payment option filtered because flag opt-in for Creditor Institution %s is not enabled"),
   REDIS_CACHE_NOT_UPDATED(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Redis Cache is not updated",

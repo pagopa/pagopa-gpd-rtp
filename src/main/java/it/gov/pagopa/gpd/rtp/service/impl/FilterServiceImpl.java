@@ -50,7 +50,8 @@ public class FilterServiceImpl implements FilterService {
     // Check flag opt-in
     var hasRtpEnabled = isPresent(valuesAfter.getOrganizationFiscalCode());
     if (!hasRtpEnabled) {
-      throw new FailAndIgnore(AppError.EC_NOT_ENABLED_FOR_RTP);
+      throw new FailAndIgnore(
+          AppError.EC_NOT_ENABLED_FOR_RTP, valuesAfter.getOrganizationFiscalCode());
     }
   }
 
