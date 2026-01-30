@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.1"
+    tag: "0.7.2"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
