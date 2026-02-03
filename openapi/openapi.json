@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.7.2"
+    "version": "0.7.2-1-pagopa-helm-configuration"
   },
   "servers": [
     {
