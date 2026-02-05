@@ -289,8 +289,10 @@ public class IngestionServiceImpl implements IngestionService {
    */
   private PaymentPosition findPaymentPosition(
       DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    Long paymentPositionId = paymentOption.getAfter().getPaymentPositionId();
+    log.debug("[DB Call] Searching for PaymentPosition in database with ID: {}", paymentPositionId);
     Optional<PaymentPosition> debtPosition =
-        this.debtPositionRepository.findById(paymentOption.getAfter().getPaymentPositionId());
+        this.debtPositionRepository.findById(paymentPositionId);
     return debtPosition.orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_POSITION_NOT_FOUND));
   }
 
