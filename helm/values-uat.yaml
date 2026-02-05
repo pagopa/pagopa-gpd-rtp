@@ -24,7 +24,7 @@ microservice-chart: &microservice-chart
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 2 # tmp test
+    replicas: 2 # same as HPA minReplica
     strategy:
       type: RollingUpdate
       rollingUpdate:
@@ -54,8 +54,8 @@ microservice-chart: &microservice-chart
   resources: &resources
   autoscaling:
     enable: true
-    minReplica: 2 # tmp
-    maxReplica: 6 # tmp
+    minReplica: 2
+    maxReplica: 2
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
     triggers:
