@@ -2,8 +2,6 @@ package it.gov.pagopa.gpd.rtp.util;
 
 import lombok.experimental.UtilityClass;
 
-import java.util.UUID;
-
 @UtilityClass
 public class Constants {
 
