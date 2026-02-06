@@ -32,14 +32,15 @@ public class RedisSubscriber {
 
             if (payload != null) {
                 Object eventAction = payload.get(version);
+                String eventActionString = eventAction.toString();
 
-                if (EventEnum.START_CONSUMER.equals(eventAction)) {
+                if (EventEnum.START_CONSUMER.name().equals(eventActionString)) {
                     kafkaConsumerService.startAllConsumers();
-                } else if (EventEnum.STOP_CONSUMER.equals(eventAction)) {
+                } else if (EventEnum.STOP_CONSUMER.name().equals(eventActionString)) {
                     kafkaConsumerService.stopAllConsumers();
-                } else if (EventEnum.ENABLE_FORCE_KILL.equals(eventAction)) {
+                } else if (EventEnum.ENABLE_FORCE_KILL.name().equals(eventActionString)) {
                     gracefulShutdownHandler.withForceKill(true);
-                } else if (EventEnum.DISABLE_FORCE_KILL.equals(eventAction)) {
+                } else if (EventEnum.DISABLE_FORCE_KILL.name().equals(eventActionString)) {
                     gracefulShutdownHandler.withForceKill(false);
                 }
             }
