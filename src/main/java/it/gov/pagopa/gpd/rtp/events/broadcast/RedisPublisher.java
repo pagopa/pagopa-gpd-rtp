@@ -18,8 +18,9 @@ public class RedisPublisher {
 
   public void publishEvent(Map<String, EventEnum> eventPayload) {
     // Publish to the channel in broadcast
-    redisTemplate.convertAndSend(STREAM_KEY, eventPayload);
+   Long clientsNumber = redisTemplate.convertAndSend(STREAM_KEY, eventPayload);
 
-    log.info("PRODUCER: message broadcasted to topic '{}' with payload: {}", STREAM_KEY, eventPayload);
+    log.info("PRODUCER: message broadcasted to topic '{}' with payload: {}. \n" + 
+            "The number of clients that received the message {}.", STREAM_KEY, eventPayload, clientsNumber);
   }
 }
