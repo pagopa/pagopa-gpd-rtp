@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopa-gpd-rtp
 description: Microservice that handles the forwarding of the debt positions to RTP
 type: application
-version: 0.59.0
-appVersion: 0.7.3-1-PIDM-1478
+version: 0.60.0
+appVersion: 0.7.3-2-PIDM-1478
 dependencies:
   - name: microservice-chart
     version: 8.0.2
