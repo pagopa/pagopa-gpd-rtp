@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.rtp.service.impl;
 
 import it.gov.pagopa.gpd.rtp.events.consumer.ProcessingTracker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.binder.Binding;
 import org.springframework.cloud.stream.binding.BindingsLifecycleController;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KafkaConsumerService {
 
     public static final String BINDING_NAME = "bindingName";
@@ -23,6 +25,7 @@ public class KafkaConsumerService {
             String bindingName = (String) elem.get(BINDING_NAME);
             bindingsLifecycleController.stop(bindingName);
         }
+        log.info("[KafkaConsumerService] Stop all consumers operation completed.");
     }
 
     public void startAllConsumers() {
@@ -30,6 +33,7 @@ public class KafkaConsumerService {
             String bindingName = (String) elem.get(BINDING_NAME);
             bindingsLifecycleController.start(bindingName);
         }
+        log.info("[KafkaConsumerService] Start all consumers operation completed.");
     }
 
     public List<Map<?, ?>> getConsumersDetails() {

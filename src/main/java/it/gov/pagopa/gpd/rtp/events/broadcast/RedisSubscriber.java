@@ -4,6 +4,7 @@ import it.gov.pagopa.gpd.rtp.GracefulShutdownHandler;
 import it.gov.pagopa.gpd.rtp.model.EventEnum;
 import it.gov.pagopa.gpd.rtp.service.impl.KafkaConsumerService;
 
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,13 @@ public class RedisSubscriber {
 
             if (payload != null) {
                 Object eventAction = payload.get(version);
-                String eventActionString = eventAction.toString();
+                String eventActionString;
+
+                if (eventAction instanceof List<?> list && !list.isEmpty()) {
+                    eventActionString = list.get(list.size() - 1).toString();
+                } else {
+                    eventActionString = eventAction.toString();
+                }
 
                 if (EventEnum.START_CONSUMER.name().equals(eventActionString)) {
                     kafkaConsumerService.startAllConsumers();
