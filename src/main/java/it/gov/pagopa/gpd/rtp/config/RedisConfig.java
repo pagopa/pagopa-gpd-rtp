@@ -8,6 +8,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 @Configuration
 public class RedisConfig {
@@ -40,5 +42,20 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(jedisConnectionFactory());
         return template;
+    }
+
+    @Bean
+    RedisMessageListenerContainer container(JedisConnectionFactory connectionFactory,
+                                            MessageListenerAdapter listenerAdapter) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(listenerAdapter, new org.springframework.data.redis.listener.ChannelTopic(it.gov.pagopa.gpd.rtp.util.Constants.STREAM_KEY));
+        return container;
+    }
+
+    @Bean
+    MessageListenerAdapter listenerAdapter(it.gov.pagopa.gpd.rtp.events.broadcast.RedisSubscriber subscriber) {
+        // onMessage is the method implemented in the Subscriber
+        return new MessageListenerAdapter(subscriber, "onMessage");
     }
 }
