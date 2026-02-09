@@ -26,7 +26,7 @@ class RedisSubscriberTest {
 
     @InjectMocks private RedisSubscriber redisSubscriber;
 
-    private final String VERSION = "1.2.3";
+    private static final String VERSION = "1.2.3";
 
     @BeforeEach
     void setUp() {
