@@ -11,16 +11,30 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "redis.host=localhost",
+        "redis.port=6379",
+        "redis.password=fake",
+        "info.application.version=1.0.0",
+        "spring.data.redis.repositories.enabled=false",
+        "spring.cloud.stream.enabled=false"
+})
 class OpenApiGenerationTest {
 
   @Autowired private MockMvc mvc;
+
+  @MockBean private org.springframework.data.redis.connection.jedis.JedisConnectionFactory jedisConnectionFactory;
+  @MockBean private org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
+  @MockBean private org.springframework.data.redis.listener.RedisMessageListenerContainer redisMessageListenerContainer;
 
   @Test
   void swaggerSpringPlugin() throws Exception {

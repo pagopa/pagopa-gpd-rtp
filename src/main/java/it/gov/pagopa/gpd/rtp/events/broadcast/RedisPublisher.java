@@ -6,9 +6,10 @@ import it.gov.pagopa.gpd.rtp.model.EventEnum;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
-import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,14 +17,17 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class RedisPublisher {
 
-  private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-  public void publishEvent(Map<String, EventEnum> eventPayload) {
-    ObjectRecord<String, Map<String, EventEnum>> action =
-        StreamRecords.newRecord().in(STREAM_KEY).ofObject(eventPayload);
+    public void publishEvent(Map<String, EventEnum> eventPayload) {
+        Long clientsNumber = redisTemplate.execute((RedisCallback<Long>) connection ->
+                connection.publish(
+                        new StringRedisSerializer().serialize(STREAM_KEY),
+                        new GenericJackson2JsonRedisSerializer().serialize(eventPayload)
+                )
+        );
 
-    redisTemplate.opsForStream().add(action);
-
-    log.info("PRODUCER: message sent to '{}' with payload: {}", STREAM_KEY, eventPayload);
-  }
+        log.info("PRODUCER: message broadcasted to topic '{}' with payload: {}. \n" +
+                "The number of clients that received the message is {}.", STREAM_KEY, eventPayload, clientsNumber);
+    }
 }
