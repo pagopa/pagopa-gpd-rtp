@@ -36,10 +36,14 @@ public class RedisSubscriber {
                 String eventActionString;
 
                 if (eventAction instanceof List<?> list && !list.isEmpty()) {
-                    eventActionString = list.get(list.size() - 1).toString();
-                } else {
-                    eventActionString = eventAction.toString();
+                    eventAction = list.get(list.size() - 1);
                 }
+
+                if(eventAction == null) {
+                    return;
+                }
+
+                eventActionString = eventAction.toString();
 
                 if (EventEnum.START_CONSUMER.name().equals(eventActionString)) {
                     kafkaConsumerService.startAllConsumers();

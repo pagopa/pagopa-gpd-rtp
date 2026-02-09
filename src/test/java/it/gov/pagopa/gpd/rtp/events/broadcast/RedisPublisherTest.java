@@ -1,33 +1,53 @@
 package it.gov.pagopa.gpd.rtp.events.broadcast;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.gpd.rtp.model.EventEnum;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 
-@SpringBootTest(classes = RedisPublisher.class)
+@ExtendWith(MockitoExtension.class)
 class RedisPublisherTest {
 
-  @MockBean RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
 
-  @Autowired @InjectMocks RedisPublisher redisPublisher;
+    @InjectMocks
+    private RedisPublisher redisPublisher;
 
-  @Test
-  void publishEvent() {
-    when(redisTemplate.opsForStream()).thenThrow(new RuntimeException());
+    @Test
+    void publishEvent_ShouldSucceed() {
+        // Mock client numbers
+        when(redisTemplate.execute(any(RedisCallback.class))).thenReturn(1L);
 
-    Map<String, EventEnum> map = Map.of("key", EventEnum.START_CONSUMER);
-    try {
-      redisPublisher.publishEvent(map);
-    } catch (Exception e) {
-      assertTrue(e instanceof RuntimeException);
+        Map<String, EventEnum> payload = Map.of("key", EventEnum.START_CONSUMER);
+
+        // Verify that no exceptions are thrown
+        assertDoesNotThrow(() -> redisPublisher.publishEvent(payload));
+
+        // Verify that the template has actually been called
+        verify(redisTemplate).execute(any(RedisCallback.class));
     }
-  }
+
+    @Test
+    void publishEvent_ShouldThrowException_WhenRedisFails() {
+        // Mock the failure of the execute method
+        when(redisTemplate.execute(any(RedisCallback.class)))
+                .thenThrow(new RuntimeException("Redis connection error"));
+
+        Map<String, EventEnum> payload = Map.of("key", EventEnum.START_CONSUMER);
+
+        // Verify that exception is thrown
+        assertThrows(RuntimeException.class, () -> redisPublisher.publishEvent(payload));
+    }
 }
