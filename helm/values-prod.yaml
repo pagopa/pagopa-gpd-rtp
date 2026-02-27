@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.6"
+    tag: "0.7.8"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -134,7 +134,7 @@ pagopa-gpd-rtp:
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
-    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp"
+    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp-consumer-group"
     SPRING_DATASOURCE_URL: "jdbc:postgresql://pagopa-p-weu-gpd-pgflex-ve.reader.postgres.database.azure.com:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
