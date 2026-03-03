@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.9"
+    tag: "0.7.10"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -147,7 +147,7 @@ pagopa-gpd-rtp:
     RTP_MIL_CLIENT_ID: "8c94a46f-8d74-4117-b522-4aaee3dd2d81"
     RTP_MIL_HOST: "https://api-mcshared.cstar.pagopa.it"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
-    MAX_RETRY_DB_REPLICAS: "1"
+    MAX_RETRY_DB_REPLICAS: "5"
   envSecret:
     !!merge <<: *envSecret
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
