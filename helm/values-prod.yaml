@@ -130,7 +130,7 @@ pagopa-gpd-rtp:
   envConfig:
     !!merge <<: *envConfig
     KAFKA_START_OFFSET: 'latest'
-    KAFKA_AUTO_STARTUP: 'false'
+    KAFKA_AUTO_STARTUP: 'true'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
