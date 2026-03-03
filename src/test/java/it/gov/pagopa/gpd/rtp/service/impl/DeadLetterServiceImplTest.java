@@ -141,8 +141,6 @@ class DeadLetterServiceImplTest {
   private ErrorMessage buildErrorMessage2() {
     AppException appException = new AppException(AppError.INTERNAL_SERVER_ERROR);
 
-    MessageHeaders originalMessageHeaders =
-        new MessageHeaders(Map.of(KafkaHeaders.RECEIVED_KEY, CDC_MESSAGE_KEY));
     MessageHeaders errorMessageHeaders = new MessageHeaders(Collections.emptyMap());
     Message<String> originalMessage = new GenericMessage<>("{}");
 

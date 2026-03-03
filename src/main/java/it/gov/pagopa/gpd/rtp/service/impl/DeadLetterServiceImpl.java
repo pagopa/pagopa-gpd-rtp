@@ -112,6 +112,7 @@ public class DeadLetterServiceImpl implements DeadLetterService {
   }
 
   public static String messageToString(Object message) {
+    log.debug("Payload from ErrorMessage to convert: {}", message);
     if (message == null) {
       return "message is null";
     }
