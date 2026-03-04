@@ -55,7 +55,7 @@ class HelpdeskControllerTest {
         when(helpdeskService.retryMessages(Collections.singletonList(FILENAME))).thenReturn("OK");
         mockMvc
                 .perform(
-                        post(String.format("/error-messages/retry"))
+                        post("/error-messages/retry")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(String.format("[\"%s\"]", FILENAME)))
                 .andExpect(status().isOk());
