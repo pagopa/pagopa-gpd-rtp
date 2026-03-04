@@ -115,42 +115,40 @@ public class IngestionServiceImpl implements IngestionService {
   private void handleMessage(Message<?> message) {
     Acknowledgment acknowledgment = null;
     DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
+    try {
+      acknowledgment = getAck(message);
 
-    throw new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, "c");
-//    try {
-//      acknowledgment = getAck(message);
-//
-//      paymentOption = parseMessage(message);
-//      MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
-//      MDC.put(NAV, getNav(paymentOption));
-//      MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
-//      RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
-//
-//      boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-//      checkResponse(response);
-//      MDC.put(RTP_SENT_STATUS, "OK");
-//
-//      log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
-//      acknowledgment.acknowledge();
-//    } catch (FailAndPostpone e) {
-//      assert paymentOption != null : "paymentOption cannot be null";
-//      setMDCErrorField(e);
-//      handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
-//    } catch (FailAndIgnore e) {
-//      setMDCErrorField(e);
-//      log.info("Message ignored {}", e.getMessage());
-//      assert acknowledgment != null : "acknowledgment cannot be null";
-//      acknowledgment.acknowledge();
-//    } catch (Exception e) {
-//      FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
-//      if (e instanceof FailAndNotify failAndNotifyEx) {
-//        failAndNotify = failAndNotifyEx;
-//      }
-//      setMDCErrorField(failAndNotify);
-//      log.error("Unexpected error raised", e);
-//      sendCustomEvent(failAndNotify);
-//      throw e;
-//    }
+      paymentOption = parseMessage(message);
+      MDC.put(PAYMENT_OPTION_ID, getPaymentOptionId(paymentOption));
+      MDC.put(NAV, getNav(paymentOption));
+      MDC.put(ORGANIZATION_FISCAL_CODE, getOrganizationFiscalCode(paymentOption));
+      RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
+
+      boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
+      checkResponse(response);
+      MDC.put(RTP_SENT_STATUS, "OK");
+
+      log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
+      acknowledgment.acknowledge();
+    } catch (FailAndPostpone e) {
+      assert paymentOption != null : "paymentOption cannot be null";
+      setMDCErrorField(e);
+      handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
+    } catch (FailAndIgnore e) {
+      setMDCErrorField(e);
+      log.info("Message ignored {}", e.getMessage());
+      assert acknowledgment != null : "acknowledgment cannot be null";
+      acknowledgment.acknowledge();
+    } catch (Exception e) {
+      FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
+      if (e instanceof FailAndNotify failAndNotifyEx) {
+        failAndNotify = failAndNotifyEx;
+      }
+      setMDCErrorField(failAndNotify);
+      log.error("Unexpected error raised", e);
+      sendCustomEvent(failAndNotify);
+      throw e;
+    }
   }
 
   private void setMDCErrorField(AppException e) {
