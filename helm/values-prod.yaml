@@ -24,7 +24,7 @@ microservice-chart: &microservice-chart
     periodSeconds: 10
   deployment:
     create: true
-    replicas: 2 # same as HPA minReplica
+    replicas: 3 # same as HPA minReplica
     strategy:
       type: RollingUpdate
       rollingUpdate:
@@ -54,7 +54,7 @@ microservice-chart: &microservice-chart
   resources: &resources
   autoscaling:
     enable: true
-    minReplica: 2
+    minReplica: 3
     maxReplica: 10
     pollingInterval: 10 # seconds
     cooldownPeriod: 50 # seconds
@@ -63,11 +63,11 @@ microservice-chart: &microservice-chart
         metadata:
           # Required
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
-          value: "75"
+          value: "90"
       - type: memory
         metadata:
           type: Utilization
-          value: "90"
+          value: "95"
   envConfig: &envConfig
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "prod"
@@ -147,7 +147,7 @@ pagopa-gpd-rtp:
     RTP_MIL_CLIENT_ID: "8c94a46f-8d74-4117-b522-4aaee3dd2d81"
     RTP_MIL_HOST: "https://api-mcshared.cstar.pagopa.it"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
-    MAX_RETRY_DB_REPLICAS: "5"
+    MAX_RETRY_DB_REPLICAS: "10"
   envSecret:
     !!merge <<: *envSecret
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
@@ -161,11 +161,11 @@ pagopa-gpd-rtp:
     RTP_MIL_CLIENT_SECRET: "rtp-mil-client-secret"
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "0.25"
-    limits:
       memory: "768Mi"
-      cpu: "0.50"
+      cpu: "0.30"
+    limits:
+      memory: "1024Mi"
+      cpu: "0.75"
 refresh-cache-cron:
   !!merge <<: *microservice-chart
   enabled: false
