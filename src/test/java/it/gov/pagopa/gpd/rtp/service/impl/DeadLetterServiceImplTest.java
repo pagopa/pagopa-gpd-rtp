@@ -74,6 +74,28 @@ class DeadLetterServiceImplTest {
   }
 
   @Test
+  void sendToDeadLetter_OK2() {
+    ErrorMessage errorMessage = buildErrorMessage2();
+
+    assertDoesNotThrow(() -> sut.sendToDeadLetter(errorMessage));
+
+    verify(blobStorageClient)
+        .saveStringJsonToBlobStorage(errorMessageCaptor.capture(), filePathCaptor.capture());
+    String capturedErrorMessage = errorMessageCaptor.getValue();
+
+    assertTrue(
+        capturedErrorMessage.contains(
+            DEAD_LETTER_CAUSE_FIELD + AppError.INTERNAL_SERVER_ERROR.getDetails()));
+    assertTrue(
+        capturedErrorMessage.contains(
+            DEAD_LETTER_ERROR_CODE_FIELD + AppError.INTERNAL_SERVER_ERROR.name()));
+
+    String capturedFilePath = filePathCaptor.getValue();
+
+    assertNotNull(capturedFilePath);
+  }
+
+  @Test
   void sendToDeadLetter_KO_ERROR_PARSING_MESSAGE_KEY() {
     ErrorMessage errorMessage = buildErrorMessageWithoutOriginalMessageHeaders();
 
@@ -109,6 +131,18 @@ class DeadLetterServiceImplTest {
     Message<byte[]> originalMessage =
         new GenericMessage<>(
             String.valueOf(new DataCaptureMessage<>()).getBytes(), originalMessageHeaders);
+
+    return new ErrorMessage(
+        new MessageHandlingException(originalMessage, appException),
+        errorMessageHeaders,
+        originalMessage);
+  }
+
+  private ErrorMessage buildErrorMessage2() {
+    AppException appException = new AppException(AppError.INTERNAL_SERVER_ERROR);
+
+    MessageHeaders errorMessageHeaders = new MessageHeaders(Collections.emptyMap());
+    Message<String> originalMessage = new GenericMessage<>("{}");
 
     return new ErrorMessage(
         new MessageHandlingException(originalMessage, appException),
