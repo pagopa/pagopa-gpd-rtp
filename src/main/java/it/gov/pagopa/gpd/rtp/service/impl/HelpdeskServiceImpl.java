@@ -11,7 +11,6 @@ import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,7 +40,6 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     return "Retry successful, all messages are sent to RTP eventhub";
   }
 
-  @NotNull
   private void retryMessage(String fileName) throws JsonProcessingException {
     DeadLetterMessage deadLetterMessage =
         this.objectMapper.readValue(
