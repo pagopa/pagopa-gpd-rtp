@@ -56,6 +56,38 @@ public class FilterServiceImpl implements FilterService {
   }
 
   @Override
+  public void filterDeleteByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+    PaymentOptionEvent valuesBefore = paymentOption.getBefore();
+
+    // Check flag opt-in
+    var hasRtpEnabled = isPresent(valuesBefore.getOrganizationFiscalCode());
+    if (!hasRtpEnabled) {
+      throw new FailAndIgnore(
+              AppError.EC_NOT_ENABLED_FOR_RTP, valuesBefore.getOrganizationFiscalCode());
+    }
+  }
+
+  @Override
+  public void filterDeleteByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+      PaymentOptionEvent valuesBefore = paymentOption.getBefore();
+
+      // Filter out archived Payment Options
+      if (Boolean.TRUE.equals(valuesBefore.getArchived())) {
+        throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
+      }
+  }
+
+  @Override
+  public void filterCreateOrUpdateByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+      PaymentOptionEvent valuesAfter = paymentOption.getAfter();
+
+      // Filter out archived Payment Options
+      if (Boolean.TRUE.equals(valuesAfter.getArchived())) {
+        throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
+      }
+  }
+
+  @Override
   public void filterByStatus(PaymentPosition debtPosition, DebeziumOperationCode operation) {
 
     // Check payment position status

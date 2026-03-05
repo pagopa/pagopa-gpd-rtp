@@ -242,12 +242,13 @@ public class IngestionServiceImpl implements IngestionService {
         "po_status", paymentOption.getAfter() != null ? paymentOption.getAfter().getStatus() : "-");
 
     if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
+      this.filterService.filterDeleteByArchived(paymentOption);
       // Map RTP delete message
       return mapRTPDeleteMessage(paymentOption);
     }
     if (paymentOption.getOp().equals(DebeziumOperationCode.c)
         || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
-
+      this.filterService.filterCreateOrUpdateByArchived(paymentOption);
       this.filterService.filterByTaxCode(paymentOption);
       this.filterService.filterByOptInFlag(paymentOption);
 

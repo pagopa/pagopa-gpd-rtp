@@ -26,6 +26,28 @@ public interface FilterService {
   void filterByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption);
 
   /**
+   * This method checks if the organization associated with the PaymentOptionEvent has opted in for
+   * RTP. This method is applied to delete events.
+   *
+   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   */
+  void filterDeleteByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+
+  /**
+   * This method checks if the Delete PaymentOptionEvent relates to an Archived entity
+   *
+   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   */
+  void filterDeleteByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+
+  /**
+   * This method checks if the Create or Update PaymentOptionEvent relates to an Archived entity
+   *
+   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   */
+  void filterCreateOrUpdateByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+
+  /**
    * This method validates the status of a PaymentPosition to ensure it is suitable for RTP
    * processing.
    *
