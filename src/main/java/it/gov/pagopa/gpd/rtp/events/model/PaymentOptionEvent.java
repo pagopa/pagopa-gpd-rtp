@@ -49,4 +49,7 @@ public class PaymentOptionEvent {
 
   @JsonProperty("is_partial_payment")
   private Boolean isPartialPayment;
+
+  @JsonProperty("archived")
+  private Boolean archived;
 }

@@ -242,16 +242,20 @@ public class IngestionServiceImpl implements IngestionService {
         "po_status", paymentOption.getAfter() != null ? paymentOption.getAfter().getStatus() : "-");
 
     if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
+      PaymentOptionEvent valuesBefore = paymentOption.getBefore();
+
+      this.filterService.filterByOptInFlag(valuesBefore);
+      this.filterService.filterByArchived(valuesBefore);
       // Map RTP delete message
       return mapRTPDeleteMessage(paymentOption);
     }
     if (paymentOption.getOp().equals(DebeziumOperationCode.c)
         || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
-
-      this.filterService.filterByTaxCode(paymentOption);
-      this.filterService.filterByOptInFlag(paymentOption);
-
       PaymentOptionEvent valuesAfter = paymentOption.getAfter();
+
+      this.filterService.filterByArchived(valuesAfter);
+      this.filterService.filterByTaxCode(valuesAfter);
+      this.filterService.filterByOptInFlag(valuesAfter);
 
       log.debug(
           "PaymentOption ingestion called at {} with payment option id {}",

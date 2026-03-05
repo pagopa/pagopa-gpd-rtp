@@ -6,7 +6,6 @@ import it.gov.pagopa.gpd.rtp.entity.PaymentPosition;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
-import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
@@ -34,24 +33,28 @@ public class FilterServiceImpl implements FilterService {
   }
 
   @Override
-  public void filterByTaxCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
+  public void filterByTaxCode(PaymentOptionEvent paymentOptionEvent) {
     // Debtor Tax Code Validation
-    if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
+    if (paymentOptionEvent.getFiscalCode().equals(paymentOptionEvent.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }
 
   @Override
-  public void filterByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
+  public void filterByOptInFlag(PaymentOptionEvent paymentOptionEvent) {
     // Check flag opt-in
-    var hasRtpEnabled = isPresent(valuesAfter.getOrganizationFiscalCode());
+    var hasRtpEnabled = isPresent(paymentOptionEvent.getOrganizationFiscalCode());
     if (!hasRtpEnabled) {
       throw new FailAndIgnore(
-          AppError.EC_NOT_ENABLED_FOR_RTP, valuesAfter.getOrganizationFiscalCode());
+          AppError.EC_NOT_ENABLED_FOR_RTP, paymentOptionEvent.getOrganizationFiscalCode());
+    }
+  }
+
+  @Override
+  public void filterByArchived(PaymentOptionEvent paymentOptionEvent) {
+    // Filter out archived Payment Options
+    if (paymentOptionEvent != null && Boolean.TRUE.equals(paymentOptionEvent.getArchived())) {
+      throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
     }
   }
 

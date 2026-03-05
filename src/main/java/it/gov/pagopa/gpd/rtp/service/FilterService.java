@@ -2,7 +2,6 @@ package it.gov.pagopa.gpd.rtp.service;
 
 import it.gov.pagopa.gpd.rtp.entity.PaymentPosition;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
-import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import java.util.List;
@@ -13,17 +12,24 @@ public interface FilterService {
    * This method validates the tax codes in the PaymentOptionEvent. In particular, it checks that
    * the debtor's fiscal code is not the same as the organization's fiscal code.
    *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
    */
-  void filterByTaxCode(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  void filterByTaxCode(PaymentOptionEvent paymentOptionEvent);
 
   /**
    * This method checks if the organization associated with the PaymentOptionEvent has opted in for
    * RTP.
    *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
    */
-  void filterByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  void filterByOptInFlag(PaymentOptionEvent paymentOptionEvent);
+
+  /**
+   * This method checks if the PaymentOptionEvent relates to an Archived entity
+   *
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
+   */
+  void filterByArchived(PaymentOptionEvent paymentOptionEvent);
 
   /**
    * This method validates the status of a PaymentPosition to ensure it is suitable for RTP

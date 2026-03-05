@@ -40,6 +40,10 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Creditor Institution not enabled for RTP",
       "Payment option filtered because flag opt-in for Creditor Institution %s is not enabled"),
+  ARCHIVED_PAYMENT_OPTION(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    "The Payment Option has been archived",
+          "Filtered archived Payment Option event"),
   REDIS_CACHE_NOT_UPDATED(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Redis Cache is not updated",
