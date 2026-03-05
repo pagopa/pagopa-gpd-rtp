@@ -242,6 +242,7 @@ public class IngestionServiceImpl implements IngestionService {
         "po_status", paymentOption.getAfter() != null ? paymentOption.getAfter().getStatus() : "-");
 
     if (paymentOption.getOp().equals(DebeziumOperationCode.d)) {
+      this.filterService.filterDeleteByOptInFlag(paymentOption);
       this.filterService.filterDeleteByArchived(paymentOption);
       // Map RTP delete message
       return mapRTPDeleteMessage(paymentOption);
