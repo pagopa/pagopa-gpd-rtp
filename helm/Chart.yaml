@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopa-gpd-rtp
 description: Microservice that handles the forwarding of the debt positions to RTP
 type: application
-version: 0.72.0
-appVersion: 0.7.12
+version: 0.73.0
+appVersion: 0.7.12-1-PIDM-1629-switch-authentication-from-mil-to-keycloak
 dependencies:
   - name: microservice-chart
     version: 8.0.2
