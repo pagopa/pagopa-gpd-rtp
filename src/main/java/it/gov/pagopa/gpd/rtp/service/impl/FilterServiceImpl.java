@@ -6,7 +6,6 @@ import it.gov.pagopa.gpd.rtp.entity.PaymentPosition;
 import it.gov.pagopa.gpd.rtp.entity.Transfer;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.PaymentPositionStatus;
 import it.gov.pagopa.gpd.rtp.entity.enumeration.ServiceType;
-import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
 import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;

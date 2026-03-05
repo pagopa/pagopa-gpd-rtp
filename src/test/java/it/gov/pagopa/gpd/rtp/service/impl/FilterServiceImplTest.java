@@ -102,6 +102,60 @@ class FilterServiceImplTest {
     }
 
     @Test
+    void filterByArchived_After_OK() {
+      var po = new DataCaptureMessage<PaymentOptionEvent>();
+      po.setAfter(new PaymentOptionEvent());
+      po.getAfter().setFiscalCode("fiscalCode");
+      po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
+      po.getAfter().setArchived(false);
+      assertDoesNotThrow(
+              () ->
+                      sut.filterByArchived(po.getAfter())
+      );
+    }
+
+    @Test
+    void filterByArchived_Before_OK() {
+      var po = new DataCaptureMessage<PaymentOptionEvent>();
+      po.setBefore(new PaymentOptionEvent());
+      po.getBefore().setFiscalCode("fiscalCode");
+      po.getBefore().setOrganizationFiscalCode("organizationFiscalCode");
+      po.getBefore().setArchived(false);
+      assertDoesNotThrow(
+              () ->
+                      sut.filterByArchived(po.getBefore())
+      );
+    }
+
+    @Test
+    void filterByArchived_After_KO() {
+      var po = new DataCaptureMessage<PaymentOptionEvent>();
+      po.setAfter(new PaymentOptionEvent());
+      po.getAfter().setFiscalCode("fiscalCode");
+      po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
+      po.getAfter().setArchived(true);
+      try {
+        sut.filterByArchived(po.getAfter());
+      } catch (AppException e) {
+        assertEquals(AppError.ARCHIVED_PAYMENT_OPTION, e.getAppErrorCode());
+      }
+    }
+
+    @Test
+    void filterByArchived_Before_KO() {
+      var po = new DataCaptureMessage<PaymentOptionEvent>();
+      po.setBefore(new PaymentOptionEvent());
+      po.getBefore().setFiscalCode("fiscalCode");
+      po.getBefore().setOrganizationFiscalCode("organizationFiscalCode");
+      po.getBefore().setArchived(true);
+      try {
+        sut.filterByArchived(po.getAfter());
+      } catch (AppException e) {
+        assertEquals(AppError.ARCHIVED_PAYMENT_OPTION, e.getAppErrorCode());
+      }
+    }
+
+    @Test
     void filterByStatus_OK_OPERATION_C() {
 
         var pd = new PaymentPosition();
