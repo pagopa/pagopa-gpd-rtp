@@ -153,7 +153,7 @@ pagopa-gpd-rtp:
     REDIS_PASSWORD: "redis-password"
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
-    RTP_KEYCLOAK_CLIENT_SECRET: "rtp-mil-client-secret"
+    RTP_KEYCLOAK_CLIENT_SECRET: "rtp-keycloak-client-secret"
   resources:
     requests:
       memory: "512Mi"
