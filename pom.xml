@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.7.12</version>
+  <version>0.7.12-1-PIDM-1629-switch-authentication-from-mil-to-keycloak</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 
