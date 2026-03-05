@@ -34,57 +34,29 @@ public class FilterServiceImpl implements FilterService {
   }
 
   @Override
-  public void filterByTaxCode(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
+  public void filterByTaxCode(PaymentOptionEvent paymentOptionEvent) {
     // Debtor Tax Code Validation
-    if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
+    if (paymentOptionEvent.getFiscalCode().equals(paymentOptionEvent.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }
 
   @Override
-  public void filterByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
+  public void filterByOptInFlag(PaymentOptionEvent paymentOptionEvent) {
     // Check flag opt-in
-    var hasRtpEnabled = isPresent(valuesAfter.getOrganizationFiscalCode());
+    var hasRtpEnabled = isPresent(paymentOptionEvent.getOrganizationFiscalCode());
     if (!hasRtpEnabled) {
       throw new FailAndIgnore(
-          AppError.EC_NOT_ENABLED_FOR_RTP, valuesAfter.getOrganizationFiscalCode());
+          AppError.EC_NOT_ENABLED_FOR_RTP, paymentOptionEvent.getOrganizationFiscalCode());
     }
   }
 
   @Override
-  public void filterDeleteByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-    PaymentOptionEvent valuesBefore = paymentOption.getBefore();
-
-    // Check flag opt-in
-    var hasRtpEnabled = isPresent(valuesBefore.getOrganizationFiscalCode());
-    if (!hasRtpEnabled) {
-      throw new FailAndIgnore(
-              AppError.EC_NOT_ENABLED_FOR_RTP, valuesBefore.getOrganizationFiscalCode());
+  public void filterByArchived(PaymentOptionEvent paymentOptionEvent) {
+    // Filter out archived Payment Options
+    if (paymentOptionEvent != null && Boolean.TRUE.equals(paymentOptionEvent.getArchived())) {
+      throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
     }
-  }
-
-  @Override
-  public void filterDeleteByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-      PaymentOptionEvent valuesBefore = paymentOption.getBefore();
-
-      // Filter out archived Payment Options
-      if (Boolean.TRUE.equals(valuesBefore.getArchived())) {
-        throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
-      }
-  }
-
-  @Override
-  public void filterCreateOrUpdateByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-      PaymentOptionEvent valuesAfter = paymentOption.getAfter();
-
-      // Filter out archived Payment Options
-      if (Boolean.TRUE.equals(valuesAfter.getArchived())) {
-        throw new FailAndIgnore(AppError.ARCHIVED_PAYMENT_OPTION);
-      }
   }
 
   @Override

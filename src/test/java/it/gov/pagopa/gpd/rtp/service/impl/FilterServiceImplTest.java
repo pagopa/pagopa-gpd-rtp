@@ -47,7 +47,7 @@ class FilterServiceImplTest {
         po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
         assertDoesNotThrow(
                 () ->
-                        sut.filterByTaxCode(po)
+                        sut.filterByTaxCode(po.getAfter())
         );
     }
 
@@ -58,7 +58,7 @@ class FilterServiceImplTest {
         po.getAfter().setFiscalCode("organizationFiscalCode");
         po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
         try {
-            sut.filterByTaxCode(po);
+            sut.filterByTaxCode(po.getAfter());
         } catch (AppException e) {
             assertEquals(AppError.TAX_CODE_NOT_VALID_FOR_RTP, e.getAppErrorCode());
         }
@@ -78,7 +78,7 @@ class FilterServiceImplTest {
         po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
         assertDoesNotThrow(
                 () ->
-                        sut.filterByOptInFlag(po)
+                        sut.filterByOptInFlag(po.getAfter())
         );
     }
 
@@ -95,7 +95,7 @@ class FilterServiceImplTest {
         po.getAfter().setFiscalCode("organizationFiscalCode");
         po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
         try {
-            sut.filterByOptInFlag(po);
+            sut.filterByOptInFlag(po.getAfter());
         } catch (AppException e) {
             assertEquals(AppError.EC_NOT_ENABLED_FOR_RTP, e.getAppErrorCode());
         }

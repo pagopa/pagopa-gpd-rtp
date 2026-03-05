@@ -13,39 +13,24 @@ public interface FilterService {
    * This method validates the tax codes in the PaymentOptionEvent. In particular, it checks that
    * the debtor's fiscal code is not the same as the organization's fiscal code.
    *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
    */
-  void filterByTaxCode(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  void filterByTaxCode(PaymentOptionEvent paymentOptionEvent);
 
   /**
    * This method checks if the organization associated with the PaymentOptionEvent has opted in for
    * RTP.
    *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
    */
-  void filterByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  void filterByOptInFlag(PaymentOptionEvent paymentOptionEvent);
 
   /**
-   * This method checks if the organization associated with the PaymentOptionEvent has opted in for
-   * RTP. This method is applied to delete events.
+   * This method checks if the PaymentOptionEvent relates to an Archived entity
    *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
+   * @param paymentOptionEvent the PaymentOptionEvent to be validated.
    */
-  void filterDeleteByOptInFlag(DataCaptureMessage<PaymentOptionEvent> paymentOption);
-
-  /**
-   * This method checks if the Delete PaymentOptionEvent relates to an Archived entity
-   *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
-   */
-  void filterDeleteByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption);
-
-  /**
-   * This method checks if the Create or Update PaymentOptionEvent relates to an Archived entity
-   *
-   * @param paymentOption the DataCaptureMessage containing the PaymentOptionEvent to be validated.
-   */
-  void filterCreateOrUpdateByArchived(DataCaptureMessage<PaymentOptionEvent> paymentOption);
+  void filterByArchived(PaymentOptionEvent paymentOptionEvent);
 
   /**
    * This method validates the status of a PaymentPosition to ensure it is suitable for RTP
