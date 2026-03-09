@@ -17,20 +17,20 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class RtpClientService {
 
-  private final RtpMilClientService rtpMilClientService;
+  private final RtpKeycloakClientService rtpKeycloakClientService;
   private final RestOperations restTemplate;
 
   @Value("${service.rtp.host}")
   private String host;
 
   @Autowired
-  public RtpClientService(RtpMilClientService rtpMilClientService, RestTemplate restTemplate) {
-    this.rtpMilClientService = rtpMilClientService;
+  public RtpClientService(RtpKeycloakClientService rtpKeycloakClientService, RestTemplate restTemplate) {
+    this.rtpKeycloakClientService = rtpKeycloakClientService;
     this.restTemplate = restTemplate;
   }
 
   public PayeesPage payees(int page, int size) {
-    String token = rtpMilClientService.getToken();
+    String token = rtpKeycloakClientService.getToken();
 
     URI uri =
         UriComponentsBuilder.fromHttpUrl(host + "/payees/payees")

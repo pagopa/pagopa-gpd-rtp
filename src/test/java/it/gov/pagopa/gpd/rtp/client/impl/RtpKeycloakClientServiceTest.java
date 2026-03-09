@@ -18,12 +18,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = {RtpMilClientService.class})
-class RtpMilClientServiceTest {
-    @Value("${service.rtp-mil.host}")
+@SpringBootTest(classes = {RtpKeycloakClientService.class})
+class RtpKeycloakClientServiceTest {
+    @Value("${service.rtp-keycloak.host}")
     private String host;
 
-    public static final String PATH = "/auth/token";
+    public static final String PATH = "/token";
 
     public static final String ACCESS_TOKEN = "accessToken";
     public static final String TOKEN_TYPE = "tokenType";
@@ -31,7 +31,7 @@ class RtpMilClientServiceTest {
     private RestTemplate restTemplate;
     @Autowired
     @InjectMocks
-    private RtpMilClientService sut;
+    private RtpKeycloakClientService sut;
 
     @Test
     void getToken_OK() {
