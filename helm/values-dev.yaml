@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.12-1-PIDM-1629-switch-authentication-from-mil-to-keycloak"
+    tag: "0.7.13"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
