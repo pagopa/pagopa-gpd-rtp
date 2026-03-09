@@ -30,7 +30,7 @@ class RtpClientServiceTest {
     @Value("${service.rtp.host}")
     private String host;
     @MockBean
-    private RtpMilClientService rtpMilClientService;
+    private RtpKeycloakClientService rtpKeycloakClientService;
 
     @MockBean
     private RestTemplate restTemplate;
@@ -40,7 +40,7 @@ class RtpClientServiceTest {
 
     @Test
     void payees_OK() {
-        when(rtpMilClientService.getToken()).thenReturn("token");
+        when(rtpKeycloakClientService.getToken()).thenReturn("token");
         List<Payee> payeeList = List.of(Payee.builder().payeeId("payeeId1").name("payeeName1").build(), Payee.builder().payeeId("payeeId2").name("payeeName2").build());
         PageMetadata pageMetadata = PageMetadata.builder().totalPages(1).page(0).totalElements(payeeList.size()).size(payeeList.size()).build();
         PayeesPage page = PayeesPage.builder().payees(payeeList).pageMetadata(pageMetadata).build();
@@ -56,7 +56,7 @@ class RtpClientServiceTest {
         when(restTemplate.exchange(eq(uri), eq(HttpMethod.GET), any(HttpEntity.class), eq(PayeesPage.class))).thenReturn(response);
 
         assertDoesNotThrow(() -> sut.payees(1, payeeList.size()));
-        verify(rtpMilClientService).getToken();
+        verify(rtpKeycloakClientService).getToken();
         verify(restTemplate).exchange(eq(uri), eq(HttpMethod.GET), any(HttpEntity.class), eq(PayeesPage.class));
     }
 }

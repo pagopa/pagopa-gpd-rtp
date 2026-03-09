@@ -14,18 +14,18 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
-public class RtpMilClientService {
+public class RtpKeycloakClientService {
 
-  public static final String PATH = "/auth/token";
+  public static final String PATH = "/token";
   private final RestTemplate restTemplate;
 
-  @Value("${service.rtp-mil.host}")
+  @Value("${service.rtp-keycloak.host}")
   private String host;
 
-  @Value("${service.rtp-mil.clientId}")
+  @Value("${service.rtp-keycloak.clientId}")
   private String clientId;
 
-  @Value("${service.rtp-mil.clientSecret}")
+  @Value("${service.rtp-keycloak.clientSecret}")
   private String clientSecret;
 
   public String getToken() {
@@ -43,7 +43,8 @@ public class RtpMilClientService {
     ResponseEntity<TokenResponse> response =
         restTemplate.postForEntity(host + PATH, request, TokenResponse.class);
 
-    assert response.getBody() != null;
-    return response.getBody().getAccessToken();
+    TokenResponse body = response.getBody();
+    assert body != null;
+    return body.getAccessToken();
   }
 }
