@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.7.13"
+    "version": "0.7.13-1-PIDM-1730-fix-retrieve-flag-opt-in"
   },
   "servers": [
     {
