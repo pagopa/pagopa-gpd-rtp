@@ -9,5 +9,5 @@ import lombok.*;
 @Data
 public class PayeesPage {
   private List<Payee> payees;
-  private PageMetadata pageMetadata;
+  private PageMetadata page;
 }

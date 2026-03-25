@@ -42,8 +42,8 @@ public class OptinServiceImpl implements OptinService {
                 toCache.addAll(flagOptIns);
                 pageNumber++;
             } while (page != null
-                    && page.getPageMetadata() != null
-                    && pageNumber < page.getPageMetadata().getTotalPages());
+                    && page.getPage() != null
+                    && pageNumber < page.getPage().getTotalPages());
 
             this.redisCacheRepository.saveAll(toCache);
         } catch (Exception e) {
