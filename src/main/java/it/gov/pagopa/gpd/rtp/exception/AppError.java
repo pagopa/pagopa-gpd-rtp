@@ -82,6 +82,11 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Unable to download the attachment",
       "Unable to download the attachment from the blob storage"),
+  RETRY_DEAD_LETTER_UNSUCCESSFUL(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          "Retry dead letter messages unsuccessful",
+          "Retry unsuccessful, all messages failed: messages that failed and can be retried %s; messages that have been deleted and cannot be retried %s"
+  ),
   UNKNOWN(null, null, null);
 
   public final HttpStatus httpStatus;
