@@ -189,7 +189,7 @@ refresh-cache-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
-  envSecrets:
+  envSecret:
     !!merge <<: *envSecret
   tolerations:
     - key: dedicated
