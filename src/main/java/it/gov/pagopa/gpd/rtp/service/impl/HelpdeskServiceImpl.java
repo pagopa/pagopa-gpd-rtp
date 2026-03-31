@@ -64,7 +64,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         if (retriable.isEmpty() && nonRetriable.isEmpty()) {
             return "Retry successful, all messages have been sent to RTP eventhub";
         }
-        if((retriable.size() + nonRetriable.size()) == fileNames.size()){
+        if ((retriable.size() + nonRetriable.size()) == fileNames.size()) {
             throw new AppException(AppError.RETRY_DEAD_LETTER_UNSUCCESSFUL, retriable, nonRetriable);
         }
 
