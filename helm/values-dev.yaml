@@ -183,7 +183,57 @@ refresh-cache-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
-  envSecrets:
+  envSecret:
+    !!merge <<: *envSecret
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+retry-dead-letter-cron:
+  !!merge <<: *microservice-chart
+  schedule: "*/5 * * * *" # Every 5 minutes
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  failedJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "latest"
+    pullPolicy: "Always"
+  command:
+    - /bin/sh
+    - -c
+    - |
+      set -e
+
+      YEAR=$(date +%Y)
+      MONTH=$(date +%m)
+      DAY=$(date +%d)
+
+      BASE_URL="https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service"
+
+      RESPONSE=$(curl -s -k \
+        "${BASE_URL}/error-messages?year=${YEAR}&month=${MONTH}&day=${DAY}")
+
+      if [ -z "$RESPONSE" ] || [ "$RESPONSE" = "[]" ]; then
+        echo "No messages to retry"
+        exit 0
+      fi
+
+      POST_RESPONSE=$(curl -s -k -X POST \
+        -H "Content-Type: application/json" \
+        -d "$RESPONSE" \
+        "${BASE_URL}/error-messages/retry")
+
+      echo "${POST_RESPONSE}
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "150m"
+  envSecret:
     !!merge <<: *envSecret
   tolerations:
     - key: dedicated
