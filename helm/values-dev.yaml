@@ -196,12 +196,12 @@ retry-dead-letter-cron:
   successfulJobsHistoryLimit: "1"
   failedJobsHistoryLimit: "1"
   image:
-    repository: "curlimages/curl"
+    repository: "alpine/curl"
     tag: "latest"
     pullPolicy: "Always"
   command:
-    - /bin/sh
-    - -c
+    - "/bin/sh"
+    - "-c"
     - "set -e; BASE_URL=\"https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service\"; RESPONSE=$(curl -s -k \"${BASE_URL}/error-messages\"); if [ -z \"$RESPONSE\" ] || [ \"$RESPONSE\" = \"[]\" ]; then echo \"No messages to retry\"; exit 0; fi; POST_RESPONSE=$(curl -s -k -X POST -H \"Content-Type: application/json\" -d \"$RESPONSE\" \"${BASE_URL}/error-messages/retry\"); echo \"$POST_RESPONSE\""
   resources:
     requests:
