@@ -183,7 +183,7 @@ refresh-cache-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
-  envSecret:
+  envSecrets:
     !!merge <<: *envSecret
   tolerations:
     - key: dedicated
@@ -193,8 +193,6 @@ refresh-cache-cron:
 retry-dead-letter-cron:
   schedule: "*/5 * * * *" # Every 5 minutes
   timeZone: "Europe/Rome"
-  successfulJobsHistoryLimit: "1"
-  failedJobsHistoryLimit: "1"
   image:
     repository: "alpine/curl"
     tag: "latest"
