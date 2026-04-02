@@ -50,15 +50,13 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         for (String fileName : fileNames) {
             boolean deleteBlob = true;
             try {
-                boolean sent = retryMessage(fileName);
-                if (!sent) {
-                    throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
-                }
+                retryMessage(fileName);
+     
             } catch (AppException ex) {
                 if (AppError.RTP_MESSAGE_NOT_SENT.equals(ex.getAppErrorCode())) {
                     retriable.add(fileName);
                     deleteBlob = false;
-                } else if (AppError.DEAD_LETTER_MESSAGE_OUTDATED.equals(ex.getAppErrorCode())) {
+                } else {
                     ignored.add(fileName);
                 }
             } catch (JsonProcessingException ex) {
@@ -82,7 +80,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         );
     }
 
-    private boolean retryMessage(String fileName) throws JsonProcessingException {
+    private void retryMessage(String fileName) throws JsonProcessingException {
         DeadLetterMessage deadLetterMessage =
                 this.objectMapper.readValue(
                         new String(blobStorageClient.getJSONFromBlobStorage(fileName)),
@@ -95,7 +93,11 @@ public class HelpdeskServiceImpl implements HelpdeskService {
 
         verifyPaymentOptionWithDB(paymentOption.getAfter());
 
-        return this.ingestionService.retryDeadLetterMessage(paymentOption);
+        boolean sent = this.ingestionService.retryDeadLetterMessage(paymentOption);
+
+        if (!sent) {
+            throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
+        }
     }
 
     private void verifyPaymentOptionWithDB(PaymentOptionEvent valuesAfter) {
