@@ -82,10 +82,10 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Unable to download the attachment",
       "Unable to download the attachment from the blob storage"),
-  RETRY_DEAD_LETTER_UNSUCCESSFUL(
+  DEAD_LETTER_MESSAGE_OUTDATED(
           HttpStatus.UNPROCESSABLE_ENTITY,
-          "Retry dead letter messages unsuccessful",
-          "Retry unsuccessful, all messages failed: messages that failed and can be retried %s; messages that have been deleted and cannot be retried %s"
+          "Dead letter message is outdated",
+          "The dead letter message is older than the corresponding payment option stored in the database or the payment option has been deleted."
   ),
   UNKNOWN(null, null, null);
 

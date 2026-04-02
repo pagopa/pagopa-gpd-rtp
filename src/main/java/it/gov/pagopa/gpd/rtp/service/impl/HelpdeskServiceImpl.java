@@ -16,9 +16,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -43,39 +45,44 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     @Override
     public String retryMessages(List<String> fileNames) {
         List<String> retriable = new ArrayList<>();
-        List<String> nonRetriable = new ArrayList<>();
+        List<String> ignored = new ArrayList<>();
 
         for (String fileName : fileNames) {
+            boolean deleteBlob = true;
             try {
-                retryMessage(fileName);
+                boolean sent = retryMessage(fileName);
+                if (!sent) {
+                    throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
+                }
             } catch (AppException ex) {
                 if (AppError.RTP_MESSAGE_NOT_SENT.equals(ex.getAppErrorCode())) {
                     retriable.add(fileName);
-                } else {
-                    nonRetriable.add(fileName);
-                    blobStorageClient.deleteBlob(fileName);
+                    deleteBlob = false;
+                } else if (AppError.DEAD_LETTER_MESSAGE_OUTDATED.equals(ex.getAppErrorCode())) {
+                    ignored.add(fileName);
                 }
-            } catch (Exception ex) {
-                nonRetriable.add(fileName);
+            } catch (JsonProcessingException ex) {
+                ignored.add(fileName);
+            }
+            if (deleteBlob) {
                 blobStorageClient.deleteBlob(fileName);
             }
         }
 
-        if (retriable.isEmpty() && nonRetriable.isEmpty()) {
+        if (retriable.isEmpty() && ignored.isEmpty()) {
             return "Retry successful, all messages have been sent to RTP eventhub";
         }
-        if ((retriable.size() + nonRetriable.size()) == fileNames.size()) {
-            throw new AppException(AppError.RETRY_DEAD_LETTER_UNSUCCESSFUL, retriable, nonRetriable);
+        if (ignored.size() == fileNames.size()) {
+            return "All messages have been ignored because outdated or not processable";
         }
 
         return String.format(
-                "Retry partially successful: messages that failed and can be retried %s; messages that have been deleted and cannot be retried %s",
-                retriable,
-                nonRetriable
+                "Retry partially successful: this messages failed and can be retried %s",
+                retriable
         );
     }
 
-    private void retryMessage(String fileName) throws JsonProcessingException {
+    private boolean retryMessage(String fileName) throws JsonProcessingException {
         DeadLetterMessage deadLetterMessage =
                 this.objectMapper.readValue(
                         new String(blobStorageClient.getJSONFromBlobStorage(fileName)),
@@ -86,21 +93,23 @@ public class HelpdeskServiceImpl implements HelpdeskService {
             throw new AppException(AppError.JSON_NOT_PROCESSABLE);
         }
 
-        // Verify if paymentOption is present on DB replica
-        Long paymentOptionId = paymentOption.getAfter().getId();
-        Optional<PaymentOption> poFromDBReplica = paymentOptionRepository.findById(paymentOptionId);
-        if (poFromDBReplica.isEmpty()) {
-            throw new AppException(AppError.PAYMENT_OPTION_NOT_FOUND);
+        verifyPaymentOptionWithDB(paymentOption.getAfter());
+
+        return this.ingestionService.retryDeadLetterMessage(paymentOption);
+    }
+
+    private void verifyPaymentOptionWithDB(PaymentOptionEvent valuesAfter) {
+        PaymentOption poFromDBReplica =
+                paymentOptionRepository
+                        .findById(valuesAfter.getId())
+                        .orElseThrow(() -> new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED));
+        if (poFromDBReplica == null) {
+            throw new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED);
         }
-
-        boolean sent =
-                this.ingestionService.retryDeadLetterMessage(paymentOption);
-
-        if (sent) {
-            this.blobStorageClient.deleteBlob(fileName);
-            return;
+        Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
+        LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
+        if (poMessageDate.isBefore(poFromDBReplica.getLastUpdatedDate())) {
+            throw new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED);
         }
-
-        throw new AppException(AppError.RTP_MESSAGE_NOT_SENT);
     }
 }
