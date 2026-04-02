@@ -206,14 +206,10 @@ retry-dead-letter-cron:
     - |
       set -e
 
-      YEAR=$(date +%Y)
-      MONTH=$(date +%m)
-      DAY=$(date +%d)
-
       BASE_URL="https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service"
 
       RESPONSE=$(curl -s -k \
-        "${BASE_URL}/error-messages?year=${YEAR}&month=${MONTH}&day=${DAY}")
+        "${BASE_URL}/error-messages")
 
       if [ -z "$RESPONSE" ] || [ "$RESPONSE" = "[]" ]; then
         echo "No messages to retry"
