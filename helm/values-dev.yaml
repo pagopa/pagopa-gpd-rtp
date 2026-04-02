@@ -191,7 +191,6 @@ refresh-cache-cron:
       value: "gps"
       effect: NoSchedule
 retry-dead-letter-cron:
-  !!merge <<: *microservice-chart
   schedule: "*/5 * * * *" # Every 5 minutes
   timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
@@ -203,25 +202,24 @@ retry-dead-letter-cron:
   command:
     - /bin/sh
     - -c
-    - |
+    - >
       set -e
-
+  
       BASE_URL="https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service"
-
-      RESPONSE=$(curl -s -k \
-        "${BASE_URL}/error-messages")
-
+  
+      RESPONSE=$(curl -s -k "${BASE_URL}/error-messages")
+  
       if [ -z "$RESPONSE" ] || [ "$RESPONSE" = "[]" ]; then
         echo "No messages to retry"
         exit 0
       fi
-
+  
       POST_RESPONSE=$(curl -s -k -X POST \
         -H "Content-Type: application/json" \
         -d "$RESPONSE" \
         "${BASE_URL}/error-messages/retry")
-
-      echo "${POST_RESPONSE}"
+  
+      echo "$POST_RESPONSE"
   resources:
     requests:
       memory: "256Mi"
@@ -229,8 +227,6 @@ retry-dead-letter-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
-  envSecret:
-    !!merge <<: *envSecret
   tolerations:
     - key: dedicated
       operator: Equal
