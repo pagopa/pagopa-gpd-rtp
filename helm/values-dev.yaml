@@ -221,7 +221,7 @@ retry-dead-letter-cron:
         -d "$RESPONSE" \
         "${BASE_URL}/error-messages/retry")
 
-      echo "${POST_RESPONSE}
+      echo "${POST_RESPONSE}"
   resources:
     requests:
       memory: "256Mi"
