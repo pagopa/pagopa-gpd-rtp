@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
             boolean deleteBlob = true;
             try {
                 retryMessage(fileName);
-     
+
             } catch (AppException ex) {
                 if (AppError.RTP_MESSAGE_NOT_SENT.equals(ex.getAppErrorCode())) {
                     retriable.add(fileName);
@@ -110,7 +111,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         }
         Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
         LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
-        if (poMessageDate.isBefore(poFromDBReplica.getLastUpdatedDate())) {
+        if (poMessageDate.isBefore(poFromDBReplica.getLastUpdatedDate().truncatedTo(ChronoUnit.MILLIS))) {
             throw new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED);
         }
     }

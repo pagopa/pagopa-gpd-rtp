@@ -58,7 +58,7 @@ class HelpdeskServiceImplTest {
 
     @BeforeEach
     void setup() {
-        LocalDateTime dateNow = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+        LocalDateTime dateNow = LocalDateTime.now();
         paymentOptionFromDB.setLastUpdatedDate(dateNow);
         Long dateNowEvent = Timestamp.valueOf(dateNow.plusHours(2)).getTime() * 1000;
         paymentOptionEvent1.setLastUpdatedDate(dateNowEvent);
