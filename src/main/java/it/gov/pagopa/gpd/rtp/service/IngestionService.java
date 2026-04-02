@@ -20,5 +20,4 @@ public interface IngestionService {
      * @param paymentOption PaymentOption message
      */
     boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption);
-
 }
