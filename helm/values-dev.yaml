@@ -191,6 +191,7 @@ refresh-cache-cron:
       value: "gps"
       effect: NoSchedule
 retry-dead-letter-cron:
+  !!merge <<: *microservice-chart
   schedule: "*/5 * * * *" # Every 5 minutes
   timeZone: "Europe/Rome"
   image:
@@ -205,6 +206,8 @@ retry-dead-letter-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
+  envSecrets:
+    !!merge <<: *envSecret
   tolerations:
     - key: dedicated
       operator: Equal
