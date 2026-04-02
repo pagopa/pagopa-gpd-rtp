@@ -43,7 +43,7 @@ class RtpClientServiceTest {
         when(rtpKeycloakClientService.getToken()).thenReturn("token");
         List<Payee> payeeList = List.of(Payee.builder().payeeId("payeeId1").name("payeeName1").build(), Payee.builder().payeeId("payeeId2").name("payeeName2").build());
         PageMetadata pageMetadata = PageMetadata.builder().totalPages(1).page(0).totalElements(payeeList.size()).size(payeeList.size()).build();
-        PayeesPage page = PayeesPage.builder().payees(payeeList).pageMetadata(pageMetadata).build();
+        PayeesPage page = PayeesPage.builder().payees(payeeList).page(pageMetadata).build();
 
         URI uri =
                 UriComponentsBuilder.fromHttpUrl(host + "/payees/payees")

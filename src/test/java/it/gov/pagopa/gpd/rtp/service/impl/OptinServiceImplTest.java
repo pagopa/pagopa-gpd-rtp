@@ -51,7 +51,7 @@ class OptinServiceImplTest {
             .totalElements(payeeList.size())
             .size(payeeList.size())
             .build();
-    PayeesPage page = PayeesPage.builder().payees(payeeList).pageMetadata(pageMetadata).build();
+    PayeesPage page = PayeesPage.builder().payees(payeeList).page(pageMetadata).build();
     when(rtpClientService.payees(anyInt(), anyInt())).thenReturn(page);
 
     assertDoesNotThrow(() -> sut.optInRefresh());
@@ -75,7 +75,7 @@ class OptinServiceImplTest {
             .totalElements(payeeList.size())
             .size(payeeList.size())
             .build();
-    PayeesPage page = PayeesPage.builder().payees(payeeList).pageMetadata(pageMetadata).build();
+    PayeesPage page = PayeesPage.builder().payees(payeeList).page(pageMetadata).build();
     when(rtpClientService.payees(anyInt(), anyInt())).thenReturn(page);
     doThrow(new RuntimeException("error")).when(redisCacheRepository).saveAll(any());
 
