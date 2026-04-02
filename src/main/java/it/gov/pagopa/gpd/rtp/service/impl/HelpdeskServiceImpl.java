@@ -106,9 +106,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
                 paymentOptionRepository
                         .findById(valuesAfter.getId())
                         .orElseThrow(() -> new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED));
-        if (poFromDBReplica == null) {
-            throw new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED);
-        }
+
         Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
         LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
         if (poMessageDate.isBefore(poFromDBReplica.getLastUpdatedDate().truncatedTo(ChronoUnit.MILLIS))) {

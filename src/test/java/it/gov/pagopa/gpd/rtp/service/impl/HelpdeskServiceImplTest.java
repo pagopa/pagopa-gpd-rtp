@@ -170,6 +170,25 @@ class HelpdeskServiceImplTest {
     }
 
     @Test
+    void retryMessages_KO_JsonProcessingException() throws JsonProcessingException {
+        paymentOptionEvent1.setLastUpdatedDate(1000L);
+        DeadLetterMessage deadLetterMessage =
+                DeadLetterMessage.builder()
+                        .id("id")
+                        .originalMessage(DataCaptureMessage.<PaymentOptionEvent>builder().build())
+                        .build();
+        byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
+        when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
+        when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
+        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME)));
+
+        verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
+        verify(paymentOptionRepository, never()).findById(PAYMENT_OPTION_ID);
+        verify(ingestionService, never()).retryDeadLetterMessage(any(DataCaptureMessage.class));
+        verify(blobStorageClient).deleteBlob(FILENAME);
+    }
+
+    @Test
     void retryMessages_KO_message_outdated() throws JsonProcessingException {
         paymentOptionEvent1.setLastUpdatedDate(1000L);
         DeadLetterMessage deadLetterMessage =
@@ -180,7 +199,6 @@ class HelpdeskServiceImplTest {
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.of(paymentOptionFromDB));
-        when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME)));
 
@@ -228,7 +246,6 @@ class HelpdeskServiceImplTest {
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME_2)).thenReturn(json2);
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.empty());
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID_2)).thenReturn(Optional.empty());
-        when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME_2)).thenReturn(true);
         assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
@@ -263,7 +280,6 @@ class HelpdeskServiceImplTest {
         when(ingestionService.retryDeadLetterMessage(deadLetterMessage.getOriginalMessage())).thenReturn(true);
         when(ingestionService.retryDeadLetterMessage(deadLetterMessage2.getOriginalMessage())).thenReturn(false);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
-        when(blobStorageClient.deleteBlob(FILENAME_2)).thenReturn(true);
         assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
