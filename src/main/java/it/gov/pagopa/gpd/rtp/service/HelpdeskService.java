@@ -1,6 +1,7 @@
 package it.gov.pagopa.gpd.rtp.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.gpd.rtp.model.helpdesk.RetryDeadLetterResponse;
+
 import java.util.List;
 
 public interface HelpdeskService {
@@ -26,6 +27,7 @@ public interface HelpdeskService {
    * Retry failed PaymentOption Messages by JSON blob filename
    *
    * @param fileName A list of Blob filenames
+   * @param minutesOffset Integer to ignore messages newer than the defined minutes
    */
-  String retryMessages(List<String> fileName) throws JsonProcessingException;
+  RetryDeadLetterResponse retryMessages(List<String> fileName, int minutesOffset);
 }

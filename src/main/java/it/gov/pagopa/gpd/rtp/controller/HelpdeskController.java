@@ -1,6 +1,5 @@
 package it.gov.pagopa.gpd.rtp.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -9,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.gov.pagopa.gpd.rtp.model.ProblemJson;
+import it.gov.pagopa.gpd.rtp.model.helpdesk.RetryDeadLetterResponse;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -157,7 +157,11 @@ public class HelpdeskController {
                     schema = @Schema(implementation = ProblemJson.class)))
       })
   @Operation(summary = "Retry a list of error message")
-  public String retryMessages(@RequestBody List<String> filename) throws JsonProcessingException {
-    return helpdeskService.retryMessages(filename);
+  public RetryDeadLetterResponse retryMessages(
+          @Parameter(description = "Ignore the messages newer than the defined minutes", example = "5")
+          @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
+          int minutesOffset,
+          @RequestBody List<String> filename) {
+    return helpdeskService.retryMessages(filename, minutesOffset);
   }
 }
