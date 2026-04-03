@@ -197,14 +197,9 @@ retry-dead-letter-cron:
   image:
     repository: alpine/curl
     tag: latest
+  command: ["/bin/sh", "/mnt/file-config/retry-dead-letter.sh"]
   configMapFromFile:
-    retry-script:
-      mountPath: /scripts
-      files:
-        - retry-dead-letter.sh
-  command:
-    - "/bin/sh"
-    - "/scripts/retry-dead-letter.sh"
+    retry-dead-letter.sh: files/retry-dead-letter.sh
   resources:
     requests:
       memory: "256Mi"
