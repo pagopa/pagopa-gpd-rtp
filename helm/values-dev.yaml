@@ -195,17 +195,16 @@ retry-dead-letter-cron:
   schedule: "*/5 * * * *" # Every 5 minutes
   timeZone: "Europe/Rome"
   image:
-    repository: "alpine/curl"
-    tag: "latest"
-    pullPolicy: "Always"
-  command:
-    - "/bin/sh"
-    - "/scripts/retry-dead-letter.sh"
-  configMapFromFile:
-    retry-script:
-      mountPath: /scripts
-      files:
-        - retry-dead-letter.sh
+    repository: openjdk
+    tag: 8u102-jdk
+    pullPolicy: Always
+  command: ["/bin/bash", "-c", "/mnt/file-azure/retry-dl/scripts/retry-dead-letter.sh"]
+  providedVolumeMount:
+    create: true
+    folders:
+      - name: retry-dl
+        readOnly: true
+        mountOptions: "dir_mode=0777,file_mode=0777,cache=strict,actimeo=30"
   resources:
     requests:
       memory: "256Mi"
@@ -213,8 +212,8 @@ retry-dead-letter-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
-  envSecrets:
-    !!merge <<: *envSecret
+  envConfig:
+    BASE_MNT: "/mnt/file-azure/retry-dl/"
   tolerations:
     - key: dedicated
       operator: Equal
