@@ -202,7 +202,10 @@ retry-dead-letter-cron:
     - "/bin/sh"
     - "/scripts/retry-dead-letter.sh"
   configMapFromFile:
-    retry-dead-letter.sh: scripts/retry-dead-letter.sh
+    retry-script:
+      mountPath: /scripts
+      files:
+        - retry-dead-letter.sh
   resources:
     requests:
       memory: "256Mi"
