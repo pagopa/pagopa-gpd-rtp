@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.7.16</version>
+  <version>0.7.16-1-PIDM-1668-cron-retry-dead-letter</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 
