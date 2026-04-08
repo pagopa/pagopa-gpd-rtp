@@ -158,7 +158,7 @@ public class HelpdeskController {
       })
   @Operation(summary = "Retry a list of error message")
   public RetryDeadLetterResponse retryMessages(
-          @Parameter(description = "Ignore the messages newer than the defined minutes", example = "5")
+          @Parameter(description = "Ignore the messages newer than the defined minutes (default 2)", example = "2")
           @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
           int minutesOffset,
           @RequestBody List<String> filename) {

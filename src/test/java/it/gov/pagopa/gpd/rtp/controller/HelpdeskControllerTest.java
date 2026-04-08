@@ -48,7 +48,7 @@ class HelpdeskControllerTest {
   }
 
   @Test
-  void retryMessage_OK() throws Exception {
+  void retryMessage_OK_MinutesOffset_Default() throws Exception {
     when(helpdeskService.retryMessages(eq(Collections.singletonList(FILENAME)), anyInt())).thenReturn(new RetryDeadLetterResponse());
     mockMvc
         .perform(
@@ -56,6 +56,18 @@ class HelpdeskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("[\"%s\"]", FILENAME)))
         .andExpect(status().isOk());
-    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME), 5);
+    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME), 2);
+  }
+
+  @Test
+  void retryMessage_OK_MinutesOffset_Defined() throws Exception {
+    when(helpdeskService.retryMessages(eq(Collections.singletonList(FILENAME)), anyInt())).thenReturn(new RetryDeadLetterResponse());
+    mockMvc
+            .perform(
+                    post(String.format("/error-messages/retry?minutesOffset=10"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(String.format("[\"%s\"]", FILENAME)))
+            .andExpect(status().isOk());
+    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME), 10);
   }
 }
