@@ -71,8 +71,10 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         if(minutesOffset != 0){
             // Verify message timestamp to ignore messages newer than the defined minutes
             try {
-                Instant instant = Instant.parse(fileName.substring(fileName.lastIndexOf("_") + 1));
-                if (instant != null && instant.isAfter(LocalDateTime.now().minusMinutes(minutesOffset).toInstant(ZoneOffset.UTC))) {
+                int startingIndex = fileName.lastIndexOf("_") + 1;
+                int endingIndex = fileName.lastIndexOf(".");
+                Instant instant = Instant.parse(fileName.substring(startingIndex, endingIndex));
+                if (instant != null && instant.isAfter(Instant.now().minus(minutesOffset, ChronoUnit.MINUTES))) {
                     return RetryDeadLetterEnum.RETRY_POSTPONED;
                 }
             } catch (DateTimeParseException ignored) {

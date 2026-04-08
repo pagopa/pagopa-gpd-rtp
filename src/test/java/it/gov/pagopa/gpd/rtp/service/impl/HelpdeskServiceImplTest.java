@@ -20,8 +20,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,17 +31,17 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {HelpdeskServiceImpl.class})
 class HelpdeskServiceImplTest {
-    public static final String YEAR = "2025";
-    public static final String MONTH = "6";
-    public static final String DAY = "17";
-    public static final String HOUR = "12";
-    public static final String FILENAME = "testFilename.json";
-    public static final String FILENAME_2 = "testFilename_2.json";
-    public static final long PAYMENT_OPTION_ID = 100L;
-    public static final PaymentOptionEvent paymentOptionEvent1 = PaymentOptionEvent.builder().id(PAYMENT_OPTION_ID).build();
-    public static final long PAYMENT_OPTION_ID_2 = 102L;
-    public static final PaymentOptionEvent paymentOptionEvent2 = PaymentOptionEvent.builder().id(PAYMENT_OPTION_ID_2).build();
-    public static final PaymentOption paymentOptionFromDB = new PaymentOption();
+    private static final String YEAR = "2025";
+    private static final String MONTH = "6";
+    private static final String DAY = "17";
+    private static final String HOUR = "12";
+    private static final long PAYMENT_OPTION_ID = 100L;
+    private static final PaymentOptionEvent paymentOptionEvent1 = PaymentOptionEvent.builder().id(PAYMENT_OPTION_ID).build();
+    private static final long PAYMENT_OPTION_ID_2 = 102L;
+    private static final PaymentOptionEvent paymentOptionEvent2 = PaymentOptionEvent.builder().id(PAYMENT_OPTION_ID_2).build();
+    private static final PaymentOption paymentOptionFromDB = new PaymentOption();
+    private static final String FILENAME = String.format("2026/05/03/100/ERROR_%s.json", Instant.now());
+    private static final String FILENAME_2 = String.format("2026/05/03/102/ERROR_2_%s.json", Instant.now());
 
     @MockBean
     private BlobStorageClient blobStorageClient;
@@ -59,8 +59,8 @@ class HelpdeskServiceImplTest {
     @BeforeEach
     void setup() {
         LocalDateTime dateNow = LocalDateTime.now();
-        paymentOptionFromDB.setLastUpdatedDate(dateNow);
         Long dateNowEvent = Timestamp.valueOf(dateNow.plusHours(2)).getTime() * 1000;
+        paymentOptionFromDB.setLastUpdatedDate(dateNow);
         paymentOptionEvent1.setLastUpdatedDate(dateNowEvent);
         paymentOptionEvent2.setLastUpdatedDate(dateNowEvent);
     }
@@ -95,7 +95,7 @@ class HelpdeskServiceImplTest {
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.of(paymentOptionFromDB));
         when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME)));
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(paymentOptionRepository).findById(PAYMENT_OPTION_ID);
@@ -117,7 +117,7 @@ class HelpdeskServiceImplTest {
         when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME_2)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
+        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME_2);
@@ -148,7 +148,7 @@ class HelpdeskServiceImplTest {
         when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME_2)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
+        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME_2);
@@ -160,10 +160,30 @@ class HelpdeskServiceImplTest {
     }
 
     @Test
+    void retryMessages_KO_message_too_new() throws JsonProcessingException {
+        paymentOptionEvent1.setLastUpdatedDate(1000L);
+        DeadLetterMessage deadLetterMessage =
+                DeadLetterMessage.builder()
+                        .id("id")
+                        .originalMessage(DataCaptureMessage.<PaymentOptionEvent>builder().after(paymentOptionEvent1).build())
+                        .build();
+        byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
+        when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
+        when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.of(paymentOptionFromDB));
+        when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME), 5));
+
+        verify(blobStorageClient, never()).getJSONFromBlobStorage(FILENAME);
+        verify(paymentOptionRepository, never()).findById(PAYMENT_OPTION_ID);
+        verify(ingestionService, never()).retryDeadLetterMessage(any(DataCaptureMessage.class));
+        verify(blobStorageClient, never()).deleteBlob(FILENAME);
+    }
+
+    @Test
     void retryMessages_KO_retrieve_JSON() {
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME))
                 .thenThrow(new AppException(AppError.BLOB_STORAGE_ATTACHMENT_NOT_FOUND));
-        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME)));
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME), 0));
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(ingestionService, never()).retryDeadLetterMessage(any());
         verify(blobStorageClient).deleteBlob(any());
@@ -180,7 +200,7 @@ class HelpdeskServiceImplTest {
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME)));
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList((FILENAME)), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(paymentOptionRepository, never()).findById(PAYMENT_OPTION_ID);
@@ -200,7 +220,7 @@ class HelpdeskServiceImplTest {
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.of(paymentOptionFromDB));
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME)));
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(paymentOptionRepository, times(1)).findById(PAYMENT_OPTION_ID);
@@ -218,10 +238,8 @@ class HelpdeskServiceImplTest {
         byte[] json = objectMapper.writeValueAsString(deadLetterMessage).getBytes();
         when(blobStorageClient.getJSONFromBlobStorage(FILENAME)).thenReturn(json);
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID)).thenReturn(Optional.of(paymentOptionFromDB));
-        doThrow(new AppException(AppError.RTP_MESSAGE_NOT_SENT))
-                .when(ingestionService)
-                .retryDeadLetterMessage(any(DataCaptureMessage.class));
-        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME)));
+        when(ingestionService.retryDeadLetterMessage(any(DataCaptureMessage.class))).thenReturn(false);
+        assertDoesNotThrow(() -> sut.retryMessages(Collections.singletonList(FILENAME), 0));
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(paymentOptionRepository).findById(PAYMENT_OPTION_ID);
         verify(ingestionService).retryDeadLetterMessage(any(DataCaptureMessage.class));
@@ -248,7 +266,7 @@ class HelpdeskServiceImplTest {
         when(paymentOptionRepository.findById(PAYMENT_OPTION_ID_2)).thenReturn(Optional.empty());
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
         when(blobStorageClient.deleteBlob(FILENAME_2)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
+        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME_2);
@@ -280,7 +298,7 @@ class HelpdeskServiceImplTest {
         when(ingestionService.retryDeadLetterMessage(deadLetterMessage.getOriginalMessage())).thenReturn(true);
         when(ingestionService.retryDeadLetterMessage(deadLetterMessage2.getOriginalMessage())).thenReturn(false);
         when(blobStorageClient.deleteBlob(FILENAME)).thenReturn(true);
-        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2)));
+        assertDoesNotThrow(() -> sut.retryMessages(List.of(FILENAME, FILENAME_2), 0));
 
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME);
         verify(blobStorageClient).getJSONFromBlobStorage(FILENAME_2);

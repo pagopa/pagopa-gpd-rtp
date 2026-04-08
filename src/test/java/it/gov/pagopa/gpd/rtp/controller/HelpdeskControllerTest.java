@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import it.gov.pagopa.gpd.rtp.model.helpdesk.RetryDeadLetterResponse;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import java.util.Collections;
 import java.util.List;
@@ -48,13 +49,13 @@ class HelpdeskControllerTest {
 
   @Test
   void retryMessage_OK() throws Exception {
-    when(helpdeskService.retryMessages(Collections.singletonList(FILENAME))).thenReturn("OK");
+    when(helpdeskService.retryMessages(eq(Collections.singletonList(FILENAME)), anyInt())).thenReturn(new RetryDeadLetterResponse());
     mockMvc
         .perform(
             post(String.format("/error-messages/retry"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("[\"%s\"]", FILENAME)))
         .andExpect(status().isOk());
-    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME));
+    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME), 5);
   }
 }
