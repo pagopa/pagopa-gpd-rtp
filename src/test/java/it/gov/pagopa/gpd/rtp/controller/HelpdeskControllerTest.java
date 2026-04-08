@@ -52,7 +52,7 @@ class HelpdeskControllerTest {
     when(helpdeskService.retryMessages(eq(Collections.singletonList(FILENAME)), anyInt())).thenReturn(new RetryDeadLetterResponse());
     mockMvc
         .perform(
-            post(String.format("/error-messages/retry"))
+            post("/error-messages/retry")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("[\"%s\"]", FILENAME)))
         .andExpect(status().isOk());
@@ -64,7 +64,7 @@ class HelpdeskControllerTest {
     when(helpdeskService.retryMessages(eq(Collections.singletonList(FILENAME)), anyInt())).thenReturn(new RetryDeadLetterResponse());
     mockMvc
             .perform(
-                    post(String.format("/error-messages/retry?minutesOffset=10"))
+                    post("/error-messages/retry?minutesOffset=10")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(String.format("[\"%s\"]", FILENAME)))
             .andExpect(status().isOk());
