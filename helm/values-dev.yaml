@@ -203,7 +203,7 @@ retry-dead-letter-cron:
   command:
     - "sh"
     - "-c"
-    - "RESPONSE=$(curl -k -X POST -m 300 -sS -o /tmp/resp.txt -w \"%{http_code}\" https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all); echo \"HTTP_STATUS:$RESPONSE\"; cat /tmp/resp.txt"
+    - "curl -k -X POST -m 300 https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all; sleep 2"
   resources:
     requests:
       memory: "256Mi"
