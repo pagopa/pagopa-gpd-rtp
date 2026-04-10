@@ -26,8 +26,8 @@ public interface HelpdeskService {
   /**
    * Retry failed PaymentOption Messages by JSON blob filename
    *
-   * @param fileName A list of Blob filenames
+   * @param fileNames A list of Blob filenames
    * @param minutesOffset Integer to ignore messages newer than the defined minutes
    */
-  RetryDeadLetterResponse retryMessages(List<String> fileName, int minutesOffset);
+  RetryDeadLetterResponse retryMessages(List<String> fileNames, int minutesOffset);
 }

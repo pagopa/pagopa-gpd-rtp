@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.gpd.rtp.client.BlobStorageClient;
 import it.gov.pagopa.gpd.rtp.entity.PaymentOption;
@@ -50,7 +51,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     public RetryDeadLetterResponse retryMessages(List<String> fileNames, int minutesOffset) {
         Map<RetryDeadLetterEnum, List<String>> retryOutcomes = Map.of(
                 RetryDeadLetterEnum.RETRY_SUCCESSFUL, new ArrayList<>(),
-                RetryDeadLetterEnum.RETRY_IGNORED, new ArrayList<>(),
+                RetryDeadLetterEnum.RETRY_DISCARDED, new ArrayList<>(),
                 RetryDeadLetterEnum.RETRY_POSTPONED, new ArrayList<>(),
                 RetryDeadLetterEnum.RETRY_FAILED, new ArrayList<>()
         );
@@ -59,7 +60,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
             RetryDeadLetterEnum outcome = retryMessage(fileName, minutesOffset);
 
             retryOutcomes.get(outcome).add(fileName);
-            if (outcome.equals(RetryDeadLetterEnum.RETRY_SUCCESSFUL) || outcome.equals(RetryDeadLetterEnum.RETRY_IGNORED)) {
+            if (outcome.equals(RetryDeadLetterEnum.RETRY_SUCCESSFUL) || outcome.equals(RetryDeadLetterEnum.RETRY_DISCARDED)) {
                 blobStorageClient.deleteBlob(fileName);
             }
         }
@@ -68,7 +69,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     }
 
     private RetryDeadLetterEnum retryMessage(String fileName, int minutesOffset) {
-        if(minutesOffset != 0){
+        if (minutesOffset != 0) {
             // Verify message timestamp to ignore messages newer than the defined minutes
             try {
                 int startingIndex = fileName.lastIndexOf("_") + 1;
@@ -95,9 +96,8 @@ public class HelpdeskServiceImpl implements HelpdeskService {
             }
 
             verifyPaymentOptionWithDB(paymentOption.getAfter());
-
-        } catch (Exception e) {
-            return RetryDeadLetterEnum.RETRY_IGNORED;
+        } catch (AppException | JsonProcessingException e) {
+            return RetryDeadLetterEnum.RETRY_DISCARDED;
         }
 
         boolean sent = this.ingestionService.retryDeadLetterMessage(paymentOption);

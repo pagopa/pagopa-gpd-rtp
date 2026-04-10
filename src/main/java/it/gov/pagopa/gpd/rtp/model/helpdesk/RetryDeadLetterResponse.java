@@ -12,8 +12,8 @@ import java.util.Map;
 public class RetryDeadLetterResponse {
     @Schema(description = "Messages successfully retried")
     private RetryDeadLetterInfo retrySuccessful;
-    @Schema(description = "Messages ignored because outdated or not processable")
-    private RetryDeadLetterInfo retryIgnored;
+    @Schema(description = "Messages discarded because outdated or not processable")
+    private RetryDeadLetterInfo retryDiscarded;
     @Schema(description = "Messages ignored because newer than the minutes offset defined in the request (default 2)")
     private RetryDeadLetterInfo retryPostponed;
     @Schema(description = "Messages failed to be sent to eventhub, need a retry")
@@ -22,7 +22,7 @@ public class RetryDeadLetterResponse {
 
     public RetryDeadLetterResponse(int totalCount, Map<RetryDeadLetterEnum, List<String>> retryOutcomes){
         this.retrySuccessful = new RetryDeadLetterInfo(retryOutcomes.get(RetryDeadLetterEnum.RETRY_SUCCESSFUL));
-        this.retryIgnored = new RetryDeadLetterInfo(retryOutcomes.get(RetryDeadLetterEnum.RETRY_IGNORED));
+        this.retryDiscarded = new RetryDeadLetterInfo(retryOutcomes.get(RetryDeadLetterEnum.RETRY_DISCARDED));
         this.retryPostponed = new RetryDeadLetterInfo(retryOutcomes.get(RetryDeadLetterEnum.RETRY_POSTPONED));
         this.retryFailed = new RetryDeadLetterInfo(retryOutcomes.get(RetryDeadLetterEnum.RETRY_FAILED));
         this.totalCount = totalCount;
