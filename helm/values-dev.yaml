@@ -201,13 +201,9 @@ retry-dead-letter-cron:
     tag: "latest"
     pullPolicy: "Always"
   command:
-    - "curl"
-    - "-k"
-    - "-X"
-    - "POST"
-    - "-m"
-    - "\"300\""
-    - "https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all"
+    - "sh"
+    - "-c"
+    - "curl -k -X POST -m 300 -sS -w '\nHTTP_STATUS:%{http_code}\n' https://weudev.gps.internal.dev.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all; echo 'EXIT_CODE:'$?"
   resources:
     requests:
       memory: "256Mi"
