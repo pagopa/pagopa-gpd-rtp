@@ -16,6 +16,7 @@ import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
+import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
+import static org.springframework.messaging.simp.stomp.StompHeaders.MESSAGE_ID;
 
 @Service
 @Slf4j
@@ -59,8 +62,11 @@ public class HelpdeskServiceImpl implements HelpdeskService {
 
         for (String fileName : fileNames) {
             RetryDeadLetterEnum outcome = retryMessage(fileName, minutesOffset);
+            MDC.put(RTP_RETRY_OUTCOME, String.valueOf(outcome));
 
             retryOutcomes.get(outcome).add(fileName);
+            log.info("Dead letter message {} retried with outcome {}", fileName, outcome);
+            removeMDCDeadLetterFields();
             if (outcome.equals(RetryDeadLetterEnum.RETRY_SUCCESSFUL) || outcome.equals(RetryDeadLetterEnum.RETRY_DISCARDED)) {
                 blobStorageClient.deleteBlob(fileName);
             }
@@ -85,6 +91,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         DataCaptureMessage<PaymentOptionEvent> paymentOption;
         try {
             paymentOption = getPaymentOptionEventDataCaptureMessage(fileName);
+            setMDCPaymentOptionInfo(paymentOption);
 
             verifyPaymentOptionWithDB(paymentOption.getAfter());
         } catch (AppException | JsonProcessingException e) {
@@ -93,8 +100,10 @@ public class HelpdeskServiceImpl implements HelpdeskService {
 
         boolean sent = this.ingestionService.retryDeadLetterMessage(paymentOption);
         if (sent) {
+            MDC.put(RTP_SENT_STATUS, "OK");
             return RetryDeadLetterEnum.RETRY_SUCCESSFUL;
         }
+        MDC.put(RTP_SENT_STATUS, "KO");
         return RetryDeadLetterEnum.RETRY_FAILED;
     }
 
@@ -104,6 +113,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
                 this.objectMapper.readValue(
                         new String(blobStorageClient.getJSONFromBlobStorage(fileName)),
                         DeadLetterMessage.class);
+        MDC.put(MESSAGE_ID, String.valueOf(deadLetterMessage.getId()));
 
         paymentOption = deadLetterMessage.getOriginalMessage();
         if (paymentOption == null || paymentOption.getAfter() == null) {
