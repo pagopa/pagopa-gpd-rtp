@@ -38,13 +38,12 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 
 @Service
@@ -306,8 +305,7 @@ public class IngestionServiceImpl implements IngestionService {
         if (poFromDBReplica == null) {
             throw new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND);
         }
-        Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
-        LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
+        LocalDateTime poMessageDate = getLocalDateTimeFromLong(valuesAfter.getLastUpdatedDate());
         if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
             throw new FailAndPostpone(AppError.DB_REPLICA_NOT_UPDATED);
         }

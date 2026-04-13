@@ -1,8 +1,13 @@
 package it.gov.pagopa.gpd.rtp.util;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommonUtility {
@@ -40,5 +45,16 @@ public class CommonUtility {
       return null;
     }
     return input.replaceAll("[^A-Za-z0-9./:_-]", "_");
+  }
+
+  /**
+   * Convert date from long to LocalDatetime
+   * @param dateLong Date in long format
+   * @return date formatted in LocalDateTime
+   */
+  @NotNull
+  public static LocalDateTime getLocalDateTimeFromLong(long dateLong) {
+    Instant poMessageInstant = Instant.ofEpochMilli(dateLong / 1000);
+    return LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
   }
 }

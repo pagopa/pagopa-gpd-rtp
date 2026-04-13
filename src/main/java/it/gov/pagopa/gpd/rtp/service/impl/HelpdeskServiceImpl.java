@@ -20,12 +20,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 
 @Service
 @Slf4j
@@ -72,9 +73,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         if (minutesOffset != 0) {
             // Verify message timestamp to ignore messages newer than the defined minutes
             try {
-                int startingIndex = fileName.lastIndexOf("_") + 1;
-                int endingIndex = fileName.lastIndexOf(".");
-                Instant instant = Instant.parse(fileName.substring(startingIndex, endingIndex));
+                Instant instant = getInstantFromFilename(fileName);
                 if (instant != null && instant.isAfter(Instant.now().minus(minutesOffset, ChronoUnit.MINUTES))) {
                     return RetryDeadLetterEnum.RETRY_POSTPONED;
                 }
@@ -85,15 +84,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
 
         DataCaptureMessage<PaymentOptionEvent> paymentOption;
         try {
-            DeadLetterMessage deadLetterMessage =
-                    this.objectMapper.readValue(
-                            new String(blobStorageClient.getJSONFromBlobStorage(fileName)),
-                            DeadLetterMessage.class);
-
-            paymentOption = deadLetterMessage.getOriginalMessage();
-            if (paymentOption == null || paymentOption.getAfter() == null) {
-                throw new AppException(AppError.JSON_NOT_PROCESSABLE);
-            }
+            paymentOption = getPaymentOptionEventDataCaptureMessage(fileName);
 
             verifyPaymentOptionWithDB(paymentOption.getAfter());
         } catch (AppException | JsonProcessingException e) {
@@ -107,16 +98,37 @@ public class HelpdeskServiceImpl implements HelpdeskService {
         return RetryDeadLetterEnum.RETRY_FAILED;
     }
 
+    private DataCaptureMessage<PaymentOptionEvent> getPaymentOptionEventDataCaptureMessage(String fileName) throws JsonProcessingException {
+        DataCaptureMessage<PaymentOptionEvent> paymentOption;
+        DeadLetterMessage deadLetterMessage =
+                this.objectMapper.readValue(
+                        new String(blobStorageClient.getJSONFromBlobStorage(fileName)),
+                        DeadLetterMessage.class);
+
+        paymentOption = deadLetterMessage.getOriginalMessage();
+        if (paymentOption == null || paymentOption.getAfter() == null) {
+            throw new AppException(AppError.JSON_NOT_PROCESSABLE);
+        }
+        return paymentOption;
+    }
+
+    private static Instant getInstantFromFilename(String fileName) {
+        int instantStartIndex = fileName.lastIndexOf("_") + 1;
+        int fileFormatIndex = fileName.lastIndexOf(".");
+        return Instant.parse(fileName.substring(instantStartIndex, fileFormatIndex));
+    }
+
     private void verifyPaymentOptionWithDB(PaymentOptionEvent valuesAfter) {
         PaymentOption poFromDBReplica =
                 paymentOptionRepository
                         .findById(valuesAfter.getId())
                         .orElseThrow(() -> new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED));
 
-        Instant poMessageInstant = Instant.ofEpochMilli(valuesAfter.getLastUpdatedDate() / 1000);
-        LocalDateTime poMessageDate = LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
+        LocalDateTime poMessageDate = getLocalDateTimeFromLong(valuesAfter.getLastUpdatedDate());
         if (poMessageDate.isBefore(poFromDBReplica.getLastUpdatedDate().truncatedTo(ChronoUnit.MILLIS))) {
             throw new AppException(AppError.DEAD_LETTER_MESSAGE_OUTDATED);
         }
     }
+
+
 }
