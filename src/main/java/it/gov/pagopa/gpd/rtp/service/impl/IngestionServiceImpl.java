@@ -289,9 +289,7 @@ public class IngestionServiceImpl implements IngestionService {
                 paymentOptionRepository
                         .findById(valuesAfter.getId())
                         .orElseThrow(() -> new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND));
-        if (poFromDBReplica == null) {
-            throw new FailAndPostpone(AppError.PAYMENT_OPTION_NOT_FOUND);
-        }
+
         LocalDateTime poMessageDate = getLocalDateTimeFromLong(valuesAfter.getLastUpdatedDate());
         if (poFromDBReplica.getLastUpdatedDate().isBefore(poMessageDate)) {
             throw new FailAndPostpone(AppError.DB_REPLICA_NOT_UPDATED);
