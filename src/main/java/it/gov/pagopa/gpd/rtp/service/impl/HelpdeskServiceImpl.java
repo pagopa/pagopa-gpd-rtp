@@ -14,6 +14,7 @@ import it.gov.pagopa.gpd.rtp.model.helpdesk.RetryDeadLetterResponse;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
+import it.gov.pagopa.gpd.rtp.util.CommonUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,6 @@ import java.util.Map;
 
 import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
-import static org.springframework.messaging.simp.stomp.StompHeaders.MESSAGE_ID;
 
 @Service
 @Slf4j
@@ -65,7 +64,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
             MDC.put(RTP_RETRY_OUTCOME, String.valueOf(outcome));
 
             retryOutcomes.get(outcome).add(fileName);
-            log.info("Dead letter message {} retried with outcome {}", fileName, outcome);
+            log.info("Dead letter message {} retried with outcome {}", CommonUtility.sanitizeLogInput(fileName), outcome);
             removeMDCDeadLetterFields();
             if (outcome.equals(RetryDeadLetterEnum.RETRY_SUCCESSFUL) || outcome.equals(RetryDeadLetterEnum.RETRY_DISCARDED)) {
                 blobStorageClient.deleteBlob(fileName);
@@ -83,7 +82,7 @@ public class HelpdeskServiceImpl implements HelpdeskService {
                 if (instant != null && instant.isAfter(Instant.now().minus(minutesOffset, ChronoUnit.MINUTES))) {
                     return RetryDeadLetterEnum.RETRY_POSTPONED;
                 }
-            } catch (DateTimeParseException ignored) {
+            } catch (Exception ignored) {
                 // If date not parsable continue
             }
         }
