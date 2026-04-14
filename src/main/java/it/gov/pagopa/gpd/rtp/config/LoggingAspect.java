@@ -30,12 +30,14 @@ import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
 @Component
 @Slf4j
 public class LoggingAspect {
-
-    @Autowired
-    HttpServletRequest httRequest;
-
-    @Autowired
+    HttpServletRequest httpRequest;
     HttpServletResponse httpResponse;
+
+    @Autowired
+    LoggingAspect(HttpServletRequest httpRequest, HttpServletResponse httpResponse){
+        this.httpRequest = httpRequest;
+        this.httpResponse = httpResponse;
+    }
 
     @Value("${info.application.name}")
     private String name;
