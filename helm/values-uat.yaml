@@ -195,30 +195,3 @@ refresh-cache-cron:
       operator: Equal
       value: "gps"
       effect: NoSchedule
-retry-dead-letter-cron:
-  !!merge <<: *microservice-chart
-  schedule: "*/5 * * * *"
-  timeZone: "Europe/Rome"
-  successfulJobsHistoryLimit: "1"
-  image:
-    repository: "curlimages/curl"
-    tag: "8.19.0"
-    pullPolicy: "Always"
-  command:
-    - "sh"
-    - "-c"
-    - "curl -sS -X POST -m 300 https://weuuat.gps.internal.uat.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all; echo END"
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "150m"
-  envSecrets:
-    !!merge <<: *envSecret
-  tolerations:
-    - key: dedicated
-      operator: Equal
-      value: "gps"
-      effect: NoSchedule
