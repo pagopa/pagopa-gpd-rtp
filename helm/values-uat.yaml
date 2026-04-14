@@ -173,7 +173,7 @@ refresh-cache-cron:
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
-    tag: "latest"
+    tag: "8.19.0"
     pullPolicy: "Always"
   command:
     - "curl"
@@ -202,7 +202,7 @@ retry-dead-letter-cron:
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
-    tag: "latest"
+    tag: "8.19.0"
     pullPolicy: "Always"
   command:
     - "sh"
