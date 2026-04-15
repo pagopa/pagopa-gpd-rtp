@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.7.16-3-PIDM-1668-cron-retry-dead-letter"
+    "version": "0.8.0"
   },
   "servers": [
     {
