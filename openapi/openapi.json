@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.7.16"
+    "version": "0.7.16-3-PIDM-1668-cron-retry-dead-letter"
   },
   "servers": [
     {
@@ -97,7 +97,14 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {}
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
             },
             "description": "OK",
             "headers": {
@@ -201,7 +208,11 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {}
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
             },
             "description": "OK",
             "headers": {
@@ -319,6 +330,20 @@
       ],
       "post": {
         "operationId": "retryMessages",
+        "parameters": [
+          {
+            "description": "Ignore the messages newer than the defined minutes (default 2)",
+            "example": 2,
+            "in": "query",
+            "name": "minutesOffset",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 2
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -335,7 +360,11 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {}
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryDeadLetterResponse"
+                }
+              }
             },
             "description": "OK",
             "headers": {
@@ -425,6 +454,135 @@
           }
         },
         "summary": "Retry a list of error message",
+        "tags": [
+          "API Helpdesk"
+        ]
+      }
+    },
+    "/error-messages/retry/all": {
+      "parameters": [
+        {
+          "description": "This header identifies the call, if not passed it is self-generated. This ID is returned in the response.",
+          "in": "header",
+          "name": "X-Request-Id",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "retryAllMessages",
+        "parameters": [
+          {
+            "description": "Ignore the messages newer than the defined minutes (default 2)",
+            "example": 5,
+            "in": "query",
+            "name": "minutesOffset",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 2
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryDeadLetterResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Bad Request",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Not found",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            },
+            "description": "Service unavailable",
+            "headers": {
+              "X-Request-Id": {
+                "description": "This header identifies the call",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Retry all error messages",
         "tags": [
           "API Helpdesk"
         ]
@@ -766,6 +924,43 @@
           "title": {
             "type": "string",
             "description": "A short, summary of the problem type. Written in english and readable for engineers (usually not suited for non technical stakeholders and not localized); example: Service Unavailable"
+          }
+        }
+      },
+      "RetryDeadLetterInfo": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fileNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Messages failed to be sent to eventhub, need a retry"
+      },
+      "RetryDeadLetterResponse": {
+        "type": "object",
+        "properties": {
+          "retryDiscarded": {
+            "$ref": "#/components/schemas/RetryDeadLetterInfo"
+          },
+          "retryFailed": {
+            "$ref": "#/components/schemas/RetryDeadLetterInfo"
+          },
+          "retryPostponed": {
+            "$ref": "#/components/schemas/RetryDeadLetterInfo"
+          },
+          "retrySuccessful": {
+            "$ref": "#/components/schemas/RetryDeadLetterInfo"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       }

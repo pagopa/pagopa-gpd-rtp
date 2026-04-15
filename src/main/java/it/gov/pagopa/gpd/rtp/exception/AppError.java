@@ -82,6 +82,11 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Unable to download the attachment",
       "Unable to download the attachment from the blob storage"),
+  DEAD_LETTER_MESSAGE_OUTDATED(
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          "Dead letter message is outdated",
+          "The dead letter message is older than the corresponding payment option stored in the database or the payment option has been deleted."
+  ),
   UNKNOWN(null, null, null);
 
   public final HttpStatus httpStatus;

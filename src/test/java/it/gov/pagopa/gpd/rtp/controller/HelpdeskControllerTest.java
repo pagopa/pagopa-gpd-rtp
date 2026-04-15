@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import it.gov.pagopa.gpd.rtp.model.helpdesk.RetryDeadLetterResponse;
 import it.gov.pagopa.gpd.rtp.service.HelpdeskService;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,7 @@ class HelpdeskControllerTest {
   public static final String DAY = "17";
   public static final String HOUR = "12";
   public static final String FILENAME = "testFilename.json";
+  public static final List<String> FILENAMES = Collections.singletonList(FILENAME);
   @Autowired private MockMvc mockMvc;
   @MockBean private HelpdeskService helpdeskService;
 
@@ -47,14 +49,56 @@ class HelpdeskControllerTest {
   }
 
   @Test
-  void retryMessage_OK() throws Exception {
-    when(helpdeskService.retryMessages(Collections.singletonList(FILENAME))).thenReturn("OK");
+  void retryMessage_OK_MinutesOffset_Default() throws Exception {
+    when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
     mockMvc
         .perform(
-            post(String.format("/error-messages/retry"))
+            post("/error-messages/retry")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(String.format("[\"%s\"]", FILENAME)))
         .andExpect(status().isOk());
-    verify(helpdeskService).retryMessages(Collections.singletonList(FILENAME));
+    verify(helpdeskService).retryMessages(FILENAMES, 2);
+  }
+
+  @Test
+  void retryMessage_OK_MinutesOffset_Defined() throws Exception {
+    when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
+    mockMvc
+            .perform(
+                    post("/error-messages/retry?minutesOffset=10")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(String.format("[\"%s\"]", FILENAME)))
+            .andExpect(status().isOk());
+    verify(helpdeskService).retryMessages(FILENAMES, 10);
+  }
+
+  @Test
+  void retryAllMessages_OK() throws Exception {
+    when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
+    when(helpdeskService.getBlobList(null, null, null, null)).thenReturn(FILENAMES);
+
+    mockMvc
+            .perform(
+                    post("/error-messages/retry/all")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(String.format("[\"%s\"]", FILENAME)))
+            .andExpect(status().isOk());
+    verify(helpdeskService).retryMessages(FILENAMES, 2);
+    verify(helpdeskService).getBlobList(null, null, null, null);
+  }
+
+  @Test
+  void retryAllMessages_OK_MinutesOffset_Defined() throws Exception {
+    when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
+    when(helpdeskService.getBlobList(null, null, null, null)).thenReturn(FILENAMES);
+
+    mockMvc
+            .perform(
+                    post("/error-messages/retry/all?minutesOffset=10")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(String.format("[\"%s\"]", FILENAME)))
+            .andExpect(status().isOk());
+    verify(helpdeskService).retryMessages(FILENAMES, 10);
+    verify(helpdeskService).getBlobList(null, null, null, null);
   }
 }

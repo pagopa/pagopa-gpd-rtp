@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.16"
+    tag: "0.7.16-3-PIDM-1668-cron-retry-dead-letter"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -52,7 +52,7 @@ microservice-chart: &microservice-chart
       drop:
         - all
   autoscaling:
-    enable: true
+    enable: false
     minReplica: 1
     maxReplica: 1
     pollingInterval: 10 # seconds
@@ -143,6 +143,7 @@ pagopa-gpd-rtp:
     RTP_KEYCLOAK_CLIENT_ID: "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
     MAX_RETRY_DB_REPLICAS: "1"
+    KAFKA_MAX_ATTEMPTS: "1"
   envSecret:
     !!merge <<: *envSecret
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-d-tx-rtp-connection-string"
@@ -168,7 +169,7 @@ refresh-cache-cron:
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
-    tag: "latest"
+    tag: "8.19.0"
     pullPolicy: "Always"
   command:
     - "curl"

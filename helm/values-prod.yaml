@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.7.16"
+    tag: "0.7.16-3-PIDM-1668-cron-retry-dead-letter"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -174,7 +174,7 @@ refresh-cache-cron:
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
-    tag: "latest"
+    tag: "8.19.0"
     pullPolicy: "Always"
   command:
     - "curl"
