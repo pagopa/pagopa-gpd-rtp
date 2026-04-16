@@ -214,7 +214,7 @@ retry-dead-letter-cron:
       memory: "100Mi"
       cpu: "0.1"
     limits:
-      memory: "100Mi"
+      memory: "150Mi"
       cpu: "0.1"
   envSecrets:
     !!merge <<: *envSecret
