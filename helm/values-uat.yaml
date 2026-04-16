@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.8.1-1-PIDM-1668-reintroduce-cron-retry-dead-letter"
+    tag: "0.8.1-2-PIDM-1668-reintroduce-cron-retry-dead-letter"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
