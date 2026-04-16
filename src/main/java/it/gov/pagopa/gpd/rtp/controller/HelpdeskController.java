@@ -77,8 +77,8 @@ public class HelpdeskController {
                     example = "1")
             @RequestParam(value = "hour", required = false)
             String hour,
-            @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
-            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            @Parameter(description = "Number of messages to retry (default 400)", example = "400")
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "400")
             int maxMessages
             ) {
         return this.helpdeskService.getBlobList(year, month, day, hour, maxMessages);
@@ -211,8 +211,8 @@ public class HelpdeskController {
             @Parameter(description = "Ignore the messages newer than the defined minutes (default 2)", example = "5")
             @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
             int minutesOffset,
-            @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
-            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            @Parameter(description = "Number of messages to retry (default 400)", example = "400")
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "400")
             int maxMessages
     ) {
         List<String> filenames = this.helpdeskService.getBlobList(null, null, null, null, maxMessages);
