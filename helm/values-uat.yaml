@@ -198,7 +198,6 @@ refresh-cache-cron:
 retry-dead-letter-cron:
   !!merge <<: *microservice-chart
   schedule: "*/5 * * * *"
-  timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
@@ -210,11 +209,11 @@ retry-dead-letter-cron:
     - "curl -sS -X POST -m 300 https://weuuat.gps.internal.uat.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all; echo END"
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: "100Mi"
+      cpu: "0.1"
     limits:
-      memory: "512Mi"
-      cpu: "150m"
+      memory: "100Mi"
+      cpu: "0.1"
   envSecrets:
     !!merge <<: *envSecret
   tolerations:
