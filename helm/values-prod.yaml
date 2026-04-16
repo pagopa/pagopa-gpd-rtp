@@ -199,6 +199,7 @@ refresh-cache-cron:
 retry-dead-letter-cron:
   !!merge <<: *microservice-chart
   schedule: "*/5 * * * *"
+  timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
     repository: "curlimages/curl"
