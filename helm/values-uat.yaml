@@ -197,7 +197,7 @@ refresh-cache-cron:
       effect: NoSchedule
 retry-dead-letter-cron:
   !!merge <<: *microservice-chart
-  schedule: "*/5 * * * *"
+  schedule: "0 * * * *"
   timeZone: "Europe/Rome"
   successfulJobsHistoryLimit: "1"
   image:
