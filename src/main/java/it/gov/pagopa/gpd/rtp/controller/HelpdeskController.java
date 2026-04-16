@@ -78,10 +78,10 @@ public class HelpdeskController {
             @RequestParam(value = "hour", required = false)
             String hour,
             @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
-            @RequestParam(value = "numberOfMessages", required = false, defaultValue = "1000")
-            int numberOfMessages
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            int maxMessages
             ) {
-        return this.helpdeskService.getBlobList(year, month, day, hour, numberOfMessages);
+        return this.helpdeskService.getBlobList(year, month, day, hour, maxMessages);
     }
 
     @GetMapping(value = "/detail", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -212,10 +212,10 @@ public class HelpdeskController {
             @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
             int minutesOffset,
             @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
-            @RequestParam(value = "numberOfMessages", required = false, defaultValue = "1000")
-            int numberOfMessages
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            int maxMessages
     ) {
-        List<String> filenames = this.helpdeskService.getBlobList(null, null, null, null, numberOfMessages);
+        List<String> filenames = this.helpdeskService.getBlobList(null, null, null, null, maxMessages);
         return this.helpdeskService.retryMessages(filenames, minutesOffset);
     }
 }

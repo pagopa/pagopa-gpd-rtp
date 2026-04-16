@@ -41,8 +41,8 @@ public class HelpdeskServiceImpl implements HelpdeskService {
     private final PaymentOptionRepository paymentOptionRepository;
 
     @Override
-    public List<String> getBlobList(String year, String month, String day, String hour, int numberOfMessages) {
-        return blobStorageClient.getBlobList(year, month, day, hour, numberOfMessages);
+    public List<String> getBlobList(String year, String month, String day, String hour, int maxMessages) {
+        return blobStorageClient.getBlobList(year, month, day, hour, maxMessages);
     }
 
     @Override

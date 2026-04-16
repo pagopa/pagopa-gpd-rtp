@@ -78,7 +78,7 @@
           "description" : "Number of messages to retry (default 1000)",
           "example" : 100,
           "in" : "query",
-          "name" : "numberOfMessages",
+          "name" : "maxMessages",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -461,7 +461,7 @@
           "description" : "Number of messages to retry (default 1000)",
           "example" : 100,
           "in" : "query",
-          "name" : "numberOfMessages",
+          "name" : "maxMessages",
           "required" : false,
           "schema" : {
             "type" : "integer",
