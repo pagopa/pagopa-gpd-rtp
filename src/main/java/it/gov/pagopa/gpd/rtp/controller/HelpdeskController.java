@@ -162,7 +162,7 @@ public class HelpdeskController {
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = ProblemJson.class)))
             })
-    @Operation(summary = "Retry a list of error message")
+    @Operation(summary = "Retry a list of error messages")
     public RetryDeadLetterResponse retryMessages(
             @Parameter(description = "Ignore the messages newer than the defined minutes (default 2)", example = "2")
             @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")

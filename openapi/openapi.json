@@ -431,7 +431,7 @@
             }
           }
         },
-        "summary" : "Retry a list of error message",
+        "summary" : "Retry a list of error messages",
         "tags" : [ "API Helpdesk" ]
       }
     },
