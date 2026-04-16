@@ -76,8 +76,12 @@ public class HelpdeskController {
                     description = "Filter by hours, requires day otherwise gets ignored",
                     example = "1")
             @RequestParam(value = "hour", required = false)
-            String hour) {
-        return this.helpdeskService.getBlobList(year, month, day, hour);
+            String hour,
+            @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            int maxMessages
+            ) {
+        return this.helpdeskService.getBlobList(year, month, day, hour, maxMessages);
     }
 
     @GetMapping(value = "/detail", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -158,7 +162,7 @@ public class HelpdeskController {
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = ProblemJson.class)))
             })
-    @Operation(summary = "Retry a list of error message")
+    @Operation(summary = "Retry a list of error messages")
     public RetryDeadLetterResponse retryMessages(
             @Parameter(description = "Ignore the messages newer than the defined minutes (default 2)", example = "2")
             @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
@@ -206,9 +210,12 @@ public class HelpdeskController {
     public RetryDeadLetterResponse retryAllMessages(
             @Parameter(description = "Ignore the messages newer than the defined minutes (default 2)", example = "5")
             @RequestParam(value = "minutesOffset", required = false, defaultValue = "2")
-            int minutesOffset
+            int minutesOffset,
+            @Parameter(description = "Number of messages to retry (default 1000)", example = "100")
+            @RequestParam(value = "maxMessages", required = false, defaultValue = "1000")
+            int maxMessages
     ) {
-        List<String> filenames = this.helpdeskService.getBlobList(null, null, null, null);
+        List<String> filenames = this.helpdeskService.getBlobList(null, null, null, null, maxMessages);
         return this.helpdeskService.retryMessages(filenames, minutesOffset);
     }
 }

@@ -13,8 +13,9 @@ public interface HelpdeskService {
    * @param month Filter by month (requires year)
    * @param day Filter by day (requires month)
    * @param hour Filter by hour (requires day)
+   * @param maxMessages Retrieve only the defined amount of messages
    */
-  List<String> getBlobList(String year, String month, String day, String hour);
+  List<String> getBlobList(String year, String month, String day, String hour, int maxMessages);
 
   /**
    * Retrieve failed PaymentOption Messages from dead letter storage

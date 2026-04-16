@@ -19,8 +19,9 @@ public interface BlobStorageClient {
    * @param month Filter by month (requires year)
    * @param day Filter by day (requires month)
    * @param hour Filter by hour (requires day)
+   * @param numberOfBlobs Retrieve only the defined number of blobs
    */
-  List<String> getBlobList(String year, String month, String day, String hour);
+  List<String> getBlobList(String year, String month, String day, String hour, int numberOfBlobs);
 
   /**
    * Handles retrieving a file from the blob storage
