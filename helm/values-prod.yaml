@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.8.1"
+    tag: "0.8.1-2-PIDM-1668-reintroduce-cron-retry-dead-letter"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -189,6 +189,33 @@ refresh-cache-cron:
     limits:
       memory: "512Mi"
       cpu: "150m"
+  envSecrets:
+    !!merge <<: *envSecret
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: "gps"
+      effect: NoSchedule
+retry-dead-letter-cron:
+  !!merge <<: *microservice-chart
+  schedule: "*/5 * * * *"
+  timeZone: "Europe/Rome"
+  successfulJobsHistoryLimit: "1"
+  image:
+    repository: "curlimages/curl"
+    tag: "8.19.0"
+    pullPolicy: "Always"
+  command:
+    - "sh"
+    - "-c"
+    - "curl -sS -X POST -m 300 https://weuprod.gps.internal.platform.pagopa.it/gpd-rtp-service/error-messages/retry/all; echo END"
+  resources:
+    requests:
+      memory: "100Mi"
+      cpu: "0.1"
+    limits:
+      memory: "150Mi"
+      cpu: "0.1"
   envSecrets:
     !!merge <<: *envSecret
   tolerations:

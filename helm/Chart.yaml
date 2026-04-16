@@ -2,8 +2,8 @@ apiVersion: v2
 name: pagopa-gpd-rtp
 description: Microservice that handles the forwarding of the debt positions to RTP
 type: application
-version: 0.84.0
-appVersion: 0.8.1
+version: 0.86.0
+appVersion: 0.8.1-2-PIDM-1668-reintroduce-cron-retry-dead-letter
 dependencies:
   - name: microservice-chart
     version: 8.0.2
@@ -13,3 +13,7 @@ dependencies:
     version: 3.0.0
     repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
     alias: refresh-cache-cron
+  - name: cron-chart
+    version: 3.0.0
+    repository: "https://pagopa.github.io/aks-cron-chart-blueprint"
+    alias: retry-dead-letter-cron

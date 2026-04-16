@@ -24,7 +24,7 @@ class HelpdeskControllerTest {
   public static final String HOUR = "12";
   public static final String FILENAME = "testFilename.json";
   private static final List<String> FILENAMES = Collections.singletonList(FILENAME);
-  private static final int NUMBER_OF_MESSAGES = 1000;
+  private static final int NUMBER_OF_MESSAGES = 400;
   @Autowired private MockMvc mockMvc;
   @MockBean private HelpdeskService helpdeskService;
 
@@ -101,5 +101,20 @@ class HelpdeskControllerTest {
             .andExpect(status().isOk());
     verify(helpdeskService).retryMessages(FILENAMES, 10);
     verify(helpdeskService).getBlobList(null, null, null, null, NUMBER_OF_MESSAGES);
+  }
+
+  @Test
+  void retryAllMessages_OK_MaxMessages_Defined() throws Exception {
+    when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
+    when(helpdeskService.getBlobList(null, null, null, null, 1000)).thenReturn(FILENAMES);
+
+    mockMvc
+            .perform(
+                    post("/error-messages/retry/all?maxMessages=1000")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(String.format("[\"%s\"]", FILENAME)))
+            .andExpect(status().isOk());
+    verify(helpdeskService).retryMessages(FILENAMES, 2);
+    verify(helpdeskService).getBlobList(null, null, null, null, 1000);
   }
 }

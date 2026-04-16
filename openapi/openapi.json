@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.8.1"
+    "version": "0.8.1-2-PIDM-1668-reintroduce-cron-retry-dead-letter"
   },
   "servers": [
     {
@@ -94,15 +94,15 @@
             }
           },
           {
-            "description": "Number of messages to retry (default 1000)",
-            "example": 100,
+            "description": "Number of messages to retry (default 400)",
+            "example": 400,
             "in": "query",
             "name": "maxMessages",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 1000
+              "default": 400
             }
           }
         ],
@@ -498,15 +498,15 @@
             }
           },
           {
-            "description": "Number of messages to retry (default 1000)",
-            "example": 100,
+            "description": "Number of messages to retry (default 400)",
+            "example": 400,
             "in": "query",
             "name": "maxMessages",
             "required": false,
             "schema": {
               "type": "integer",
               "format": "int32",
-              "default": 1000
+              "default": 400
             }
           }
         ],
