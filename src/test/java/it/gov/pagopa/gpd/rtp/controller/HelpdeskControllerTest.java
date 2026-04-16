@@ -23,20 +23,21 @@ class HelpdeskControllerTest {
   public static final String DAY = "17";
   public static final String HOUR = "12";
   public static final String FILENAME = "testFilename.json";
-  public static final List<String> FILENAMES = Collections.singletonList(FILENAME);
+  private static final List<String> FILENAMES = Collections.singletonList(FILENAME);
+  private static final int NUMBER_OF_MESSAGES = 1000;
   @Autowired private MockMvc mockMvc;
   @MockBean private HelpdeskService helpdeskService;
 
   @Test
   void getBlobList_OK() throws Exception {
-    when(helpdeskService.getBlobList(YEAR, MONTH, DAY, HOUR)).thenReturn(List.of("test"));
+    when(helpdeskService.getBlobList(YEAR, MONTH, DAY, HOUR , NUMBER_OF_MESSAGES)).thenReturn(List.of("test"));
     mockMvc
         .perform(
             get(
                 String.format(
                     "/error-messages?year=%s&month=%s&day=%s&hour=%s", YEAR, MONTH, DAY, HOUR)))
         .andExpect(status().isOk());
-    verify(helpdeskService).getBlobList(YEAR, MONTH, DAY, HOUR);
+    verify(helpdeskService).getBlobList(YEAR, MONTH, DAY, HOUR, NUMBER_OF_MESSAGES);
   }
 
   @Test
@@ -75,7 +76,7 @@ class HelpdeskControllerTest {
   @Test
   void retryAllMessages_OK() throws Exception {
     when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
-    when(helpdeskService.getBlobList(null, null, null, null)).thenReturn(FILENAMES);
+    when(helpdeskService.getBlobList(null, null, null, null, NUMBER_OF_MESSAGES)).thenReturn(FILENAMES);
 
     mockMvc
             .perform(
@@ -84,13 +85,13 @@ class HelpdeskControllerTest {
                             .content(String.format("[\"%s\"]", FILENAME)))
             .andExpect(status().isOk());
     verify(helpdeskService).retryMessages(FILENAMES, 2);
-    verify(helpdeskService).getBlobList(null, null, null, null);
+    verify(helpdeskService).getBlobList(null, null, null, null, NUMBER_OF_MESSAGES);
   }
 
   @Test
   void retryAllMessages_OK_MinutesOffset_Defined() throws Exception {
     when(helpdeskService.retryMessages(eq(FILENAMES), anyInt())).thenReturn(new RetryDeadLetterResponse());
-    when(helpdeskService.getBlobList(null, null, null, null)).thenReturn(FILENAMES);
+    when(helpdeskService.getBlobList(null, null, null, null, NUMBER_OF_MESSAGES)).thenReturn(FILENAMES);
 
     mockMvc
             .perform(
@@ -99,6 +100,6 @@ class HelpdeskControllerTest {
                             .content(String.format("[\"%s\"]", FILENAME)))
             .andExpect(status().isOk());
     verify(helpdeskService).retryMessages(FILENAMES, 10);
-    verify(helpdeskService).getBlobList(null, null, null, null);
+    verify(helpdeskService).getBlobList(null, null, null, null, NUMBER_OF_MESSAGES);
   }
 }

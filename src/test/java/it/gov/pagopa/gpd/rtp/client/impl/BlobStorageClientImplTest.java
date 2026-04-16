@@ -37,11 +37,12 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {BlobStorageClientImpl.class})
 class BlobStorageClientImplTest {
-    public static final String YEAR = "2025";
-    public static final String MONTH = "6";
-    public static final String DAY = "17";
-    public static final String HOUR = "12";
-    public static final String FILENAME = "testFilename.json";
+    private static final String YEAR = "2025";
+    private static final String MONTH = "6";
+    private static final String DAY = "17";
+    private static final String HOUR = "12";
+    private static final String FILENAME = "testFilename.json";
+    private static final int NUMBER_OF_BLOBS = 1000;
     @MockBean
     private BlobContainerClient blobContainerClient;
     @SpyBean
@@ -73,7 +74,7 @@ class BlobStorageClientImplTest {
 
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
-        List<String> response = sut.getBlobList(null, null, null, null);
+        List<String> response = sut.getBlobList(null, null, null, null, NUMBER_OF_BLOBS);
         assertTrue(response.contains(FILENAME));
         verify(blobContainerClient).listBlobs(listBlobsOptionsArgumentCaptor.capture(), any(Duration.class));
 
@@ -91,7 +92,7 @@ class BlobStorageClientImplTest {
 
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
-        List<String> response = sut.getBlobList(YEAR, MONTH, DAY, HOUR);
+        List<String> response = sut.getBlobList(YEAR, MONTH, DAY, HOUR, NUMBER_OF_BLOBS);
         assertTrue(response.contains(FILENAME));
         verify(blobContainerClient).listBlobs(listBlobsOptionsArgumentCaptor.capture(), any(Duration.class));
 
@@ -109,7 +110,7 @@ class BlobStorageClientImplTest {
 
         when(blobContainerClient.listBlobs(any(ListBlobsOptions.class), any(Duration.class))).thenReturn(pagedIterable);
 
-        List<String> response = sut.getBlobList(null, null, null, HOUR);
+        List<String> response = sut.getBlobList(null, null, null, HOUR, NUMBER_OF_BLOBS);
         assertTrue(response.contains(FILENAME));
         verify(blobContainerClient).listBlobs(listBlobsOptionsArgumentCaptor.capture(), any(Duration.class));
 

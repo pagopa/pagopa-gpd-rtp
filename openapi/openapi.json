@@ -4,7 +4,7 @@
     "description": "GPD service to forward debt positions to RTP",
     "termsOfService": "https://www.pagopa.gov.it/",
     "title": "pagopa-gpd-rtp",
-    "version": "0.8.0"
+    "version": "0.8.1"
   },
   "servers": [
     {
@@ -91,6 +91,18 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Number of messages to retry (default 1000)",
+            "example": 100,
+            "in": "query",
+            "name": "maxMessages",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1000
             }
           }
         ],
@@ -453,7 +465,7 @@
             }
           }
         },
-        "summary": "Retry a list of error message",
+        "summary": "Retry a list of error messages",
         "tags": [
           "API Helpdesk"
         ]
@@ -483,6 +495,18 @@
               "type": "integer",
               "format": "int32",
               "default": 2
+            }
+          },
+          {
+            "description": "Number of messages to retry (default 1000)",
+            "example": 100,
+            "in": "query",
+            "name": "maxMessages",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1000
             }
           }
         ],
