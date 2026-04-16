@@ -42,6 +42,7 @@ class HelpdeskServiceImplTest {
     private static final PaymentOption paymentOptionFromDB = new PaymentOption();
     private static final String FILENAME = String.format("2026/05/03/100/ERROR_%s.json", Instant.now());
     private static final String FILENAME_2 = String.format("2026/05/03/102/ERROR_2_%s.json", Instant.now());
+    private static final int NUMBER_OF_MESSAGES = 1000;
 
     @MockBean
     private BlobStorageClient blobStorageClient;
@@ -68,10 +69,10 @@ class HelpdeskServiceImplTest {
     @Test
     void getBlobList_OK() {
         List<String> blobList = List.of("test");
-        when(blobStorageClient.getBlobList(YEAR, MONTH, DAY, HOUR)).thenReturn(blobList);
-        List<String> response = assertDoesNotThrow(() -> sut.getBlobList(YEAR, MONTH, DAY, HOUR));
+        when(blobStorageClient.getBlobList(YEAR, MONTH, DAY, HOUR, NUMBER_OF_MESSAGES)).thenReturn(blobList);
+        List<String> response = assertDoesNotThrow(() -> sut.getBlobList(YEAR, MONTH, DAY, HOUR, NUMBER_OF_MESSAGES));
         assertTrue(blobList.containsAll(response));
-        verify(blobStorageClient).getBlobList(YEAR, MONTH, DAY, HOUR);
+        verify(blobStorageClient).getBlobList(YEAR, MONTH, DAY, HOUR, NUMBER_OF_MESSAGES);
     }
 
     @Test

@@ -42,7 +42,7 @@ public class BlobStorageClientImpl implements BlobStorageClient {
     }
 
     @Override
-    public List<String> getBlobList(String year, String month, String day, String hour) {
+    public List<String> getBlobList(String year, String month, String day, String hour, int numberOfBlobs) {
         String blobPrefix = null;
         if (year != null) {
             blobPrefix = year;
@@ -57,7 +57,7 @@ public class BlobStorageClientImpl implements BlobStorageClient {
             }
         }
 
-        ListBlobsOptions options = new ListBlobsOptions().setPrefix(blobPrefix);
+        ListBlobsOptions options = new ListBlobsOptions().setPrefix(blobPrefix).setMaxResultsPerPage(numberOfBlobs);
         return blobContainerClient.listBlobs(options, Duration.ofSeconds(30))
                 .stream().map(BlobItem::getName).toList();
     }
