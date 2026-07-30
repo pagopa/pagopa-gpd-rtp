@@ -129,12 +129,24 @@ pagopa-gpd-rtp:
     servicePort: 8080
   envConfig:
     !!merge <<: *envConfig
+    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     KAFKA_START_OFFSET: 'latest'
     KAFKA_AUTO_STARTUP: 'true'
-    CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
+    KAFKA_MAX_ATTEMPTS: "1"
+    KAFKA_BACKOFF_INITIAL_INTERVAL: "1800"
+    KAFKA_BACKOFF_MULTIPLIER: "2"
+    KAFKA_MAX_POLL_INTERVAL_MS: '900000'
+    KAFKA_MAX_POLL_RECORDS: '500'
+    KAFKA_PAYMENT_OPTION_FILTERED_TOPIC: 'cdc-filtered'
+    KAFKA_PAYMENT_OPTION_FILTERED_GROUP_ID: 'rtp-filtered'
+    KAFKA_PAYMENT_OPTION_FILTERED_CONSUMER_CONCURRENCY: '5'
+    KAFKA_PAYMENT_OPTION_RAW_TOPIC: 'cdc-raw-auto.apd.payment_option'
+    KAFKA_PAYMENT_OPTION_RAW_EVENTHUB_GROUP_ID: 'rtp-consumer-group'
+    KAFKA_PAYMENT_OPTION_CDC_CONSUMER_CONCURRENCY: '5'
+    KAFKA_CDC_FILTERED_OUTPUT_TOPIC: 'cdc-filtered'
+    KAFKA_RTP_MESSAGE_OUTPUT_TOPIC: 'rtp-events'
     RTP_KAFKA_BROKER: "pagopa-p-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
-    PAYMENT_OPTION_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
-    PAYMENT_OPTION_EVENTHUB_COMPLETE_GROUP_ID: "rtp-consumer-group"
+    PAYMENT_OPTION_CDC_KAFKA_BROKER: "pagopa-p-itn-observ-gpd-evh.servicebus.windows.net:9093"
     SPRING_DATASOURCE_URL: "jdbc:postgresql://pagopa-p-weu-gpd-pgflex-ve.reader.postgres.database.azure.com:5432/apd?sslmode=require&prepareThreshold=0&tcpKeepAlive=true"
     SPRING_DATASOURCE_TYPE: "org.springframework.jdbc.datasource.SimpleDriverDataSource"
     SCHEMA_NAME: "apd"
@@ -150,8 +162,10 @@ pagopa-gpd-rtp:
     MAX_RETRY_DB_REPLICAS: "10"
   envSecret:
     !!merge <<: *envSecret
+    PAYMENT_OPTION_CDC_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
+    PAYMENT_OPTION_FILTERED_INPUT_EVENTHUB_CONN_STRING: 'ehub-p-rx-rtp-cdc-connection-string'
+    PAYMENT_OPTION_FILTERED_OUTPUT_EVENTHUB_CONN_STRING: 'ehub-p-tx-rtp-cdc-connection-string'
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-p-tx-rtp-connection-string"
-    PAYMENT_OPTION_INPUT_EVENTHUB_CONN_STRING: "payment-option-topic-input-conn-string"
     SPRING_DATASOURCE_USERNAME: "db-apd-user-name"
     SPRING_DATASOURCE_PASSWORD: "db-apd-user-password"
     REDIS_HOSTNAME: "redis-hostname"
