@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.buildMessage;
 import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
@@ -348,5 +349,42 @@ public class IngestionServiceImpl implements IngestionService {
                 .operation(RTPOperationCode.DELETE)
                 .timestamp(paymentOption.getTsMs())
                 .build();
+    }
+
+    @Override
+    public void filterPaymentOptions(List<String> messages) {
+        for (String message : messages) {
+            if (message != null && !message.isBlank()) {
+                DataCaptureMessage<PaymentOptionEvent> po = parseCdcMessage(message);
+
+                if (po != null && validDebeziumOperation(po)) {
+                    Long id = po.getAfter() != null ? po.getAfter().getId() : po.getBefore().getId();
+
+                    boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
+                    if (!res) {
+                        Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id.toString());
+                        this.deadLetterService.sendToDeadLetter(
+                                new ErrorMessage(new MessageHandlingException(ehMessage, new FailAndNotify(AppError.FILTERED_CDC_MESSAGE_NOT_SENT)), ehMessage));
+                    }
+                }
+            }
+        }
+    }
+
+    private DataCaptureMessage<PaymentOptionEvent> parseCdcMessage(String message) {
+        try {
+            return this.objectMapper.readValue(message, new TypeReference<>() {
+            });
+        } catch (Exception ignore) {
+            log.debug("Failed to parse message as JSON, skipping message. Message: {}", message);
+        }
+        return null;
+    }
+
+    private static boolean validDebeziumOperation(DataCaptureMessage<PaymentOptionEvent> po) {
+        return po.getOp() != null &&
+                (po.getOp().equals(DebeziumOperationCode.c) ||
+                po.getOp().equals(DebeziumOperationCode.u) ||
+                po.getOp().equals(DebeziumOperationCode.d));
     }
 }
