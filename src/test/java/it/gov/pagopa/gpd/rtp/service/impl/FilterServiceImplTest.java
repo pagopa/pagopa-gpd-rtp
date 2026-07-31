@@ -10,7 +10,10 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
+import it.gov.pagopa.gpd.rtp.utils.EntityUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -222,6 +225,24 @@ class FilterServiceImplTest {
                     getTransferList(INVALID_TRANSFER_CATEGORY, INVALID_TRANSFER_CATEGORY));
         } catch (AppException e) {
             assertEquals(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP, e.getAppErrorCode());
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DebeziumOperationCode.class, names = {"c", "u", "d"})
+    void filterByDebeziumOperation_OK(DebeziumOperationCode op) {
+        DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(op);
+        assertDoesNotThrow(() -> sut.filterByDebeziumOperation(po));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DebeziumOperationCode.class, names = {"t", "r", "m"})
+    void filterByDebeziumOperation_KO(DebeziumOperationCode op) {
+        DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(op);
+        try {
+            sut.filterByDebeziumOperation(po);
+        } catch (AppException e) {
+            assertEquals(AppError.DEBEZIUM_OPERATION_NOT_VALID_FOR_RTP, e.getAppErrorCode());
         }
     }
 
