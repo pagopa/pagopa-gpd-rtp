@@ -27,6 +27,6 @@ public interface RTPMessageProducer {
      * @param id entity id to use as message key
      * @return boolean referring if the insertion on the sending channel was successfully
      */
-    boolean sendFilteredCdcMessage(DataCaptureMessage<PaymentOptionEvent> filteredCdcMessage, Long id);
+    boolean sendFilteredCdcMessage(DataCaptureMessage<PaymentOptionEvent> filteredCdcMessage, String id);
 
 }

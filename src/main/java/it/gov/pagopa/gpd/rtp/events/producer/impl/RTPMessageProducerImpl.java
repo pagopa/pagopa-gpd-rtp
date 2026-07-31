@@ -37,7 +37,7 @@ public class RTPMessageProducerImpl implements RTPMessageProducer {
   }
 
   @Override
-  public boolean sendFilteredCdcMessage(DataCaptureMessage<PaymentOptionEvent> filteredCdcMessage, Long id) {
-      return streamBridge.send("ingestCdcPaymentOption-out-0", buildMessage(filteredCdcMessage, id.toString()));
+  public boolean sendFilteredCdcMessage(DataCaptureMessage<PaymentOptionEvent> filteredCdcMessage, String id) {
+      return streamBridge.send("ingestCdcPaymentOption-out-0", buildMessage(filteredCdcMessage, id));
   }
 }

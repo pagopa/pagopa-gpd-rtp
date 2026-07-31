@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,6 +25,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {FilterServiceImpl.class})
@@ -70,7 +70,7 @@ class FilterServiceImplTest {
     @Test
     void filterByOptInFlag_OK() {
         when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
-        SetOperations mock = Mockito.mock(SetOperations.class);
+        SetOperations mock = mock(SetOperations.class);
         when(mock.isMember(anyString(), anyString())).thenReturn(true);
         when(redisCacheRepository.getFlags()).thenReturn(mock);
 
@@ -88,7 +88,7 @@ class FilterServiceImplTest {
     @Test
     void filterByOptInFlag_KO() {
         when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
-        SetOperations mock = Mockito.mock(SetOperations.class);
+        SetOperations mock = mock(SetOperations.class);
         when(mock.isMember(anyString(), anyString())).thenReturn(false);
         when(redisCacheRepository.getFlags()).thenReturn(mock);
 

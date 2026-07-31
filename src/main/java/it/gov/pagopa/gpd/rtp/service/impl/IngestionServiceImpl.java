@@ -28,6 +28,7 @@ import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
+import it.gov.pagopa.gpd.rtp.util.CommonUtility;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,8 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static it.gov.pagopa.gpd.rtp.util.CommonUtility.buildMessage;
-import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.*;
 import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
 
@@ -80,19 +80,6 @@ public class IngestionServiceImpl implements IngestionService {
         return acknowledgment;
     }
 
-    private static String getOptionEvent(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-        return Optional.ofNullable(paymentOption.getBefore())
-                .orElse(paymentOption.getAfter())
-                .getId()
-                .toString();
-    }
-
-    private static void checkResponse(boolean response) {
-        if (!response) {
-            throw new FailAndNotify(AppError.RTP_MESSAGE_NOT_SENT);
-        }
-    }
-
     public void ingestPaymentOption(Message<String> message) {
         try {
             processingTracker.messageProcessingStarted();
@@ -101,11 +88,6 @@ public class IngestionServiceImpl implements IngestionService {
             processingTracker.messageProcessingFinished();
             MDC.clear();
         }
-    }
-
-    public boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
-        RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
-        return this.rtpMessageProducer.sendRTPMessage(rtpMessage);
     }
 
     private void handleMessage(Message<?> message) {
@@ -122,12 +104,12 @@ public class IngestionServiceImpl implements IngestionService {
             checkResponse(response);
             MDC.put(RTP_SENT_STATUS, "OK");
 
-            log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
+            log.info("RTP Message sent to eventhub at {}", CommonUtility.getDateNowUTC());
             acknowledgment.acknowledge();
         } catch (FailAndPostpone e) {
             assert paymentOption != null : "paymentOption cannot be null";
             setMDCErrorField(e);
-            handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
+            handleRetry(message, getPaymentOptionId(paymentOption), e, acknowledgment);
         } catch (FailAndIgnore e) {
             setMDCErrorField(e);
             log.info("Message ignored {}", e.getMessage());
@@ -160,17 +142,26 @@ public class IngestionServiceImpl implements IngestionService {
         if (message.getHeaders().getId() == null
                 || message.getPayload() == null
                 || !(message.getPayload() instanceof String msg)) {
-            log.debug("NULL message ignored at {}", LocalDateTime.now());
+            log.debug("NULL message ignored at {}", CommonUtility.getDateNowUTC());
             throw new FailAndIgnore(AppError.NULL_MESSAGE);
         }
 
         MDC.put(MESSAGE_ID, String.valueOf(message.getHeaders().getId()));
         log.info(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
-                LocalDateTime.now(),
+                CommonUtility.getDateNowUTC(),
                 message.getHeaders().getId());
 
-        return parseMessage(message, msg);
+        try {
+            return this.objectMapper.readValue(msg, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            FailAndIgnore failAndIgnore = new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+            this.deadLetterService.sendToDeadLetter(
+                    new ErrorMessage(new MessageHandlingException(message, failAndIgnore), message));
+            setMDCErrorField(failAndIgnore);
+            throw failAndIgnore;
+        }
     }
 
     /**
@@ -207,19 +198,6 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    private DataCaptureMessage<PaymentOptionEvent> parseMessage(Message<?> message, String msg) {
-        try {
-            return this.objectMapper.readValue(msg, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            FailAndIgnore failAndIgnore = new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
-            this.deadLetterService.sendToDeadLetter(
-                    new ErrorMessage(new MessageHandlingException(message, failAndIgnore), message));
-            setMDCErrorField(failAndIgnore);
-            throw failAndIgnore;
-        }
-    }
-
     private RTPMessage createRTPMessageOrElseThrow(
             DataCaptureMessage<PaymentOptionEvent> paymentOption) {
         MDC.put(
@@ -243,7 +221,7 @@ public class IngestionServiceImpl implements IngestionService {
 
             log.debug(
                     "PaymentOption ingestion called at {} with payment option id {}",
-                    LocalDateTime.now(),
+                    CommonUtility.getDateNowUTC(),
                     valuesAfter.getId());
 
             verifyDBReplicaSync(valuesAfter);
@@ -355,43 +333,60 @@ public class IngestionServiceImpl implements IngestionService {
         log.debug("Filter po called with size {}", messages.size());
         int totalSent = 0;
         for (String message : messages) {
-            if (message != null && !message.isBlank()) {
-                DataCaptureMessage<PaymentOptionEvent> po = null;
-                Long id = null;
-                try {
-                    po = parseCdcMessage(message);
+            DataCaptureMessage<PaymentOptionEvent> po = null;
+            String id = null;
+            try {
+                po = parseCdcMessage(message);
 
-                    this.filterService.filterByDebeziumOperation(po);
-                    this.filterService.filterByTaxCode(po);
+                this.filterService.filterByDebeziumOperation(po);
+                this.filterService.filterByTaxCode(po);
 
-                    id = po.getAfter() != null ? po.getAfter().getId() : po.getBefore().getId();
-                    boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
-                    checkResponse(res);
+                id = getPaymentOptionId(po);
+                boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
+                checkResponse(res);
 
-                    totalSent++;
-                } catch (FailAndIgnore e){
-                    // Ignore and continue
-                } catch (FailAndNotify e){
-                    if(po != null && id != null){
-                        Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id.toString());
-                        this.deadLetterService.sendToDeadLetter(
-                                new ErrorMessage(new MessageHandlingException(ehMessage, new FailAndNotify(AppError.FILTERED_CDC_MESSAGE_NOT_SENT)), ehMessage));
-                    }
+                totalSent++;
+            } catch (FailAndIgnore e) {
+                // Ignore and continue
+            } catch (FailAndNotify e) {
+                if (po != null && id != null) {
+                    Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id);
+                    this.deadLetterService.sendToDeadLetter(
+                            new ErrorMessage(new MessageHandlingException(ehMessage, new FailAndNotify(AppError.FILTERED_CDC_MESSAGE_NOT_SENT)), ehMessage));
                 }
             }
         }
-        log.debug("Total messages sent: {}", totalSent);
+        log.debug("Filter po total messages sent: {}", totalSent);
     }
 
     private DataCaptureMessage<PaymentOptionEvent> parseCdcMessage(String message) {
+        if (message == null || message.isBlank()) {
+            throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+        }
         try {
             return this.objectMapper.readValue(message, new TypeReference<>() {
             });
         } catch (Exception ignore) {
-            log.error("Failed to parse message as JSON, skipping message. Message: {}", message);
-            throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+            log.error("Failed to parse message as JSON, sending message to dead letter. Message: {}", message);
+            throw new FailAndNotify(AppError.JSON_NOT_PROCESSABLE);
         }
     }
 
+    private static String getPaymentOptionId(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        return Optional.ofNullable(paymentOption.getBefore())
+                .orElse(paymentOption.getAfter())
+                .getId()
+                .toString();
+    }
 
+    private static void checkResponse(boolean response) {
+        if (!response) {
+            throw new FailAndNotify(AppError.RTP_MESSAGE_NOT_SENT);
+        }
+    }
+
+    public boolean retryDeadLetterMessage(DataCaptureMessage<PaymentOptionEvent> paymentOption) {
+        RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
+        return this.rtpMessageProducer.sendRTPMessage(rtpMessage);
+    }
 }

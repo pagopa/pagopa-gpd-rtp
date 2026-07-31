@@ -67,4 +67,8 @@ public class CommonUtility {
                 .setHeader(KafkaHeaders.KEY, id)
                 .build();
     }
+
+    public static LocalDateTime getDateNowUTC(){
+        return LocalDateTime.now(ZoneOffset.UTC);
+    }
 }
