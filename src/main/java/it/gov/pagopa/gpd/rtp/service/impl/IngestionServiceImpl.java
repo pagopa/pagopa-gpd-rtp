@@ -237,7 +237,6 @@ public class IngestionServiceImpl implements IngestionService {
         if (paymentOption.getOp().equals(DebeziumOperationCode.c)
                 || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
 
-            this.filterService.filterByTaxCode(paymentOption);
             this.filterService.filterByOptInFlag(paymentOption);
 
             PaymentOptionEvent valuesAfter = paymentOption.getAfter();
@@ -353,15 +352,27 @@ public class IngestionServiceImpl implements IngestionService {
 
     @Override
     public void filterPaymentOptions(List<String> messages) {
+        log.debug("Filter po called with size {}", messages.size());
+        int totalSent = 0;
         for (String message : messages) {
             if (message != null && !message.isBlank()) {
-                DataCaptureMessage<PaymentOptionEvent> po = parseCdcMessage(message);
+                DataCaptureMessage<PaymentOptionEvent> po = null;
+                Long id = null;
+                try {
+                    po = parseCdcMessage(message);
 
-                if (po != null && validDebeziumOperation(po)) {
-                    Long id = po.getAfter() != null ? po.getAfter().getId() : po.getBefore().getId();
+                    this.filterService.filterByDebeziumOperation(po);
+                    this.filterService.filterByTaxCode(po);
 
+                    id = po.getAfter() != null ? po.getAfter().getId() : po.getBefore().getId();
                     boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
-                    if (!res) {
+                    checkResponse(res);
+
+                    totalSent++;
+                } catch (FailAndIgnore e){
+                    return;
+                } catch (FailAndNotify e){
+                    if(po != null && id != null){
                         Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id.toString());
                         this.deadLetterService.sendToDeadLetter(
                                 new ErrorMessage(new MessageHandlingException(ehMessage, new FailAndNotify(AppError.FILTERED_CDC_MESSAGE_NOT_SENT)), ehMessage));
@@ -369,6 +380,7 @@ public class IngestionServiceImpl implements IngestionService {
                 }
             }
         }
+        log.debug("Total messages sent: {}", totalSent);
     }
 
     private DataCaptureMessage<PaymentOptionEvent> parseCdcMessage(String message) {
@@ -377,14 +389,9 @@ public class IngestionServiceImpl implements IngestionService {
             });
         } catch (Exception ignore) {
             log.debug("Failed to parse message as JSON, skipping message. Message: {}", message);
+            throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
         }
-        return null;
     }
 
-    private static boolean validDebeziumOperation(DataCaptureMessage<PaymentOptionEvent> po) {
-        return po.getOp() != null &&
-                (po.getOp().equals(DebeziumOperationCode.c) ||
-                po.getOp().equals(DebeziumOperationCode.u) ||
-                po.getOp().equals(DebeziumOperationCode.d));
-    }
+
 }

@@ -52,4 +52,12 @@ public interface FilterService {
    * @param transferList PaymentOption's transfers
    */
   void filterByTaxonomy(PaymentOptionEvent paymentOption, List<Transfer> transferList);
+
+  /**
+   * This method checks if the cdc message has the valid operations such as "c", "u" and "d".
+   * Else throws filterAdIgnore  error
+   *
+   * @param cdcPO the DataCaptureMessage containing the PaymentOptionEvent with the debezium operation
+   */
+  void filterByDebeziumOperation(DataCaptureMessage<PaymentOptionEvent> cdcPO);
 }

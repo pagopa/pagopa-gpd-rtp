@@ -95,6 +95,16 @@ public class FilterServiceImpl implements FilterService {
     }
   }
 
+  @Override
+  public void filterByDebeziumOperation(DataCaptureMessage<PaymentOptionEvent> cdcPO){
+      if( cdcPO.getOp() == null ||
+              !(cdcPO.getOp().equals(DebeziumOperationCode.c) ||
+                      cdcPO.getOp().equals(DebeziumOperationCode.u) ||
+                      cdcPO.getOp().equals(DebeziumOperationCode.d))){
+        throw new FailAndIgnore(AppError.DEBEZIUM_OPERATION_NOT_VALID_FOR_RTP);
+    }
+  }
+
   private static boolean taxonomyStartsWithOptOut(String elem) {
     return elem.startsWith("6/") || elem.startsWith("7/") || elem.startsWith("8/");
   }

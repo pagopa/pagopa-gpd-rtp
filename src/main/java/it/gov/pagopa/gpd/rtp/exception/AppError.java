@@ -40,6 +40,10 @@ public enum AppError {
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Tax code not valid for RTP",
       "Payment option filtered by tax code"),
+  DEBEZIUM_OPERATION_NOT_VALID_FOR_RTP(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Debezium operation not valid for RTP",
+          "Payment option filtered by debezium operation"),
   EC_NOT_ENABLED_FOR_RTP(
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Creditor Institution not enabled for RTP",
