@@ -38,7 +38,7 @@ public class FilterServiceImpl implements FilterService {
     PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
     // Debtor Tax Code Validation
-    if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
+    if (valuesAfter != null && valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }

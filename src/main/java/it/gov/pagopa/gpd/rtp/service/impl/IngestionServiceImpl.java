@@ -370,7 +370,7 @@ public class IngestionServiceImpl implements IngestionService {
 
                     totalSent++;
                 } catch (FailAndIgnore e){
-                    return;
+                    // Ignore and continue
                 } catch (FailAndNotify e){
                     if(po != null && id != null){
                         Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id.toString());
@@ -388,7 +388,7 @@ public class IngestionServiceImpl implements IngestionService {
             return this.objectMapper.readValue(message, new TypeReference<>() {
             });
         } catch (Exception ignore) {
-            log.debug("Failed to parse message as JSON, skipping message. Message: {}", message);
+            log.error("Failed to parse message as JSON, skipping message. Message: {}", message);
             throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
         }
     }
