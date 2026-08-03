@@ -352,7 +352,7 @@ public class IngestionServiceImpl implements IngestionService {
                 if (po != null && id != null) {
                     Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id);
                     this.deadLetterService.sendToDeadLetter(
-                            new ErrorMessage(new MessageHandlingException(ehMessage, new FailAndNotify(AppError.FILTERED_CDC_MESSAGE_NOT_SENT)), ehMessage));
+                            new ErrorMessage(new MessageHandlingException(ehMessage, e), ehMessage));
                 }
             }
         }
