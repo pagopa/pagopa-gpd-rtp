@@ -677,8 +677,8 @@ class IngestionServiceImplTest {
 
     assertDoesNotThrow(() -> sut.filterPaymentOptions(messages));
 
+    verify(deadLetterService, times(1)).sendToDeadLetter(any());
     verify(rtpMessageProducer, never()).sendFilteredCdcMessage(any(), any());
-    verify(deadLetterService, never()).sendToDeadLetter(any());
   }
 
   private DataCaptureMessage<PaymentOptionEvent> getDeletedPaymentOption() {

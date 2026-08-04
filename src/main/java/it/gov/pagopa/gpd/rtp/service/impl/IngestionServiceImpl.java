@@ -333,10 +333,9 @@ public class IngestionServiceImpl implements IngestionService {
         log.debug("Filter po called with size {}", messages.size());
         int totalSent = 0;
         for (String message : messages) {
-            DataCaptureMessage<PaymentOptionEvent> po = null;
-            String id = null;
+            String id = "unknown";
             try {
-                po = parseCdcMessage(message);
+                DataCaptureMessage<PaymentOptionEvent> po = parseCdcMessage(message);
 
                 this.filterService.filterByDebeziumOperation(po);
                 this.filterService.filterByTaxCode(po);
@@ -349,11 +348,9 @@ public class IngestionServiceImpl implements IngestionService {
             } catch (FailAndIgnore e) {
                 // Ignore and continue
             } catch (FailAndNotify e) {
-                if (po != null && id != null) {
-                    Message<DataCaptureMessage<PaymentOptionEvent>> ehMessage = buildMessage(po, id);
-                    this.deadLetterService.sendToDeadLetter(
-                            new ErrorMessage(new MessageHandlingException(ehMessage, e), ehMessage));
-                }
+                Message<String> ehMessage = buildMessage(message, id);
+                this.deadLetterService.sendToDeadLetter(
+                        new ErrorMessage(new MessageHandlingException(ehMessage, e), ehMessage));
             }
         }
         log.debug("Filter po total messages sent: {}", totalSent);
@@ -361,13 +358,13 @@ public class IngestionServiceImpl implements IngestionService {
 
     private DataCaptureMessage<PaymentOptionEvent> parseCdcMessage(String message) {
         if (message == null || message.isBlank()) {
-            throw new FailAndIgnore(AppError.JSON_NOT_PROCESSABLE);
+            throw new FailAndIgnore(AppError.NULL_MESSAGE);
         }
         try {
             return this.objectMapper.readValue(message, new TypeReference<>() {
             });
-        } catch (Exception ignore) {
-            log.error("Failed to parse message as JSON, sending message to dead letter. Message: {}", message);
+        } catch (Exception e) {
+            log.error("Failed to parse message as JSON, sending message to dead letter. Message: {}", message, e);
             throw new FailAndNotify(AppError.JSON_NOT_PROCESSABLE);
         }
     }
