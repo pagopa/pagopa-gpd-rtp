@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.8.2-1-PIDM-2302-filter-consumer"
+    tag: "0.8.2-2-PIDM-2302-filter-consumer"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:

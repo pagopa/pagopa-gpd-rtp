@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.8.2-1-PIDM-2302-filter-consumer</version>
+  <version>0.8.2-2-PIDM-2302-filter-consumer</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 
