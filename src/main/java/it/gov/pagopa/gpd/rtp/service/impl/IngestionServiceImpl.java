@@ -347,7 +347,7 @@ public class IngestionServiceImpl implements IngestionService {
                 totalSent++;
             } catch (FailAndIgnore e) {
                 // Ignore and continue
-            } catch (FailAndNotify e) {
+            } catch (Exception e) {
                 Message<String> ehMessage = buildMessage(message, id);
                 this.deadLetterService.sendToDeadLetter(
                         new ErrorMessage(new MessageHandlingException(ehMessage, e), ehMessage));
