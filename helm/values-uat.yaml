@@ -133,13 +133,14 @@ pagopa-gpd-rtp:
     KAFKA_START_OFFSET: 'latest'
     KAFKA_AUTO_STARTUP: 'true'
     KAFKA_MAX_ATTEMPTS: "5"
-    KAFKA_BACKOFF_INITIAL_INTERVAL: "1800"
+    KAFKA_BACKOFF_INITIAL_INTERVAL: "5"
+    KAFKA_BACKOFF_MAX_INTERVAL: "1800"
     KAFKA_BACKOFF_MULTIPLIER: "2"
     KAFKA_MAX_POLL_INTERVAL_MS: '900000'
     KAFKA_MAX_POLL_RECORDS: '500'
     KAFKA_PAYMENT_OPTION_FILTERED_TOPIC: 'cdc-filtered'
     KAFKA_PAYMENT_OPTION_FILTERED_GROUP_ID: 'gpd-rtp'
-    KAFKA_PAYMENT_OPTION_FILTERED_CONSUMER_CONCURRENCY: '18'
+    KAFKA_PAYMENT_OPTION_FILTERED_CONSUMER_CONCURRENCY: '5'
     KAFKA_PAYMENT_OPTION_RAW_TOPIC: 'cdc-raw-auto.apd.payment_option'
     KAFKA_PAYMENT_OPTION_RAW_EVENTHUB_GROUP_ID: 'rtp-consumer-group'
     KAFKA_PAYMENT_OPTION_CDC_CONSUMER_CONCURRENCY: '1'
@@ -173,6 +174,13 @@ pagopa-gpd-rtp:
     SHARED_SUBSCRIPTION_KEY: "shared-anonymizer-api-key"
     DEAD_LETTER_CONNECTION_STRING: "rtp-storage-account-connection-string"
     RTP_KEYCLOAK_CLIENT_SECRET: "rtp-keycloak-client-secret"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "0.25"
+    limits:
+      memory: "768Mi"
+      cpu: "0.50"
 refresh-cache-cron:
   !!merge <<: *microservice-chart
   schedule: "0 9 * * *"
