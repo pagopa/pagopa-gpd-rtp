@@ -101,7 +101,7 @@ public class IngestionServiceImpl implements IngestionService {
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
 
             boolean response = this.rtpMessageProducer.sendRTPMessage(rtpMessage);
-            checkResponse(response);
+            checkResponse(response, AppError.RTP_MESSAGE_NOT_SENT);
             MDC.put(RTP_SENT_STATUS, "OK");
 
             log.info("RTP Message sent to eventhub at {}", CommonUtility.getDateNowUTC());
@@ -332,6 +332,7 @@ public class IngestionServiceImpl implements IngestionService {
     public void filterPaymentOptions(List<String> messages) {
         log.debug("Filter po called with size {}", messages.size());
         int totalSent = 0;
+        int totalFailed = 0;
         for (String message : messages) {
             String id = "unknown";
             try {
@@ -342,7 +343,7 @@ public class IngestionServiceImpl implements IngestionService {
 
                 id = getPaymentOptionId(po);
                 boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
-                checkResponse(res);
+                checkResponse(res, AppError.FILTERED_CDC_MESSAGE_NOT_SENT);
 
                 totalSent++;
             } catch (FailAndIgnore e) {
@@ -351,9 +352,10 @@ public class IngestionServiceImpl implements IngestionService {
                 Message<String> ehMessage = buildMessage(message, id);
                 this.deadLetterService.sendToDeadLetter(
                         new ErrorMessage(new MessageHandlingException(ehMessage, e), ehMessage));
+                totalFailed++;
             }
         }
-        log.debug("Filter po total messages sent: {}", totalSent);
+        log.debug("Filter po total messages sent: {}, total failed: {}", totalSent, totalFailed);
     }
 
     private DataCaptureMessage<PaymentOptionEvent> parseCdcMessage(String message) {
@@ -376,9 +378,9 @@ public class IngestionServiceImpl implements IngestionService {
                 .toString();
     }
 
-    private static void checkResponse(boolean response) {
+    private static void checkResponse(boolean response, AppError errorCode) {
         if (!response) {
-            throw new FailAndNotify(AppError.RTP_MESSAGE_NOT_SENT);
+            throw new FailAndNotify(errorCode);
         }
     }
 
