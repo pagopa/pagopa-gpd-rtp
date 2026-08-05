@@ -15,6 +15,8 @@ import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import java.util.List;
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +41,7 @@ public class FilterServiceImpl implements FilterService {
 
     // Debtor Tax Code Validation
     if (valuesAfter != null
-        && !valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
+        && Objects.equals(valuesAfter.getFiscalCode(), valuesAfter.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }

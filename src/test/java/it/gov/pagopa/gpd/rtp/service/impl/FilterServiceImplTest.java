@@ -55,6 +55,28 @@ class FilterServiceImplTest {
     }
 
     @Test
+    void filterByTaxCode_OK_afterNull() {
+        var po = new DataCaptureMessage<PaymentOptionEvent>();
+        po.setAfter(null);
+        assertDoesNotThrow(
+                () ->
+                        sut.filterByTaxCode(po)
+        );
+    }
+
+    @Test
+    void filterByTaxCode_OK_fiscalCodeNull() {
+        var po = new DataCaptureMessage<PaymentOptionEvent>();
+        po.setAfter(new PaymentOptionEvent());
+        po.getAfter().setFiscalCode(null);
+        po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
+        assertDoesNotThrow(
+                () ->
+                        sut.filterByTaxCode(po)
+        );
+    }
+
+    @Test
     void filterByTaxCode_KO() {
         var po = new DataCaptureMessage<PaymentOptionEvent>();
         po.setAfter(new PaymentOptionEvent());
