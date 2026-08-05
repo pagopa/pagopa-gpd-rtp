@@ -39,7 +39,7 @@ public class FilterServiceImpl implements FilterService {
 
     // Debtor Tax Code Validation
     if (valuesAfter != null
-        && Objects.equals(valuesAfter.getFiscalCode(), valuesAfter.getOrganizationFiscalCode())) {
+        && !valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }
