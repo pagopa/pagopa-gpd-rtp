@@ -215,6 +215,7 @@ public class IngestionServiceImpl implements IngestionService {
         if (paymentOption.getOp().equals(DebeziumOperationCode.c)
                 || paymentOption.getOp().equals(DebeziumOperationCode.u)) {
 
+            this.filterService.filterByTaxCode(paymentOption);
             this.filterService.filterByOptInFlag(paymentOption);
 
             PaymentOptionEvent valuesAfter = paymentOption.getAfter();
@@ -339,7 +340,6 @@ public class IngestionServiceImpl implements IngestionService {
                 DataCaptureMessage<PaymentOptionEvent> po = parseCdcMessage(message);
 
                 this.filterService.filterByDebeziumOperation(po);
-                this.filterService.filterByTaxCode(po);
 
                 id = getPaymentOptionId(po);
                 boolean res = this.rtpMessageProducer.sendFilteredCdcMessage(po, id);
