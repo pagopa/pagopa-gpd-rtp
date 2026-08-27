@@ -9,4 +9,5 @@ public class Constants {
   public static final String HEADER_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
   public static final String STREAM_KEY = "rtp-event-stream:action";
   public static final String CUSTOM_EVENT = "RTP_ALERT";
+  public static final String MESSAGE_HEADER_BATCH_INDEX = "batchIndex";
 }

@@ -77,15 +77,12 @@ class IngestionServiceImplTest {
   @Captor private ArgumentCaptor<RTPMessage> rtpCaptor;
 
   @Test
-  void ingestPaymentOption_OK_DELETE() throws JsonProcessingException {
+  void ingestPaymentOptions_OK_DELETE() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getDeletedPaymentOption();
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
     when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
@@ -115,11 +112,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_OK_CREATE() throws JsonProcessingException {
+  void ingestPaymentOptions_OK_CREATE() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -136,12 +131,10 @@ class IngestionServiceImplTest {
     transfer.setOrganizationFiscalCode(po.getAfter().getOrganizationFiscalCode());
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
-    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
-
     when(anonymizerClient.anonymize(any(AnonymizerModel.class))).thenReturn(ANONIMIZED_RESPONSE);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
@@ -169,11 +162,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_OK_UPDATE() throws JsonProcessingException {
+  void ingestPaymentOptions_OK_UPDATE() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.u);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -195,7 +186,7 @@ class IngestionServiceImplTest {
     when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
@@ -223,18 +214,16 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_JSON_PROCESSING_EXCEPTION_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_JSON_PROCESSING_EXCEPTION_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     doThrow(JsonProcessingException.class)
         .when(objectMapper)
         .readValue(anyString(), any(TypeReference.class));
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(deadLetterService).sendToDeadLetter(any());
@@ -248,14 +237,11 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_DEBEZIUM_OPERATION_T_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_DEBEZIUM_OPERATION_T_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.t);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
@@ -269,14 +255,12 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_DEBEZIUM_OPERATION_R_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_DEBEZIUM_OPERATION_R_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.r);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
@@ -290,14 +274,12 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_DEBEZIUM_OPERATION_M_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_DEBEZIUM_OPERATION_M_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.m);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
@@ -311,14 +293,12 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_MESSAGE_NULL_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_MESSAGE_NULL_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.m);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
@@ -335,16 +315,14 @@ class IngestionServiceImplTest {
   void ingestPaymentOption_KO_INVALID_PAYMENT_POSITION_STATUS_DISCARDED()
       throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     doThrow(new FailAndIgnore(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP))
         .when(filterService)
         .filterByTaxCode(any());
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(acknowledgment).acknowledge();
@@ -358,18 +336,16 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_INVALID_TAX_CODE_DISCARDED() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_INVALID_TAX_CODE_DISCARDED() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     doThrow(new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP))
         .when(filterService)
         .filterByTaxCode(any());
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(acknowledgment).acknowledge();
@@ -383,38 +359,34 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_REPLICA_SYNC_FAILED_NO_PO() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_REPLICA_SYNC_FAILED_NO_PO() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.empty());
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
   }
 
   @Test
-  void ingestPaymentOption_KO_REPLICA_SYNC_FAILED_ON_DATE() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_REPLICA_SYNC_FAILED_ON_DATE() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW.minus(5L, ChronoUnit.DAYS));
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
-    verify(acknowledgment).nack(any());
+    verify(acknowledgment).nack(eq(0), any());
     verify(filterService, never()).filterByTaxonomy(any(), any());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
@@ -424,11 +396,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_INVALID_TRANSFER_CATEGORIES() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_INVALID_TRANSFER_CATEGORIES() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -447,7 +417,7 @@ class IngestionServiceImplTest {
         .filterByTaxonomy(any(), any());
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
@@ -461,11 +431,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_INVALID_TRANSFER_AMOUNTS() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_INVALID_TRANSFER_AMOUNTS() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -484,7 +452,7 @@ class IngestionServiceImplTest {
         .filterByTaxonomy(any(), any());
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
@@ -498,11 +466,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_NO_PRIMARY_TRANSFER() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_NO_PRIMARY_TRANSFER() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -519,7 +485,7 @@ class IngestionServiceImplTest {
     when(transferRepository.findByPaymentOptionId(anyLong())).thenReturn(List.of(transfer));
 
     // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
 
     verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
@@ -533,11 +499,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_ERROR_SENDING_RTP_MESSAGE() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_ERROR_SENDING_RTP_MESSAGE() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -560,7 +524,7 @@ class IngestionServiceImplTest {
 
     // test execution
     try {
-      sut.ingestPaymentOption(genericMessage);
+      sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
     } catch (AppException e) {
       assertEquals(AppError.RTP_MESSAGE_NOT_SENT, e.getAppErrorCode());
     }
@@ -577,11 +541,9 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_ERROR_GENERIC() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_ERROR_GENERIC() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW);
@@ -604,7 +566,7 @@ class IngestionServiceImplTest {
 
     // test execution
     try {
-      sut.ingestPaymentOption(genericMessage);
+      sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
     } catch (RuntimeException e) {
       assertTrue(true);
     }
@@ -621,34 +583,76 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_DB_REPLICA_SYNC_0_retry() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_DB_REPLICA_SYNC_0_retry() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW.minusDays(1));
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
-    sut.ingestPaymentOption(genericMessage);
+    sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
     verify(redisCacheRepository).setRetryCount(any(), anyInt());
   }
 
   @Test
-  void ingestPaymentOption_KO_DB_REPLICA_SYNC_4_retry() throws JsonProcessingException {
+  void ingestPaymentOptions_KO_DB_REPLICA_SYNC_4_retry() throws JsonProcessingException {
     DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
 
     PaymentOption repoPO = new PaymentOption();
     repoPO.setLastUpdatedDate(DATE_NOW.minusDays(1));
     when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
     when(redisCacheRepository.getRetryCount(any())).thenReturn(4);
-    sut.ingestPaymentOption(genericMessage);
+    sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
 
     verify(redisCacheRepository).deleteRetryCount(any());
   }
+
+  @Test
+  void ingestPaymentOptionsBatch_KO_partialAckAndIndexedNack() throws JsonProcessingException {
+    DataCaptureMessage<PaymentOptionEvent> first = getDeletedPaymentOption();
+    DataCaptureMessage<PaymentOptionEvent> second = getPaymentOption(DebeziumOperationCode.c);
+    Message<List<String>> batchMessage = getBatchMessage(List.of(first, second));
+
+    PaymentOption repoPO = new PaymentOption();
+    repoPO.setLastUpdatedDate(DATE_NOW.minus(2L, ChronoUnit.DAYS));
+    when(paymentOptionRepository.findById(second.getAfter().getId())).thenReturn(Optional.of(repoPO));
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
+
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(batchMessage));
+
+    verify(acknowledgment).acknowledge(0);
+    verify(acknowledgment).nack(eq(1), any());
+    verify(acknowledgment, never()).acknowledge();
+    verify(redisCacheRepository).setRetryCount(any(), anyInt());
+  }
+
+  @Test
+  void ingestPaymentOptionsBatch_OK_ignoreAndAckWholeBatch() throws JsonProcessingException {
+    DataCaptureMessage<PaymentOptionEvent> ignored = getPaymentOption(DebeziumOperationCode.t);
+    DataCaptureMessage<PaymentOptionEvent> success = getDeletedPaymentOption();
+    Message<List<String>> batchMessage = getBatchMessage(List.of(ignored, success));
+    when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(true);
+
+    assertDoesNotThrow(() -> sut.ingestPaymentOptions(batchMessage));
+
+    verify(acknowledgment).acknowledge();
+    verify(acknowledgment, never()).nack(anyInt(), any());
+  }
+
+  private Message<List<String>> getBatchMessage(List<DataCaptureMessage<PaymentOptionEvent>> events)
+      throws JsonProcessingException {
+    List<String> payloads =
+        events.stream().map(event -> {
+          try {
+            return objectMapper.writeValueAsString(event);
+          } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+          }
+        }).toList();
+    return new GenericMessage<>(payloads, Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment));
+  }
+
 
   private DataCaptureMessage<PaymentOptionEvent> getPaymentOption(
       DebeziumOperationCode debeziumOperationCode) {

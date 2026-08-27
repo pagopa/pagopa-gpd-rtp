@@ -37,6 +37,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandlingException;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.stereotype.Service;
 
@@ -48,12 +49,22 @@ import java.util.Optional;
 
 import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
+import static it.gov.pagopa.gpd.rtp.util.Constants.MESSAGE_HEADER_BATCH_INDEX;
 import static it.gov.pagopa.gpd.rtp.util.MDCUtility.*;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class IngestionServiceImpl implements IngestionService {
+    private static final Duration RETRY_NACK_DELAY = Duration.ofSeconds(1);
+
+    private enum MessageProcessingOutcome {
+        SUCCESS,
+        IGNORED,
+        STOP_AND_RETRY,
+        RETRY_DEADLETTERED
+    }
+
     private final ObjectMapper objectMapper;
     private final RTPMessageProducer rtpMessageProducer;
     private final FilterService filterService;
@@ -92,10 +103,41 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    public void ingestPaymentOption(Message<String> message) {
+    @Override
+    public void ingestPaymentOptions(Message<List<String>> message) {
+        Acknowledgment acknowledgment = getAck(message);
+        List<String> payloadBatch = message.getPayload();
+        int processedUntil = -1;
+
         try {
             processingTracker.messageProcessingStarted();
-            handleMessage(message);
+
+            if (payloadBatch == null || payloadBatch.isEmpty()) {
+                acknowledgment.acknowledge();
+                return;
+            }
+
+            for (int i = 0; i < payloadBatch.size(); i++) {
+                Message<String> singleMessage = buildBatchElementMessage(message, payloadBatch.get(i), i);
+
+                try {
+                    MessageProcessingOutcome outcome = processMessage(singleMessage);
+                    if (outcome == MessageProcessingOutcome.STOP_AND_RETRY) {
+                        acknowledgment.nack(i, RETRY_NACK_DELAY);
+                        return;
+                    }
+                    processedUntil = i;
+                } catch (Exception e) {
+                    if (processedUntil >= 0) {
+                        acknowledgment.acknowledge(processedUntil);
+                    }
+                    throw e;
+                } finally {
+                    MDC.clear();
+                }
+            }
+
+            acknowledgment.acknowledge();
         } finally {
             processingTracker.messageProcessingFinished();
             MDC.clear();
@@ -107,12 +149,20 @@ public class IngestionServiceImpl implements IngestionService {
         return this.rtpMessageProducer.sendRTPMessage(rtpMessage);
     }
 
-    private void handleMessage(Message<?> message) {
-        Acknowledgment acknowledgment = null;
+    /**
+     * Process single PaymentOption message
+     *
+     * @param message the PaymentOption message to process
+     * @return {@link MessageProcessingOutcome}
+     * - SUCCESS if the message was processed successfully
+     * - IGNORED if the message was ignored due to validation
+     * - STOP_AND_RETRY if the message should be retried (nack)
+     * - RETRY_DEADLETTERED if the message was sent to dead letter to be retried later
+     * @throws FailAndNotify if an unexpected error occurs
+     */
+    private MessageProcessingOutcome processMessage(Message<?> message) {
         DataCaptureMessage<PaymentOptionEvent> paymentOption = null;
         try {
-            acknowledgment = getAck(message);
-
             paymentOption = parseMessage(message);
             setMDCPaymentOptionInfo(paymentOption);
             RTPMessage rtpMessage = createRTPMessageOrElseThrow(paymentOption);
@@ -122,16 +172,18 @@ public class IngestionServiceImpl implements IngestionService {
             MDC.put(RTP_SENT_STATUS, "OK");
 
             log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
-            acknowledgment.acknowledge();
+            return MessageProcessingOutcome.SUCCESS;
         } catch (FailAndPostpone e) {
             assert paymentOption != null : "paymentOption cannot be null";
             setMDCErrorField(e);
-            handleRetry(message, getOptionEvent(paymentOption), e, acknowledgment);
+            boolean shouldNack = handleRetry(message, getOptionEvent(paymentOption), e);
+            return shouldNack
+                    ? MessageProcessingOutcome.STOP_AND_RETRY
+                    : MessageProcessingOutcome.RETRY_DEADLETTERED;
         } catch (FailAndIgnore e) {
             setMDCErrorField(e);
             log.info("Message ignored {}", e.getMessage());
-            assert acknowledgment != null : "acknowledgment cannot be null";
-            acknowledgment.acknowledge();
+            return MessageProcessingOutcome.IGNORED;
         } catch (Exception e) {
             FailAndNotify failAndNotify = new FailAndNotify(AppError.INTERNAL_SERVER_ERROR, e);
             if (e instanceof FailAndNotify failAndNotifyEx) {
@@ -140,8 +192,16 @@ public class IngestionServiceImpl implements IngestionService {
             setMDCErrorField(failAndNotify);
             log.error("Unexpected error raised", e);
             sendCustomEvent(failAndNotify);
-            throw e;
+            throw failAndNotify;
         }
+    }
+
+    private Message<String> buildBatchElementMessage(
+            Message<List<String>> batchMessage, String payload, int index) {
+        return MessageBuilder.withPayload(payload)
+                .copyHeaders(batchMessage.getHeaders())
+                .setHeaderIfAbsent(MESSAGE_HEADER_BATCH_INDEX, index)
+                .build();
     }
 
     private void sendCustomEvent(FailAndNotify e) {
@@ -180,14 +240,13 @@ public class IngestionServiceImpl implements IngestionService {
      * letter storage account.
      *
      * @param message        The message to be retried.
+     * @param paymentOptionId The payment option id used as retry key.
      * @param e              The exception that caused the retry.
-     * @param acknowledgment The acknowledgment object to be used to nack the message.
      */
-    private void handleRetry(
+    private boolean handleRetry(
             Message<?> message,
             String paymentOptionId,
-            FailAndPostpone e,
-            Acknowledgment acknowledgment) {
+            FailAndPostpone e) {
 
         // get retry count
         int retryCount = redisCacheRepository.getRetryCount(paymentOptionId);
@@ -196,13 +255,14 @@ public class IngestionServiceImpl implements IngestionService {
             // if retry count < n then postpone the message and add 1 to the retry count
             log.warn("Retry reading message after1 sec", e);
             redisCacheRepository.setRetryCount(paymentOptionId, retryCount + 1);
-            acknowledgment.nack(Duration.ofSeconds(1));
+            return true;
         } else {
             // if retry count >= n then save the message to dead letter
             this.deadLetterService.sendToDeadLetter(
                     new ErrorMessage(new MessageHandlingException(message, e), message));
             redisCacheRepository.deleteRetryCount(paymentOptionId);
             log.error("Message sent to deadletter after too much errors syncronizing DB Replica");
+            return false;
         }
     }
 
