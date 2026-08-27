@@ -621,7 +621,7 @@ class IngestionServiceImplTest {
 
     assertDoesNotThrow(() -> sut.ingestPaymentOptions(batchMessage));
 
-    verify(acknowledgment).acknowledge(0);
+    verify(acknowledgment, never()).acknowledge(anyInt());
     verify(acknowledgment).nack(eq(1), any());
     verify(acknowledgment, never()).acknowledge();
     verify(redisCacheRepository).setRetryCount(any(), anyInt());
