@@ -366,7 +366,7 @@ public class IngestionServiceImpl implements IngestionService {
             return this.objectMapper.readValue(message, new TypeReference<>() {
             });
         } catch (Exception e) {
-            log.error("Failed to parse message as JSON, sending message to dead letter. Message: {}", message, e);
+            log.error("Failed to parse message as JSON, sending message to dead letter", e);
             throw new FailAndNotify(AppError.JSON_NOT_PROCESSABLE);
         }
     }
