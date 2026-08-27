@@ -10,9 +10,11 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
 import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
+import it.gov.pagopa.gpd.rtp.utils.EntityUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,6 +25,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = {FilterServiceImpl.class})
@@ -52,6 +55,28 @@ class FilterServiceImplTest {
     }
 
     @Test
+    void filterByTaxCode_OK_afterNull() {
+        var po = new DataCaptureMessage<PaymentOptionEvent>();
+        po.setAfter(null);
+        assertDoesNotThrow(
+                () ->
+                        sut.filterByTaxCode(po)
+        );
+    }
+
+    @Test
+    void filterByTaxCode_OK_fiscalCodeNull() {
+        var po = new DataCaptureMessage<PaymentOptionEvent>();
+        po.setAfter(new PaymentOptionEvent());
+        po.getAfter().setFiscalCode(null);
+        po.getAfter().setOrganizationFiscalCode("organizationFiscalCode");
+        assertDoesNotThrow(
+                () ->
+                        sut.filterByTaxCode(po)
+        );
+    }
+
+    @Test
     void filterByTaxCode_KO() {
         var po = new DataCaptureMessage<PaymentOptionEvent>();
         po.setAfter(new PaymentOptionEvent());
@@ -67,7 +92,7 @@ class FilterServiceImplTest {
     @Test
     void filterByOptInFlag_OK() {
         when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
-        SetOperations mock = Mockito.mock(SetOperations.class);
+        SetOperations mock = mock(SetOperations.class);
         when(mock.isMember(anyString(), anyString())).thenReturn(true);
         when(redisCacheRepository.getFlags()).thenReturn(mock);
 
@@ -85,7 +110,7 @@ class FilterServiceImplTest {
     @Test
     void filterByOptInFlag_KO() {
         when(redisCacheRepository.isCacheUpdated()).thenReturn(true);
-        SetOperations mock = Mockito.mock(SetOperations.class);
+        SetOperations mock = mock(SetOperations.class);
         when(mock.isMember(anyString(), anyString())).thenReturn(false);
         when(redisCacheRepository.getFlags()).thenReturn(mock);
 
@@ -222,6 +247,24 @@ class FilterServiceImplTest {
                     getTransferList(INVALID_TRANSFER_CATEGORY, INVALID_TRANSFER_CATEGORY));
         } catch (AppException e) {
             assertEquals(AppError.TRANSFERS_CATEGORIES_NOT_VALID_FOR_RTP, e.getAppErrorCode());
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DebeziumOperationCode.class, names = {"c", "u", "d"})
+    void filterByDebeziumOperation_OK(DebeziumOperationCode op) {
+        DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(op);
+        assertDoesNotThrow(() -> sut.filterByDebeziumOperation(po));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DebeziumOperationCode.class, names = {"t", "r", "m"})
+    void filterByDebeziumOperation_KO(DebeziumOperationCode op) {
+        DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(op);
+        try {
+            sut.filterByDebeziumOperation(po);
+        } catch (AppException e) {
+            assertEquals(AppError.DEBEZIUM_OPERATION_NOT_VALID_FOR_RTP, e.getAppErrorCode());
         }
     }
 

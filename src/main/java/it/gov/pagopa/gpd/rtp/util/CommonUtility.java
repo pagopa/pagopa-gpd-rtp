@@ -3,6 +3,9 @@ package it.gov.pagopa.gpd.rtp.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -57,5 +60,15 @@ public class CommonUtility {
     public static LocalDateTime getLocalDateTimeFromLong(long dateLong) {
         Instant poMessageInstant = Instant.ofEpochMilli(dateLong / 1000);
         return LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
+    }
+
+    public static <T> Message<T> buildMessage(T payload, String id) {
+        return MessageBuilder.withPayload(payload)
+                .setHeader(KafkaHeaders.KEY, id)
+                .build();
+    }
+
+    public static LocalDateTime getDateNowUTC(){
+        return LocalDateTime.now(ZoneOffset.UTC);
     }
 }

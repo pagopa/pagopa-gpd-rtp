@@ -1,5 +1,7 @@
 package it.gov.pagopa.gpd.rtp.events.producer;
 
+import it.gov.pagopa.gpd.rtp.events.model.DataCaptureMessage;
+import it.gov.pagopa.gpd.rtp.events.model.PaymentOptionEvent;
 import it.gov.pagopa.gpd.rtp.events.model.RTPMessage;
 import org.springframework.stereotype.Service;
 
@@ -17,5 +19,14 @@ public interface RTPMessageProducer {
      * @return boolean referring if the insertion on the sending channel was successfully
      */
     boolean sendRTPMessage(RTPMessage rtpMessage);
+
+    /**
+     * Send a filtered CDC message to RTP eventhub
+     *
+     * @param filteredCdcMessage data to send
+     * @param id entity id to use as message key
+     * @return boolean referring if the insertion on the sending channel was successfully
+     */
+    boolean sendFilteredCdcMessage(DataCaptureMessage<PaymentOptionEvent> filteredCdcMessage, String id);
 
 }

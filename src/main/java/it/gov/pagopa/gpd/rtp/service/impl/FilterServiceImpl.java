@@ -15,6 +15,8 @@ import it.gov.pagopa.gpd.rtp.exception.FailAndPostpone;
 import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
 import java.util.List;
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,8 @@ public class FilterServiceImpl implements FilterService {
     PaymentOptionEvent valuesAfter = paymentOption.getAfter();
 
     // Debtor Tax Code Validation
-    if (valuesAfter.getFiscalCode().equals(valuesAfter.getOrganizationFiscalCode())) {
+    if (valuesAfter != null
+        && Objects.equals(valuesAfter.getFiscalCode(), valuesAfter.getOrganizationFiscalCode())) {
       throw new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP);
     }
   }
@@ -92,6 +95,16 @@ public class FilterServiceImpl implements FilterService {
             .reduce(0L, (subtotal, element) -> subtotal + element.getAmount(), Long::sum);
     if (totalTransfersAmount != paymentOption.getAmount()) {
       throw new FailAndPostpone(AppError.TRANSFERS_TOTAL_AMOUNT_NOT_MATCHING);
+    }
+  }
+
+  @Override
+  public void filterByDebeziumOperation(DataCaptureMessage<PaymentOptionEvent> cdcPO){
+      if( cdcPO.getOp() == null ||
+              !(cdcPO.getOp().equals(DebeziumOperationCode.c) ||
+                      cdcPO.getOp().equals(DebeziumOperationCode.u) ||
+                      cdcPO.getOp().equals(DebeziumOperationCode.d))){
+        throw new FailAndIgnore(AppError.DEBEZIUM_OPERATION_NOT_VALID_FOR_RTP);
     }
   }
 

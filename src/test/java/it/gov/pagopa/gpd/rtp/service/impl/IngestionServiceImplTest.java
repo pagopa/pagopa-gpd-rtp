@@ -1,5 +1,6 @@
 package it.gov.pagopa.gpd.rtp.service.impl;
 
+import static it.gov.pagopa.gpd.rtp.utils.EntityUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,13 +32,10 @@ import it.gov.pagopa.gpd.rtp.repository.RedisCacheRepository;
 import it.gov.pagopa.gpd.rtp.repository.TransferRepository;
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.FilterService;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+
+import it.gov.pagopa.gpd.rtp.utils.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -50,6 +48,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @SpringBootTest(
     classes = {IngestionServiceImpl.class, ObjectMapper.class},
@@ -58,7 +57,7 @@ class IngestionServiceImplTest {
   private static final String REMITTANCE_INFORMATION = "remittanceInformation";
   private static final AnonymizerModel ANONIMIZED_RESPONSE =
       AnonymizerModel.builder().text("anonimizedRemittance").build();
-  private static final LocalDateTime DATE_NOW = LocalDateTime.now();
+
 
   @MockBean private RTPMessageProducer rtpMessageProducer;
   @MockBean private ProcessingTracker processingTracker;
@@ -116,7 +115,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_OK_CREATE() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -143,7 +142,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
@@ -170,7 +168,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_OK_UPDATE() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.u);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.u);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -197,7 +195,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(anonymizerClient, times(2)).anonymize(any(AnonymizerModel.class));
     verify(rtpMessageProducer).sendRTPMessage(rtpCaptor.capture());
@@ -224,7 +221,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_JSON_PROCESSING_EXCEPTION_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -249,7 +246,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_DEBEZIUM_OPERATION_T_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.t);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.t);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -270,7 +267,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_DEBEZIUM_OPERATION_R_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.r);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.r);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -291,7 +288,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_DEBEZIUM_OPERATION_M_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.m);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.m);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -312,7 +309,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_MESSAGE_NULL_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.m);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.m);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -332,50 +329,36 @@ class IngestionServiceImplTest {
   }
 
   @Test
-  void ingestPaymentOption_KO_INVALID_PAYMENT_POSITION_STATUS_DISCARDED()
+  void ingestPaymentOption_KO_INVALID_PAYMENT_POSITION_STATUS_CREATE_DRAFT_DISCARDED()
       throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
+
+    PaymentOption repoPO = new PaymentOption();
+    repoPO.setLastUpdatedDate(DATE_NOW);
+    when(paymentOptionRepository.findById(po.getAfter().getId())).thenReturn(Optional.of(repoPO));
+
+    PaymentPosition debtPosition = new PaymentPosition();
+    debtPosition.setStatus(PaymentPositionStatus.DRAFT);
+    debtPosition.setServiceType(ServiceType.GPD);
+    when(debtPositionRepository.findById(anyLong())).thenReturn(Optional.of(debtPosition));
 
     doThrow(new FailAndIgnore(AppError.PAYMENT_POSITION_STATUS_NOT_VALID_FOR_RTP))
-        .when(filterService)
-        .filterByTaxCode(any());
+            .when(filterService)
+            .filterByStatus(any(), any());
+
 
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
+    verify(filterService).filterByStatus(any(), any());
+    verify(paymentOptionRepository).findById(anyLong());
+    verify(debtPositionRepository).findById(anyLong());
     verify(acknowledgment).acknowledge();
     verify(rtpMessageProducer, never()).sendRTPMessage(any());
     verify(filterService, never()).filterByTaxonomy(any(), any());
-    verify(paymentOptionRepository, never()).findById(anyLong());
-    verify(transferRepository, never()).findByPaymentOptionId(anyLong());
-    verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
-    verify(acknowledgment, never()).nack(any());
-    verify(deadLetterService, never()).sendToDeadLetter(any());
-  }
-
-  @Test
-  void ingestPaymentOption_KO_INVALID_TAX_CODE_DISCARDED() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
-    Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
-    Message<String> genericMessage =
-        new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
-
-    doThrow(new FailAndIgnore(AppError.TAX_CODE_NOT_VALID_FOR_RTP))
-        .when(filterService)
-        .filterByTaxCode(any());
-
-    // test execution
-    assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
-
-    verify(filterService).filterByTaxCode(any());
-    verify(acknowledgment).acknowledge();
-    verify(rtpMessageProducer, never()).sendRTPMessage(any());
-    verify(filterService, never()).filterByTaxonomy(any(), any());
-    verify(paymentOptionRepository, never()).findById(anyLong());
     verify(transferRepository, never()).findByPaymentOptionId(anyLong());
     verify(anonymizerClient, never()).anonymize(any(AnonymizerModel.class));
     verify(acknowledgment, never()).nack(any());
@@ -384,7 +367,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_REPLICA_SYNC_FAILED_NO_PO() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -394,13 +377,12 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
   }
 
   @Test
   void ingestPaymentOption_KO_REPLICA_SYNC_FAILED_ON_DATE() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment);
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -412,7 +394,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(acknowledgment).nack(any());
     verify(filterService, never()).filterByTaxonomy(any(), any());
@@ -425,7 +406,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_INVALID_TRANSFER_CATEGORIES() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -449,7 +430,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
@@ -462,7 +442,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_INVALID_TRANSFER_AMOUNTS() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -486,7 +466,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
@@ -499,7 +478,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_NO_PRIMARY_TRANSFER() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -521,7 +500,6 @@ class IngestionServiceImplTest {
     // test execution
     assertDoesNotThrow(() -> sut.ingestPaymentOption(genericMessage));
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
@@ -534,7 +512,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_ERROR_SENDING_RTP_MESSAGE() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -565,7 +543,6 @@ class IngestionServiceImplTest {
       assertEquals(AppError.RTP_MESSAGE_NOT_SENT, e.getAppErrorCode());
     }
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
@@ -578,7 +555,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_ERROR_GENERIC() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -609,7 +586,6 @@ class IngestionServiceImplTest {
       assertTrue(true);
     }
 
-    verify(filterService).filterByTaxCode(any());
     verify(filterService).filterByTaxonomy(any(), any());
     verify(paymentOptionRepository).findById(anyLong());
     verify(transferRepository).findByPaymentOptionId(anyLong());
@@ -622,7 +598,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_DB_REPLICA_SYNC_0_retry() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -636,7 +612,7 @@ class IngestionServiceImplTest {
 
   @Test
   void ingestPaymentOption_KO_DB_REPLICA_SYNC_4_retry() throws JsonProcessingException {
-    DataCaptureMessage<PaymentOptionEvent> po = getPaymentOption(DebeziumOperationCode.c);
+    DataCaptureMessage<PaymentOptionEvent> po = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
     Map<String, Object> headers = Map.of(KafkaHeaders.ACKNOWLEDGMENT, acknowledgment, "id", "id");
     Message<String> genericMessage =
         new GenericMessage<>(objectMapper.writeValueAsString(po), headers);
@@ -650,33 +626,59 @@ class IngestionServiceImplTest {
     verify(redisCacheRepository).deleteRetryCount(any());
   }
 
-  private DataCaptureMessage<PaymentOptionEvent> getPaymentOption(
-      DebeziumOperationCode debeziumOperationCode) {
-    PaymentOptionEvent pp =
-        PaymentOptionEvent.builder()
-            .id(10L)
-            .paymentPositionId(1L)
-            .amount(0)
-            .description("description")
-            .dueDate(new Date().getTime())
-            .iuv("iuv")
-            .lastUpdatedDate(Timestamp.valueOf(DATE_NOW).getTime() * 1000)
-            .organizationFiscalCode("organizationFiscalCode")
-            .status("PO_PAID")
-            .nav("nav")
-            .fiscalCode(null)
-            .pspCode("pspCode")
-            .pspTaxCode("pspTaxCode")
-            .isPartialPayment(false)
-            .build();
-    return DataCaptureMessage.<PaymentOptionEvent>builder()
-        .before(null)
-        .after(pp)
-        .op(debeziumOperationCode)
-        .tsMs(10L)
-        .tsNs(0L)
-        .tsUs(0L)
-        .build();
+  @Test
+  void filterPaymentOption_OK() throws JsonProcessingException {
+    FilterService filterServiceSpy = spy(new FilterServiceImpl(mock(RedisCacheRepository.class)));
+    ReflectionTestUtils.setField(sut, "filterService", filterServiceSpy);
+
+    when(rtpMessageProducer.sendFilteredCdcMessage(any(), any())).thenReturn(true);
+
+    String poBlank = "";
+    String poValidCreate = objectMapper.writeValueAsString(EntityUtils.getPaymentOption(DebeziumOperationCode.c));
+    String poValidUpdate = objectMapper.writeValueAsString(EntityUtils.getPaymentOption(DebeziumOperationCode.u));
+    String poValidDelete = objectMapper.writeValueAsString(getDeletedPaymentOption());
+    String poInvalidOperation = objectMapper.writeValueAsString(EntityUtils.getPaymentOption(DebeziumOperationCode.r));
+
+    DataCaptureMessage<PaymentOptionEvent> poInvalidTaxCodeObject = EntityUtils.getPaymentOption(DebeziumOperationCode.c);
+    PaymentOptionEvent poEventInvalidTaxCode = poInvalidTaxCodeObject.getAfter();
+    poEventInvalidTaxCode.setFiscalCode(ORG_FISCAL_CODE);
+    poInvalidTaxCodeObject.setAfter(poEventInvalidTaxCode);
+    String poInvalidTaxCode = objectMapper.writeValueAsString(poInvalidTaxCodeObject);
+
+    List<String> messages = List.of(poBlank, poValidCreate, poValidUpdate, poValidDelete, poInvalidOperation, poInvalidTaxCode);
+
+    assertDoesNotThrow(() -> sut.filterPaymentOptions(messages));
+
+    verify(filterServiceSpy, times(5)).filterByDebeziumOperation(any());
+    verify(filterServiceSpy, times(4)).filterByTaxCode(any());
+    verify(rtpMessageProducer, times(3)).sendFilteredCdcMessage(any(), any());
+    verify(deadLetterService, never()).sendToDeadLetter(any());
+
+    ReflectionTestUtils.setField(sut, "filterService", filterService);
+  }
+
+  @Test
+  void filterPaymentOption_KO_error_send_eventhub() throws JsonProcessingException {
+    when(rtpMessageProducer.sendFilteredCdcMessage(any(), any())).thenReturn(false);
+
+    String poValidCreate = objectMapper.writeValueAsString(EntityUtils.getPaymentOption(DebeziumOperationCode.c));
+    List<String> messages = List.of(poValidCreate);
+
+    assertDoesNotThrow(() -> sut.filterPaymentOptions(messages));
+
+    verify(rtpMessageProducer, times(1)).sendFilteredCdcMessage(any(), any());
+    verify(deadLetterService, times(1)).sendToDeadLetter(any());
+  }
+
+  @Test
+  void filterPaymentOption_KO_error_unprocessable_message() {
+    String invalidMessage = "invalidMessage";
+    List<String> messages = List.of(invalidMessage);
+
+    assertDoesNotThrow(() -> sut.filterPaymentOptions(messages));
+
+    verify(deadLetterService, times(1)).sendToDeadLetter(any());
+    verify(rtpMessageProducer, never()).sendFilteredCdcMessage(any(), any());
   }
 
   private DataCaptureMessage<PaymentOptionEvent> getDeletedPaymentOption() {
