@@ -126,6 +126,12 @@ pagopa-gpd-rtp:
     !!merge <<: *envConfig
     KAFKA_START_OFFSET: 'latest'
     KAFKA_AUTO_STARTUP: 'true'
+    KAFKA_MAX_ATTEMPTS: "1"
+    KAFKA_BACKOFF_INITIAL_INTERVAL: "5"
+    KAFKA_BACKOFF_MAX_INTERVAL: "1800"
+    KAFKA_BACKOFF_MULTIPLIER: "2"
+    KAFKA_MAX_POLL_INTERVAL_MS: '900000'
+    KAFKA_MAX_POLL_RECORDS: '500'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     RTP_KAFKA_BROKER: "pagopa-d-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093"
@@ -143,7 +149,6 @@ pagopa-gpd-rtp:
     RTP_KEYCLOAK_CLIENT_ID: "9dda5226-6f73-48a7-a071-c0f06f2c4e76"
     REST_CLIENT_LOGGER_LEVEL: "NONE"
     MAX_RETRY_DB_REPLICAS: "1"
-    KAFKA_MAX_ATTEMPTS: "1"
   envSecret:
     !!merge <<: *envSecret
     RTP_MESSAGE_OUTPUT_EVENTHUB_CONN_STRING: "ehub-d-tx-rtp-connection-string"
