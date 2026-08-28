@@ -33,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -108,7 +109,6 @@ public class IngestionServiceImpl implements IngestionService {
     public void ingestPaymentOptions(Message<List<String>> message) {
         Acknowledgment acknowledgment = getAck(message);
         List<String> payloadBatch = message.getPayload();
-        int processedUntil = -1;
 
         try {
             processingTracker.messageProcessingStarted();
@@ -127,12 +127,8 @@ public class IngestionServiceImpl implements IngestionService {
                         acknowledgment.nack(i, RETRY_NACK_DELAY);
                         return;
                     }
-                    processedUntil = i;
                 } catch (Exception e) {
-                    if (processedUntil >= 0) {
-                        acknowledgment.acknowledge(processedUntil);
-                    }
-                    throw e;
+                    throw new BatchListenerFailedException("Unexpected error processing batch element at index " + i, e, i);
                 } finally {
                     MDC.clear();
                 }

@@ -22,8 +22,8 @@ import it.gov.pagopa.gpd.rtp.events.model.enumeration.DebeziumOperationCode;
 import it.gov.pagopa.gpd.rtp.events.model.enumeration.RTPOperationCode;
 import it.gov.pagopa.gpd.rtp.events.producer.RTPMessageProducer;
 import it.gov.pagopa.gpd.rtp.exception.AppError;
-import it.gov.pagopa.gpd.rtp.exception.AppException;
 import it.gov.pagopa.gpd.rtp.exception.FailAndIgnore;
+import it.gov.pagopa.gpd.rtp.exception.FailAndNotify;
 import it.gov.pagopa.gpd.rtp.model.AnonymizerModel;
 import it.gov.pagopa.gpd.rtp.repository.DebtPositionRepository;
 import it.gov.pagopa.gpd.rtp.repository.PaymentOptionRepository;
@@ -50,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
@@ -507,12 +508,16 @@ class IngestionServiceImplTest {
 
         when(rtpMessageProducer.sendRTPMessage(any(RTPMessage.class))).thenReturn(false);
 
-        // test execution
-        try {
-            sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
-        } catch (AppException e) {
-            assertEquals(AppError.RTP_MESSAGE_NOT_SENT, e.getAppErrorCode());
-        }
+        BatchListenerFailedException exception =
+                assertThrows(
+                        BatchListenerFailedException.class,
+                        () -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
+
+        assertEquals(0, exception.getIndex());
+        assertInstanceOf(FailAndNotify.class, exception.getCause());
+        assertEquals(
+                AppError.RTP_MESSAGE_NOT_SENT,
+                ((FailAndNotify) exception.getCause()).getAppErrorCode());
 
         verify(filterService).filterByTaxCode(any());
         verify(filterService).filterByTaxonomy(any(), any());
@@ -549,12 +554,16 @@ class IngestionServiceImplTest {
 
         doThrow(RuntimeException.class).when(rtpMessageProducer).sendRTPMessage(any(RTPMessage.class));
 
-        // test execution
-        try {
-            sut.ingestPaymentOptions(getBatchMessage(List.of(po)));
-        } catch (RuntimeException e) {
-            assertTrue(true);
-        }
+        BatchListenerFailedException exception =
+                assertThrows(
+                        BatchListenerFailedException.class,
+                        () -> sut.ingestPaymentOptions(getBatchMessage(List.of(po))));
+
+        assertEquals(0, exception.getIndex());
+        assertInstanceOf(FailAndNotify.class, exception.getCause());
+        assertEquals(
+                AppError.INTERNAL_SERVER_ERROR,
+                ((FailAndNotify) exception.getCause()).getAppErrorCode());
 
         verify(filterService).filterByTaxCode(any());
         verify(filterService).filterByTaxonomy(any(), any());
