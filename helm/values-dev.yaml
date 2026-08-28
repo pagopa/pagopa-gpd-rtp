@@ -132,6 +132,7 @@ pagopa-gpd-rtp:
     KAFKA_BACKOFF_MULTIPLIER: "2"
     KAFKA_MAX_POLL_INTERVAL_MS: '900000'
     KAFKA_MAX_POLL_RECORDS: '500'
+    KAFKA_CONSUMER_CONCURRENCY: '1'
     CORS_CONFIGURATION: '{"origins": ["*"], "methods": ["*"]}'
     RTP_KAFKA_BROKER: "pagopa-d-itn-gps-rtp-integration-evh.servicebus.windows.net:9093"
     PAYMENT_OPTION_KAFKA_BROKER: "pagopa-d-itn-observ-gpd-evh.servicebus.windows.net:9093"
