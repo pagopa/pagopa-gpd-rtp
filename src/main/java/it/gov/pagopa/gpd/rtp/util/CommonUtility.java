@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -58,4 +59,9 @@ public class CommonUtility {
         Instant poMessageInstant = Instant.ofEpochMilli(dateLong / 1000);
         return LocalDateTime.ofInstant(poMessageInstant, ZoneOffset.UTC);
     }
+
+    public static LocalDateTime getDateNow() {
+        return LocalDateTime.now(Clock.systemDefaultZone());
+    }
+
 }

@@ -2,6 +2,7 @@ package it.gov.pagopa.gpd.rtp.events.consumer;
 
 import it.gov.pagopa.gpd.rtp.service.DeadLetterService;
 import it.gov.pagopa.gpd.rtp.service.IngestionService;
+import java.util.List;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ import org.springframework.messaging.support.ErrorMessage;
 public class PaymentOptionConsumerConfig {
 
   @Bean
-  public Consumer<Message<String>> ingestPaymentOption(IngestionService ingestionService) {
-    return ingestionService::ingestPaymentOption;
+  public Consumer<Message<List<String>>> ingestPaymentOption(IngestionService ingestionService) {
+    return ingestionService::ingestPaymentOptions;
   }
 
   @Bean
