@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getDateNow;
 import static it.gov.pagopa.gpd.rtp.util.CommonUtility.getLocalDateTimeFromLong;
 import static it.gov.pagopa.gpd.rtp.util.Constants.CUSTOM_EVENT;
 import static it.gov.pagopa.gpd.rtp.util.Constants.MESSAGE_HEADER_BATCH_INDEX;
@@ -112,7 +113,7 @@ public class IngestionServiceImpl implements IngestionService {
         try {
             processingTracker.messageProcessingStarted();
 
-            if (payloadBatch == null || payloadBatch.isEmpty()) {
+            if (payloadBatch.isEmpty()) {
                 acknowledgment.acknowledge();
                 return;
             }
@@ -171,7 +172,7 @@ public class IngestionServiceImpl implements IngestionService {
             checkResponse(response);
             MDC.put(RTP_SENT_STATUS, "OK");
 
-            log.info("RTP Message sent to eventhub at {}", LocalDateTime.now());
+            log.info("RTP Message sent to eventhub at {}", getDateNow());
             return MessageProcessingOutcome.SUCCESS;
         } catch (FailAndPostpone e) {
             assert paymentOption != null : "paymentOption cannot be null";
@@ -219,14 +220,14 @@ public class IngestionServiceImpl implements IngestionService {
         if (message.getHeaders().getId() == null
                 || message.getPayload() == null
                 || !(message.getPayload() instanceof String msg)) {
-            log.debug("NULL message ignored at {}", LocalDateTime.now());
+            log.debug("NULL message ignored at {}", getDateNow());
             throw new FailAndIgnore(AppError.NULL_MESSAGE);
         }
 
         MDC.put(MESSAGE_ID, String.valueOf(message.getHeaders().getId()));
         log.info(
                 "PaymentOption ingestion called at {} for payment options with message id {}",
-                LocalDateTime.now(),
+                getDateNow(),
                 message.getHeaders().getId());
 
         return parseMessage(message, msg);
@@ -303,7 +304,7 @@ public class IngestionServiceImpl implements IngestionService {
 
             log.debug(
                     "PaymentOption ingestion called at {} with payment option id {}",
-                    LocalDateTime.now(),
+                    getDateNow(),
                     valuesAfter.getId());
 
             verifyDBReplicaSync(valuesAfter);
