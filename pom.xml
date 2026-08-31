@@ -12,7 +12,7 @@
 
   <groupId>it.gov.pagopa</groupId>
   <artifactId>pagopa-gpd-rtp</artifactId>
-  <version>0.8.2-4-PIDM-2302-batch-mode</version>
+  <version>0.8.2-5-PIDM-2302-batch-mode</version>
   <name>gpd-rtp</name>
   <description>GPD service to forward debt positions to RTP</description>
 
