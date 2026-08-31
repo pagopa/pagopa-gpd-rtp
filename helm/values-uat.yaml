@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.8.2-3-PIDM-2302-batch-mode"
+    tag: "0.8.2-4-PIDM-2302-batch-mode"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
