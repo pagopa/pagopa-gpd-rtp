@@ -3,7 +3,7 @@ microservice-chart: &microservice-chart
   nameOverride: ""
   image:
     repository: ghcr.io/pagopa/pagopa-gpd-rtp
-    tag: "0.8.4"
+    tag: "0.8.4-3-PIDM-2620"
     pullPolicy: Always
   terminationGracePeriodSeconds: 300
   livenessProbe:
@@ -68,6 +68,7 @@ microservice-chart: &microservice-chart
         metadata:
           value: "95"
   envConfig: &envConfig
+    JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "prod"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
@@ -116,6 +117,7 @@ microservice-chart: &microservice-chart
         tag: "0.0.0"
         pullPolicy: Always
       envConfig:
+        JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
         OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
 pagopa-gpd-rtp:
