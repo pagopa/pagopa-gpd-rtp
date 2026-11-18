@@ -69,6 +69,7 @@ microservice-chart: &microservice-chart
           type: Utilization
           value: "95"
   envConfig: &envConfig
+    JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
     APP_NAME: "gpd-rtp"
     APP_ENVIRONMENT: "prod"
     WEBSITE_SITE_NAME: 'gpd-rtp' # required to show cloud role name in application insights
@@ -117,6 +118,7 @@ microservice-chart: &microservice-chart
         tag: "0.0.0"
         pullPolicy: Always
       envConfig:
+        JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
         OTEL_SERVICE_NAME: "pagopa-gpd-rtp-beta"
       envSecret: {}
 pagopa-gpd-rtp:
