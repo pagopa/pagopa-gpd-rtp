@@ -14,6 +14,8 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -65,6 +67,7 @@ public class RedisCacheRepository {
 
   @NotNull
   @Cacheable(value = "getFlags")
+  @Retryable(maxAttempts = 4, backoff = @Backoff(delay = 1000, multiplier = 2))
   public SetOperations<String, String> getFlags() {
     return redisTemplate.opsForSet();
   }
